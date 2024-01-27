@@ -1,4 +1,4 @@
-package com.example.whatsappstatus
+package com.blackstackhub.whatsappstatus
 
 import io.flutter.embedding.android.FlutterActivity
 
