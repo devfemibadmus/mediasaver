@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:whatsapp/model.dart';
+import 'package:video_player/video_player.dart';
+import 'package:whatsappstatus/model.dart';
 
 void main() {
   runApp(const MyApp());
@@ -32,30 +33,22 @@ class StatusGrid extends StatefulWidget {
 
 class _StatusGridState extends State<StatusGrid> {
   List<StatusFileInfo> files = [];
-  List<StatusFileInfo> whatsappFilesImages = [];
-  List<StatusFileInfo> whatsappFilesVideo = [];
-  List<StatusFileInfo> whatsapp4bFilesImages = [];
-  List<StatusFileInfo> whatsapp4bFilesVideo = [];
   late Timer _timer;
-  bool permitted = false;
 
   @override
   void initState() {
     super.initState();
+    platform.invokeMethod("requestStoragePermission").then((value) {
+      if (value) {
+        print("GRANTED");
+        getStatusFiles();
+      }
+    });
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       platform.invokeMethod("checkStoragePermission").then((value) {
         if (value) {
-          setState(() {
-            permitted = true;
-          });
+          print("GRANTED");
           getStatusFiles();
-        } else {
-          platform.invokeMethod("requestStoragePermission").then((value) {
-            if (value) {
-              print("GRANTED");
-              getStatusFiles();
-            }
-          });
         }
       });
     });
@@ -64,19 +57,9 @@ class _StatusGridState extends State<StatusGrid> {
   Future<void> getStatusFiles() async {
     var statusFilesInfo = await platform.invokeListMethod('getStatusFilesInfo');
     if (statusFilesInfo != null && statusFilesInfo.isNotEmpty) {
-      if (files != parseStatusFiles(statusFilesInfo)) {
-        setState(() {
-          files = parseStatusFiles(statusFilesInfo);
-          whatsappFilesVideo =
-              filterFilesByFormat(files, 'mp4', 'mp4', 'whatsapp');
-          whatsappFilesImages =
-              filterFilesByFormat(files, 'jpg', 'png', 'whatsapp');
-          whatsapp4bFilesVideo =
-              filterFilesByFormat(files, 'mp4', 'mp4', 'whatsapp4b');
-          whatsapp4bFilesImages =
-              filterFilesByFormat(files, 'jpg', 'png', 'whatsapp4b');
-        });
-      }
+      setState(() {
+        files = parseStatusFiles(statusFilesInfo);
+      });
     }
   }
 
@@ -84,21 +67,16 @@ class _StatusGridState extends State<StatusGrid> {
   Widget build(BuildContext context) {
     return files.isEmpty
         ? const Center(child: CircularProgressIndicator())
-        : Container(
-            padding: const EdgeInsets.all(6.0),
-            child: GridView.builder(
-              cacheExtent: 9999,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 6.0,
-                mainAxisSpacing: 6.0,
-              ),
-              itemCount: whatsappFilesImages.length,
-              itemBuilder: (context, index) {
-                return StatusFileWidget(
-                    statusFileInfo: whatsappFilesImages[index]);
-              },
+        : GridView.builder(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 8.0,
+              mainAxisSpacing: 8.0,
             ),
+            itemCount: files.length,
+            itemBuilder: (context, index) {
+              return StatusFileWidget(statusFileInfo: files[index]);
+            },
           );
   }
 
@@ -116,9 +94,14 @@ class StatusFileWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.file(
-      File(statusFileInfo.path),
-      fit: BoxFit.cover,
-    );
+    if (statusFileInfo.format == 'jpg' || statusFileInfo.format == 'png') {
+      return Image.file(
+        File(statusFileInfo.path),
+        fit: BoxFit.cover,
+      );
+    } else {
+      // Handle other file types as needed
+      return Container();
+    }
   }
 }
