@@ -15,6 +15,8 @@ For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
 
+## :bug: flutter file(image/video) not working with android ACTION_OPEN_DOCUMENT_TREE but works fine in kotlin
+
 ### Kotlin code
 
 ```kotlin
@@ -94,5 +96,5 @@ private fun getAbsolutePath(rootDirectory: DocumentFile, file: DocumentFile): St
 // filePath will be inside /storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/
 Image.file(File(filePath,fit: BoxFit.contain,))
 
-Error: `accessing /storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/ Permission Denied`
+Error: accessing /storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/ Permission Denied
 ```
