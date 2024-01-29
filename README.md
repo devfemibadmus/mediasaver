@@ -15,13 +15,14 @@ For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
 
+### Kotlin code
+
+```kotlin
+private val PICK_DIRECTORY_REQUEST_CODE = 123
+private var STATUS_DIRECTORY: DocumentFile? = null
+private var BASE_DIRECTORY: Uri = Uri.parse("/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/")
 
 
-    // private val PICK_DIRECTORY_REQUEST_CODE = 123
-    // private var STATUS_DIRECTORY: DocumentFile? = null
-    // private var BASE_DIRECTORY: Uri = Uri.parse("/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/")
-
-/*
 private fun requestSpecificFolderAccess(): Boolean {
     val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
     intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, BASE_DIRECTORY)
@@ -82,4 +83,16 @@ private fun getAbsolutePath(rootDirectory: DocumentFile, file: DocumentFile): St
 
     return pathSegments.reversed().joinToString("/")
 }
-*/
+
+```
+
+### Flutter code
+
+```dart
+// assuming you've configure your channel 
+// taking image from file will result error `permission denied`
+// filePath will be inside /storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/
+Image.file(File(filePath,fit: BoxFit.contain,))
+
+Error: `accessing /storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/ Permission Denied`
+```
