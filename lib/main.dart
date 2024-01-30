@@ -1,147 +1,110 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:whatsappstatus/model.dart';
-import 'package:whatsappstatus/whatsapp.dart';
-import 'package:whatsappstatus/whatsapp4b.dart';
+import 'package:video_player/video_player.dart';
 
-void main() {
-  runApp(const MyApp());
-}
+void main() => runApp(const VideoPlayerApp());
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class VideoPlayerApp extends StatelessWidget {
+  const VideoPlayerApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    //Brightness platformBrightness = MediaQuery.of(context).platformBrightness;
-    return MaterialApp(
-      theme: ThemeData.light().copyWith(
-        primaryColor: Colors.white,
-        secondaryHeaderColor: Colors.teal,
-        appBarTheme: const AppBarTheme(
-          color: Colors.teal,
-        ),
-        colorScheme: ColorScheme.fromSwatch()
-            .copyWith(background: Colors.white)
-            .copyWith(secondary: Colors.teal[700]),
-      ),
-      darkTheme: ThemeData.dark().copyWith(
-        primaryColor: Colors.white,
-        secondaryHeaderColor: Colors.teal,
-        appBarTheme: const AppBarTheme(
-          color: Colors.teal,
-        ),
-        colorScheme: ColorScheme.fromSwatch()
-            .copyWith(background: Colors.grey[900])
-            .copyWith(secondary: Colors.teal[700]),
-      ),
-      home: const MyHomePage(),
+    return const MaterialApp(
+      title: 'Video Player Demo',
+      home: VideoPlayerScreen(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
+class VideoPlayerScreen extends StatefulWidget {
+  const VideoPlayerScreen({Key? key}) : super(key: key);
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  _VideoPlayerScreenState createState() => _VideoPlayerScreenState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _currentIndex = 0;
-  List<Widget> _tabs = [];
-  List<StatusFileInfo> files = [];
-  late Timer _timer;
-  bool permitted = false;
+class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
+  late VideoPlayerController _controller;
+  late Future<void> _initializeVideoPlayerFuture;
 
   @override
   void initState() {
     super.initState();
-    platform.invokeMethod("checkStoragePermission").then((value) {
-      if (value) {
-        setState(() {
-          permitted = true;
-        });
-      } else {
-        platform.invokeMethod("requestStoragePermission").then((value) {
-          if (value) {
-            print("GRANTED");
-          }
-        });
-      }
-    });
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      platform.invokeMethod("checkStoragePermission").then((value) {
-        if (value) {
-          _timer.cancel();
-          setState(() {
-            permitted = true;
-          });
-          print("object");
-          getStatusFiles();
-        }
-      });
-    });
-  }
 
-  Future<void> getStatusFiles() async {
-    var statusFilesInfo = await platform.invokeListMethod('getStatusFilesInfo');
-    if (statusFilesInfo != null && statusFilesInfo.isNotEmpty) {
-      if (files != parseStatusFiles(statusFilesInfo)) {
-        setState(() {
-          files = parseStatusFiles(statusFilesInfo);
-          _tabs = [
-            Whatsapp(
-              whatsappFilesImages:
-                  filterFilesByFormat(files, 'jpg', 'jpeg', 'gif', 'whatsapp'),
-              whatsappFilesVideo:
-                  filterFilesByFormat(files, 'mp4', 'mov', 'mp4', 'whatsapp'),
-            ),
-            Whatsapp4b(
-              whatsapp4bFilesVideo:
-                  filterFilesByFormat(files, 'mp4', 'mov', 'mp4', 'whatsapp4b'),
-              whatsapp4bFilesImages: filterFilesByFormat(
-                  files, 'jpg', 'jpeg', 'gif', 'whatsapp4b'),
-            ),
-          ];
-        });
-      }
-    }
-  }
+    _controller = VideoPlayerController.network(
+      'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4',
+    );
 
-  @override
-  Widget build(BuildContext context) {
-    return _tabs.isEmpty
-        ? const Center(child: CircularProgressIndicator())
-        : Scaffold(
-            body: _tabs[_currentIndex],
-            bottomNavigationBar: BottomNavigationBar(
-              backgroundColor: Theme.of(context).colorScheme.background,
-              selectedItemColor: Theme.of(context).secondaryHeaderColor,
-              currentIndex: _currentIndex,
-              onTap: (index) {
-                setState(() {
-                  _currentIndex = index;
-                });
-              },
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.chat),
-                  label: 'Whatsapp',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.business),
-                  label: 'Whatsapp Business',
-                ),
-              ],
-            ),
-          );
+    _initializeVideoPlayerFuture = _controller.initialize();
+    _controller.setLooping(true);
   }
 
   @override
   void dispose() {
-    _timer.cancel();
+    _controller.dispose();
     super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Butterfly Video'),
+      ),
+      body: Stack(
+        alignment: Alignment.center,
+        children: [
+          FutureBuilder(
+            future: _initializeVideoPlayerFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                return AspectRatio(
+                  aspectRatio: _controller.value.aspectRatio,
+                  child: VideoPlayer(_controller),
+                );
+              } else {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+            },
+          ),
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                if (_controller.value.isPlaying) {
+                  _controller.pause();
+                } else {
+                  _controller.play();
+                }
+              });
+            },
+            child: Container(
+              color: Colors.transparent,
+              child: Icon(
+                _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+                size: 80.0,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          setState(() {
+            if (_controller.value.isPlaying) {
+              _controller.pause();
+            } else {
+              _controller.play();
+            }
+          });
+        },
+        child: Icon(
+          _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+        ),
+      ),
+    );
   }
 }
