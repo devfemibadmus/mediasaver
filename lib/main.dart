@@ -14,8 +14,29 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: MyHomePage(),
+    //Brightness platformBrightness = MediaQuery.of(context).platformBrightness;
+    return MaterialApp(
+      theme: ThemeData.light().copyWith(
+        primaryColor: Colors.white,
+        secondaryHeaderColor: Colors.teal,
+        appBarTheme: const AppBarTheme(
+          color: Colors.teal,
+        ),
+        colorScheme: ColorScheme.fromSwatch()
+            .copyWith(background: Colors.white)
+            .copyWith(secondary: Colors.teal[700]),
+      ),
+      darkTheme: ThemeData.dark().copyWith(
+        primaryColor: Colors.white,
+        secondaryHeaderColor: Colors.teal,
+        appBarTheme: const AppBarTheme(
+          color: Colors.teal,
+        ),
+        colorScheme: ColorScheme.fromSwatch()
+            .copyWith(background: Colors.grey[900])
+            .copyWith(secondary: Colors.teal[700]),
+      ),
+      home: const MyHomePage(),
     );
   }
 }
@@ -96,6 +117,8 @@ class _MyHomePageState extends State<MyHomePage> {
         : Scaffold(
             body: _tabs[_currentIndex],
             bottomNavigationBar: BottomNavigationBar(
+              backgroundColor: Theme.of(context).colorScheme.background,
+              selectedItemColor: Theme.of(context).secondaryHeaderColor,
               currentIndex: _currentIndex,
               onTap: (index) {
                 setState(() {

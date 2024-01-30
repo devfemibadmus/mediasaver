@@ -48,9 +48,13 @@ class Preview extends StatefulWidget {
     super.key,
     required this.previewFile,
     required this.index,
+    required this.type,
+    required this.theme,
   });
   final List<StatusFileInfo> previewFile;
   final int index;
+  final String type;
+  final ThemeData theme;
 
   @override
   State<Preview> createState() => _PreviewState();
@@ -58,39 +62,41 @@ class Preview extends StatefulWidget {
 
 class _PreviewState extends State<Preview> {
   int currentIndex = 0;
-
+  bool move = false;
   @override
   Widget build(BuildContext context) {
     final scaffold = ScaffoldMessenger.of(context);
     return Scaffold(
+      backgroundColor: widget.theme.colorScheme.background,
       appBar: AppBar(
+        foregroundColor: widget.theme.primaryColor,
+        backgroundColor: widget.theme.colorScheme.secondary,
         centerTitle: true,
         title: Text(
-            'Preview Status: ${currentIndex + 1} of ${widget.previewFile.length}'),
+            "${!move ? widget.index + 1 : currentIndex + 1} of ${widget.previewFile.length} ${widget.type}"),
         actions: [
           IconButton(
-              onPressed: () {
-                String path;
-                String message;
-                if (widget.previewFile[currentIndex].format == 'jpg' ||
-                    widget.previewFile[currentIndex].format == 'jpeg' ||
-                    widget.previewFile[currentIndex].format == 'gif') {
-                  path = "Status/Whatsapp Images";
-                  message = 'Image saved to Gallery';
-                } else {
-                  path = "Status/Whatsapp Video";
-                  message = 'Video saved to Gallery';
-                }
-                saveImage(widget.previewFile[currentIndex].path, path).then(
-                  (value) => scaffold.showSnackBar(
-                    SnackBar(
-                      content: Text(message),
-                      duration: const Duration(seconds: 2),
-                    ),
+            onPressed: () {
+              String path;
+              String message;
+              if (widget.type == "Image") {
+                path = "Status/Whatsapp Images";
+                message = 'Image saved to Gallery';
+              } else {
+                path = "Status/Whatsapp Video";
+                message = 'Video saved to Gallery';
+              }
+              saveImage(widget.previewFile[currentIndex].path, path).then(
+                (value) => scaffold.showSnackBar(
+                  SnackBar(
+                    content: Text(message),
+                    duration: const Duration(seconds: 2),
                   ),
-                );
-              },
-              icon: const Icon(Icons.download))
+                ),
+              );
+            },
+            icon: const Icon(Icons.download),
+          )
         ],
       ),
       body: PageView.builder(
@@ -99,17 +105,37 @@ class _PreviewState extends State<Preview> {
         onPageChanged: (index) {
           setState(() {
             currentIndex = index;
+            move = true;
           });
         },
         itemBuilder: (context, index) {
-          return widget.previewFile[index].format == "jpg" ||
-                  widget.previewFile[index].format == 'jpeg' ||
-                  widget.previewFile[index].format == 'png'
-              ? Image.file(
-                  File(widget.previewFile[index].path),
-                  fit: BoxFit.contain,
-                )
-              : VideoPlayerWidget(videoPath: widget.previewFile[index].path);
+          return InkWell(
+            onLongPress: () {
+              String path;
+              String message;
+              if (widget.type == "Image") {
+                path = "Status/Whatsapp Images";
+                message = 'Image saved to Gallery';
+              } else {
+                path = "Status/Whatsapp Video";
+                message = 'Video saved to Gallery';
+              }
+              saveImage(widget.previewFile[currentIndex].path, path).then(
+                (value) => scaffold.showSnackBar(
+                  SnackBar(
+                    content: Text(message),
+                    duration: const Duration(seconds: 2),
+                  ),
+                ),
+              );
+            },
+            child: widget.type == "Image"
+                ? Image.file(
+                    File(widget.previewFile[index].path),
+                    fit: BoxFit.contain,
+                  )
+                : VideoPlayerWidget(videoPath: widget.previewFile[index].path),
+          );
         },
       ),
     );

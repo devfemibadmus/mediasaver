@@ -20,35 +20,49 @@ class _WhatsappState extends State<Whatsapp> {
   @override
   Widget build(BuildContext context) {
     final scaffold = ScaffoldMessenger.of(context);
+    final ThemeData theme = Theme.of(context);
     return MaterialApp(
       home: DefaultTabController(
         length: 2,
         child: Scaffold(
-          appBar: AppBar(
-            title: const Text('Status saver no-ads'),
-            actions: [
-              IconButton(
-                onPressed: () {
-                  //
-                },
-                icon: const Icon(Icons.more_vert),
-              )
-            ],
-            bottom: TabBar(
-              tabs: [
-                Center(
-                  child: Text("${widget.whatsappFilesImages.length} Images"),
-                ),
-                Center(
-                  child: Text("${widget.whatsappFilesVideo.length} Video"),
-                ),
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(90.0),
+            child: AppBar(
+              elevation: 0.0,
+              foregroundColor: theme.primaryColor,
+              backgroundColor: theme.colorScheme.secondary,
+              title: const Text('Status saver no-ads'),
+              actions: [
+                IconButton(
+                  onPressed: () {
+                    //
+                  },
+                  icon: const Icon(Icons.more_vert),
+                )
               ],
+              bottom: TabBar(
+                padding: const EdgeInsets.all(10),
+                dividerColor: Theme.of(context).colorScheme.secondary,
+                labelColor: Theme.of(context).primaryColor,
+                unselectedLabelColor: Theme.of(context).primaryColor,
+                indicatorColor: Theme.of(context).primaryColor,
+                indicatorPadding: const EdgeInsets.only(top: 20),
+                tabs: [
+                  Center(
+                    child: Text("${widget.whatsappFilesImages.length} Images"),
+                  ),
+                  Center(
+                    child: Text("${widget.whatsappFilesVideo.length} Video"),
+                  ),
+                ],
+              ),
             ),
           ),
           body: TabBarView(
             children: [
               widget.whatsappFilesImages.isNotEmpty
                   ? Container(
+                      color: theme.colorScheme.background,
                       padding: const EdgeInsets.all(6.0),
                       child: GridView.builder(
                         // cacheExtent: 9999,
@@ -75,13 +89,15 @@ class _WhatsappState extends State<Whatsapp> {
                               );
                             },
                             onTap: () {
-                              print(index);
+                              print(theme.colorScheme.background);
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => Preview(
                                     previewFile: widget.whatsappFilesImages,
                                     index: index,
+                                    type: 'Image',
+                                    theme: theme,
                                   ),
                                 ),
                               );
@@ -131,6 +147,8 @@ class _WhatsappState extends State<Whatsapp> {
                                   builder: (context) => Preview(
                                     previewFile: widget.whatsappFilesVideo,
                                     index: index,
+                                    type: 'Video',
+                                    theme: Theme.of(context),
                                   ),
                                 ),
                               );
