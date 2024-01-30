@@ -1,6 +1,6 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 import 'package:whatsappstatus/model.dart';
 import 'package:whatsappstatus/preview.dart';
 
@@ -117,7 +117,7 @@ class _WhatsappState extends State<Whatsapp> {
                   ? Container(
                       padding: const EdgeInsets.all(6.0),
                       child: GridView.builder(
-                        // cacheExtent: 9999,
+                        cacheExtent: 9999,
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
@@ -148,15 +148,14 @@ class _WhatsappState extends State<Whatsapp> {
                                     previewFile: widget.whatsappFilesVideo,
                                     index: index,
                                     type: 'Video',
-                                    theme: Theme.of(context),
+                                    theme: theme,
                                   ),
                                 ),
                               );
                             },
-                            child: Image.file(
-                              File(widget.whatsappFilesVideo[index].path),
-                              fit: BoxFit.cover,
-                            ),
+                            child: MyVideoPlayer(
+                                videoPath:
+                                    widget.whatsappFilesVideo[index].path),
                           );
                         },
                       ),
@@ -169,5 +168,41 @@ class _WhatsappState extends State<Whatsapp> {
         ),
       ),
     );
+  }
+}
+
+class MyVideoPlayer extends StatefulWidget {
+  final String videoPath;
+
+  const MyVideoPlayer({Key? key, required this.videoPath}) : super(key: key);
+
+  @override
+  _MyVideoPlayerState createState() => _MyVideoPlayerState();
+}
+
+class _MyVideoPlayerState extends State<MyVideoPlayer> {
+  late VideoPlayerController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = VideoPlayerController.file(File(widget.videoPath));
+    _controller.initialize().then((_) => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _controller.value.isInitialized
+        ? AspectRatio(
+            aspectRatio: _controller.value.aspectRatio,
+            child: VideoPlayer(_controller),
+          )
+        : Container();
   }
 }

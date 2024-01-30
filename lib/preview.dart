@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:whatsappstatus/model.dart';
+import 'package:whatsappstatus/video.dart';
 
 class VideoPlayerWidget extends StatefulWidget {
   final String videoPath;
@@ -134,7 +135,10 @@ class _PreviewState extends State<Preview> {
                     File(widget.previewFile[index].path),
                     fit: BoxFit.contain,
                   )
-                : VideoPlayerWidget(videoPath: widget.previewFile[index].path),
+                : VideoWidget(
+                    videoPath: File(widget.previewFile[index].path),
+                    shouldPlay: true,
+                  ),
           );
         },
       ),
