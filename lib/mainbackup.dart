@@ -93,16 +93,16 @@ class _MyHomePageState extends State<MyHomePage> {
           files = parseStatusFiles(statusFilesInfo);
           _tabs = [
             Whatsapp(
-              whatsappFilesImages:
-                  filterFilesByFormat(files, 'jpg', 'jpeg', 'gif', 'whatsapp'),
+              whatsappFilesImages: filterFilesByFormat(
+                  files, ['jpg', 'jpeg', 'gif'], 'whatsapp'),
               whatsappFilesVideo:
-                  filterFilesByFormat(files, 'mp4', 'mov', 'mp4', 'whatsapp'),
+                  filterFilesByFormat(files, ['mp4', 'mov', 'mp4'], 'whatsapp'),
             ),
             Whatsapp4b(
-              whatsapp4bFilesVideo:
-                  filterFilesByFormat(files, 'mp4', 'mov', 'mp4', 'whatsapp4b'),
+              whatsapp4bFilesVideo: filterFilesByFormat(
+                  files, ['mp4', 'mov', 'mp4'], 'whatsapp4b'),
               whatsapp4bFilesImages: filterFilesByFormat(
-                  files, 'jpg', 'jpeg', 'gif', 'whatsapp4b'),
+                  files, ['jpg', 'jpeg', 'gif'], 'whatsapp4b'),
             ),
           ];
         });

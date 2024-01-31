@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/services.dart';
 
 const platform = MethodChannel('com.blackstackhub.whatsappstatus');
@@ -8,6 +10,7 @@ class StatusFileInfo {
   int size;
   String format;
   String source;
+  Uint8List mediaByte;
 
   StatusFileInfo({
     required this.name,
@@ -15,6 +18,7 @@ class StatusFileInfo {
     required this.size,
     required this.format,
     required this.source,
+    required this.mediaByte,
   });
 
   factory StatusFileInfo.fromJson(Map<String, dynamic> json) {
@@ -24,17 +28,8 @@ class StatusFileInfo {
       size: json['size'],
       format: json['format'],
       source: json['source'],
+      mediaByte: json['mediaByte'],
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'name': name,
-      'path': path,
-      'size': size,
-      'format': format,
-      'source': source,
-    };
   }
 }
 
@@ -57,22 +52,17 @@ List<StatusFileInfo> parseStatusFiles(List<dynamic> files) {
 }
 
 List<StatusFileInfo> filterFilesByFormat(
-    List<StatusFileInfo> files,
-    String targetFormat,
-    String targetFormat2,
-    String targetFormat3,
-    String source) {
+  List<StatusFileInfo> files,
+  List<String> formats,
+  String source,
+) {
   List<StatusFileInfo> filteredFiles = files
-      .where((file) =>
-          (file.format == targetFormat ||
-              file.format == targetFormat2 ||
-              file.format == targetFormat3) &&
-          file.source == source)
+      .where((file) => (formats.contains(file.format)) && file.source == source)
       .toList();
   return filteredFiles.reversed.toList();
 }
 
-Future<void> saveImage(String imagePath, String folder) async {
+Future<void> saveStatus(String imagePath, String folder) async {
   await platform.invokeMethod('saveStatus', {
     'imagePath': imagePath,
     'folder': folder,

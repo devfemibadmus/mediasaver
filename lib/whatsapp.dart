@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
 import 'package:whatsappstatus/model.dart';
 import 'package:whatsappstatus/preview.dart';
 
@@ -23,7 +22,7 @@ class _WhatsappState extends State<Whatsapp> {
     final ThemeData theme = Theme.of(context);
     return MaterialApp(
       home: DefaultTabController(
-        length: 2,
+        length: 3,
         child: Scaffold(
           appBar: PreferredSize(
             preferredSize: const Size.fromHeight(90.0),
@@ -41,18 +40,19 @@ class _WhatsappState extends State<Whatsapp> {
                 )
               ],
               bottom: TabBar(
-                padding: const EdgeInsets.all(10),
-                dividerColor: Theme.of(context).colorScheme.secondary,
-                labelColor: Theme.of(context).primaryColor,
-                unselectedLabelColor: Theme.of(context).primaryColor,
-                indicatorColor: Theme.of(context).primaryColor,
-                indicatorPadding: const EdgeInsets.only(top: 20),
+                dividerColor: theme.colorScheme.secondary,
+                labelColor: theme.primaryColor,
+                unselectedLabelColor: theme.primaryColor,
+                indicatorColor: theme.primaryColor,
                 tabs: [
                   Center(
                     child: Text("${widget.whatsappFilesImages.length} Images"),
                   ),
                   Center(
                     child: Text("${widget.whatsappFilesVideo.length} Video"),
+                  ),
+                  Center(
+                    child: Text("${widget.whatsappFilesVideo.length} Saved"),
                   ),
                 ],
               ),
@@ -76,20 +76,19 @@ class _WhatsappState extends State<Whatsapp> {
                         itemBuilder: (context, index) {
                           return InkWell(
                             onDoubleTap: () {
-                              saveImage(
+                              saveStatus(
                                 widget.whatsappFilesImages[index].path,
-                                'Status/Whatsapp Images',
+                                'Whatsapp Status',
                               ).then(
                                 (value) => scaffold.showSnackBar(
                                   const SnackBar(
-                                    content: Text('Image saved to Gallery'),
+                                    content: Text('saved to Gallery'),
                                     duration: Duration(seconds: 2),
                                   ),
                                 ),
                               );
                             },
                             onTap: () {
-                              print(theme.colorScheme.background);
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -98,6 +97,7 @@ class _WhatsappState extends State<Whatsapp> {
                                     index: index,
                                     type: 'Image',
                                     theme: theme,
+                                    savedto: 'Whatsapp Status',
                                   ),
                                 ),
                               );
@@ -115,6 +115,7 @@ class _WhatsappState extends State<Whatsapp> {
                     ),
               widget.whatsappFilesVideo.isNotEmpty
                   ? Container(
+                      color: theme.colorScheme.background,
                       padding: const EdgeInsets.all(6.0),
                       child: GridView.builder(
                         cacheExtent: 9999,
@@ -128,13 +129,13 @@ class _WhatsappState extends State<Whatsapp> {
                         itemBuilder: (context, index) {
                           return InkWell(
                             onDoubleTap: () {
-                              saveImage(
+                              saveStatus(
                                 widget.whatsappFilesVideo[index].path,
-                                'Status/Whatsapp Video',
+                                'Whatsapp Status',
                               ).then(
                                 (value) => scaffold.showSnackBar(
                                   const SnackBar(
-                                    content: Text('Video saved to Gallery'),
+                                    content: Text('saved to Gallery'),
                                     duration: Duration(seconds: 2),
                                   ),
                                 ),
@@ -147,15 +148,15 @@ class _WhatsappState extends State<Whatsapp> {
                                   builder: (context) => Preview(
                                     previewFile: widget.whatsappFilesVideo,
                                     index: index,
-                                    type: 'Video',
+                                    type: 'video',
+                                    savedto: 'Whatsapp Status',
                                     theme: theme,
                                   ),
                                 ),
                               );
                             },
-                            child: MyVideoPlayer(
-                                videoPath:
-                                    widget.whatsappFilesVideo[index].path),
+                            child: Image.memory(
+                                widget.whatsappFilesVideo[index].mediaByte),
                           );
                         },
                       ),
@@ -163,46 +164,63 @@ class _WhatsappState extends State<Whatsapp> {
                   : const Center(
                       child: Text("No whatsapp Video"),
                     ),
+              widget.whatsappFilesImages.isNotEmpty
+                  ? Container(
+                      color: theme.colorScheme.background,
+                      padding: const EdgeInsets.all(6.0),
+                      child: GridView.builder(
+                        // cacheExtent: 9999,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 6.0,
+                          mainAxisSpacing: 6.0,
+                        ),
+                        itemCount: widget.whatsappFilesImages.length,
+                        itemBuilder: (context, index) {
+                          return InkWell(
+                            onDoubleTap: () {
+                              saveStatus(
+                                widget.whatsappFilesImages[index].path,
+                                'Whatsapp Status',
+                              ).then(
+                                (value) => scaffold.showSnackBar(
+                                  const SnackBar(
+                                    content: Text('saved to Gallery'),
+                                    duration: Duration(seconds: 2),
+                                  ),
+                                ),
+                              );
+                            },
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => Preview(
+                                    previewFile: widget.whatsappFilesImages,
+                                    index: index,
+                                    type: 'Image',
+                                    theme: theme,
+                                    savedto: 'Whatsapp Status',
+                                  ),
+                                ),
+                              );
+                            },
+                            child: Image.file(
+                              File(widget.whatsappFilesImages[index].path),
+                              fit: BoxFit.cover,
+                            ),
+                          );
+                        },
+                      ),
+                    )
+                  : const Center(
+                      child: Text("No Saved Status"),
+                    ),
             ],
           ),
         ),
       ),
     );
-  }
-}
-
-class MyVideoPlayer extends StatefulWidget {
-  final String videoPath;
-
-  const MyVideoPlayer({Key? key, required this.videoPath}) : super(key: key);
-
-  @override
-  _MyVideoPlayerState createState() => _MyVideoPlayerState();
-}
-
-class _MyVideoPlayerState extends State<MyVideoPlayer> {
-  late VideoPlayerController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = VideoPlayerController.file(File(widget.videoPath));
-    _controller.initialize().then((_) => setState(() {}));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return _controller.value.isInitialized
-        ? AspectRatio(
-            aspectRatio: _controller.value.aspectRatio,
-            child: VideoPlayer(_controller),
-          )
-        : Container();
   }
 }

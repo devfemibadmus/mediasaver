@@ -14,6 +14,12 @@ import io.flutter.plugin.common.MethodChannel
 import java.io.File
 import java.io.FileFilter
 
+import android.graphics.BitmapFactory
+
+import android.graphics.Bitmap
+import android.media.MediaMetadataRetriever
+import java.io.ByteArrayOutputStream
+
 import java.io.IOException
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -21,7 +27,9 @@ import io.flutter.plugin.common.PluginRegistry.Registrar
 
 object Common {
     val WHATSAPP = File(Environment.getExternalStorageDirectory().toString() + "/Android/media/com.whatsapp/WhatsApp/Media/.Statuses")
+    val SAVEDWHATSAPP = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),"Whatsapp Status")
     val WHATSAPP4B = File(Environment.getExternalStorageDirectory().toString() + "/Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses")
+    val SAVEDWHATSAPP4B = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),"Whatsapp4b Status")
 }
 
 
@@ -36,7 +44,14 @@ class MainActivity : FlutterActivity() {
             when (call.method) {
                 "requestStoragePermission" -> result.success(requestStoragePermission())
                 "checkStoragePermission" -> result.success(checkStoragePermission())
-                "getStatusFilesInfo" -> result.success(getStatusFilesInfo())
+                "getStatusFilesInfo" -> {
+                    val appType = call.argument<String>("appType")
+                    if (appType != null && folder != null) {
+                        result.success(getStatusFilesInfo(appType))
+                    } else {
+                        result.error("INVALID_PARAMETERS", "Invalid parameters", null)
+                    }
+                }
                 "saveStatus" -> {
                     val imagePath = call.argument<String>("imagePath")
                     val folder = call.argument<String>("folder")
@@ -61,6 +76,74 @@ class MainActivity : FlutterActivity() {
         }
     }
 
+    private fun getStatusFilesInfo(appType: String): List<Map<String, Any>> {
+        val statusFilesInfo = mutableListOf<Map<String, Any>>()
+
+        fun getMediaByte(file: File, format: String): ByteArray {
+            try {
+                val retriever = MediaMetadataRetriever()
+                retriever.setDataSource(file.absolutePath)
+
+                // Check if the file is an mp4 video
+                // val format = getFileFormat(file.name)
+                if (format == "mp4") {
+                    val thumbnailBitmap = retriever.getFrameAtTime()
+                    val stream = ByteArrayOutputStream()
+                    thumbnailBitmap?.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                    return stream.toByteArray()
+                } else if (format == "jpg"){
+                    /*
+                    val byteArrayOutputStream = ByteArrayOutputStream()
+                    val image = ImageIO.read(File(file.absolutePath))                    
+                    ImageIO.write(image, "jpg", byteArrayOutputStream)
+                    return byteArrayOutputStream.toByteArray()
+                    */
+
+                    /*
+                    val options = BitmapFactory.Options()
+                    options.inPreferredConfig = Bitmap.Config.ARGB_8888
+                    val bitmap = BitmapFactory.decodeFile(file.absolutePath, options)
+                    val byteArrayOutputStream = ByteArrayOutputStream()
+                    bitmap?.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
+                    return byteArrayOutputStream.toByteArray()
+                    */
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            return ByteArray(0)
+        }
+
+        fun processFiles(files: Array<File>?, source: String) {
+            files?.forEach { file ->
+                val fileInfo = mutableMapOf<String, Any>()
+                fileInfo["name"] = file.name
+                fileInfo["path"] = file.absolutePath
+                fileInfo["size"] = file.length()
+                fileInfo["format"] = getFileFormat(file.name)
+                fileInfo["source"] = source
+                fileInfo["mediaByte"] = getMediaByte(file, fileInfo["format"] as String)
+                statusFilesInfo.add(fileInfo)
+            }
+        }
+
+        if(appType == "WHATSAPP"){
+            Common.WHATSAPP?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "whatsapp") }
+        }
+        else if(appType == "SAVEDWHATSAPP"){
+            Common.SAVEDWHATSAPP?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "whatsapp4b") }
+        }
+        else if(appType == "WHATSAPP4B"){
+            Common.WHATSAPP4B?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "whatsapp4b") }
+        }
+        else if(appType == "SAVEDWHATSAPP4B"){
+            Common.SAVEDWHATSAPP4B?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "whatsapp4b") }
+        }
+
+        return statusFilesInfo
+    }
+
+    /*
     private fun getStatusFilesInfo(): List<Map<String, Any>> {
         val statusFilesInfo = mutableListOf<Map<String, Any>>()
         
@@ -98,6 +181,7 @@ class MainActivity : FlutterActivity() {
         statusFilesInfo.addAll(whatsapp4b)
         return statusFilesInfo
     }
+    */
     
     private fun checkStoragePermission(): Boolean {
         val hasPermission =
@@ -175,5 +259,74 @@ class MainActivity : FlutterActivity() {
         }
     }
 
+/*
+// This is the wishful use, thoug need to update
+
+private val PICK_DIRECTORY_REQUEST_CODE = 123
+private var STATUS_DIRECTORY: DocumentFile? = null
+private var BASE_DIRECTORY: Uri = Uri.parse("/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/")
+
+private fun requestSpecificFolderAccess(): Boolean {
+    val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+    intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, BASE_DIRECTORY)
+    startActivityForResult(intent, PICK_DIRECTORY_REQUEST_CODE)
+    return true
+}
+
+override fun onActivityResult(requestCode: Int, resultCode: Int, resultData: Intent?) {
+    super.onActivityResult(requestCode, resultCode, resultData)
+    if (requestCode == PICK_DIRECTORY_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+        val treeUri: Uri? = resultData?.data
+        treeUri?.let {
+            // Take persistable URI permission
+            contentResolver.takePersistableUriPermission(
+                it,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
+            // Append .Statuses to the existing URI
+            STATUS_DIRECTORY = DocumentFile.fromTreeUri(this, Uri.withAppendedPath(it, ".Statuses"))
+        }
+    }
+}
+
+private fun getStatusFilesInfo(): List<Map<String, Any>> {
+    val statusFilesInfo = mutableListOf<Map<String, Any>>()
+
+    STATUS_DIRECTORY?.let { rootDirectory ->
+        rootDirectory.listFiles()?.forEach { file ->
+            if (file.isFile && file.canRead()) {
+                val fileInfo = mutableMapOf<String, Any>()
+                fileInfo["name"] = file.name ?: "DefaultName"
+                fileInfo["path"] = file.absolutePath
+                fileInfo["size"] = file.length()
+                fileInfo["format"] = getFileFormat(file.name ?: "DefaultName")
+                statusFilesInfo.add(fileInfo)
+            } else {
+                val fileInfo = mutableMapOf<String, Any>()
+                fileInfo["name"] = "DefaultName"
+                fileInfo["path"] = "DefaultPath"
+                fileInfo["size"] = 0L
+                fileInfo["format"] = "DefaultFormat"
+                statusFilesInfo.add(fileInfo)
+            }
+        }
+    }
+
+    return statusFilesInfo
+}
+
+private fun getAbsolutePath(rootDirectory: DocumentFile, file: DocumentFile): String {
+    val pathSegments = mutableListOf(file.name ?: "DefaultName")
+    var parent = file.getParentFile()
+
+    while (parent != null && parent != rootDirectory) {
+        pathSegments.add(parent.name ?: "DefaultName")
+        parent = parent.getParentFile()
+    }
+
+    return pathSegments.reversed().joinToString("/")
+}
+
+ */
 
 }

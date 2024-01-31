@@ -49,6 +49,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  List<String> images = ['jpg', 'jpeg', 'gif'];
+  List<String> videos = ['mp4', 'mov', 'mp4'];
   int _currentIndex = 0;
   List<Widget> _tabs = [];
   List<StatusFileInfo> files = [];
@@ -94,15 +96,15 @@ class _MyHomePageState extends State<MyHomePage> {
           _tabs = [
             Whatsapp(
               whatsappFilesImages:
-                  filterFilesByFormat(files, 'jpg', 'jpeg', 'gif', 'whatsapp'),
+                  filterFilesByFormat(files, images, 'whatsapp'),
               whatsappFilesVideo:
-                  filterFilesByFormat(files, 'mp4', 'mov', 'mp4', 'whatsapp'),
+                  filterFilesByFormat(files, videos, 'whatsapp'),
             ),
             Whatsapp4b(
               whatsapp4bFilesVideo:
-                  filterFilesByFormat(files, 'mp4', 'mov', 'mp4', 'whatsapp4b'),
-              whatsapp4bFilesImages: filterFilesByFormat(
-                  files, 'jpg', 'jpeg', 'gif', 'whatsapp4b'),
+                  filterFilesByFormat(files, videos, 'whatsapp4b'),
+              whatsapp4bFilesImages:
+                  filterFilesByFormat(files, images, 'whatsapp4b'),
             ),
           ];
         });
@@ -133,6 +135,10 @@ class _MyHomePageState extends State<MyHomePage> {
                 BottomNavigationBarItem(
                   icon: Icon(Icons.business),
                   label: 'Whatsapp Business',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.business),
+                  label: 'All Saved',
                 ),
               ],
             ),
