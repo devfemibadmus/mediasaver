@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:whatsappstatus/model.dart';
 import 'package:whatsappstatus/whatsapp.dart';
-import 'package:whatsappstatus/whatsapp4b.dart';
 
 void main() {
   runApp(const MyApp());
@@ -52,7 +51,11 @@ class _MyHomePageState extends State<MyHomePage> {
   List<String> images = ['jpg', 'jpeg', 'gif'];
   List<String> videos = ['mp4', 'mov', 'mp4'];
   int _currentIndex = 0;
-  List<Widget> _tabs = [];
+  final List<Widget> _tabs = [
+    const Center(child: CircularProgressIndicator()),
+    const Center(child: CircularProgressIndicator()),
+    const Center(child: CircularProgressIndicator())
+  ];
   List<StatusFileInfo> files = [];
   late Timer _timer;
   bool permitted = false;
@@ -88,61 +91,79 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> getStatusFiles() async {
-    var statusFilesInfo = await platform.invokeListMethod('getStatusFilesInfo');
-    if (statusFilesInfo != null && statusFilesInfo.isNotEmpty) {
-      if (files != parseStatusFiles(statusFilesInfo)) {
-        setState(() {
-          files = parseStatusFiles(statusFilesInfo);
-          _tabs = [
-            Whatsapp(
-              whatsappFilesImages:
-                  filterFilesByFormat(files, images, 'whatsapp'),
-              whatsappFilesVideo:
-                  filterFilesByFormat(files, videos, 'whatsapp'),
-            ),
-            Whatsapp4b(
-              whatsapp4bFilesVideo:
-                  filterFilesByFormat(files, videos, 'whatsapp4b'),
-              whatsapp4bFilesImages:
-                  filterFilesByFormat(files, images, 'whatsapp4b'),
-            ),
-          ];
-        });
-      }
-    }
+    // WHATSAPP
+    await platform.invokeListMethod(
+      'getStatusFilesInfo',
+      {'appType': "WHATSAPP"},
+    ).then((value) async {
+      setState(() {
+        _tabs[0] = Whatsapp(
+          whatsappFilesImages:
+              filterFilesByFormat(parseStatusFiles(value!), images, 'whatsapp'),
+          whatsappFilesVideo:
+              filterFilesByFormat(parseStatusFiles(value), videos, 'whatsapp'),
+        );
+      });
+    });
+    // WHATSAPP4B
+    await platform.invokeListMethod(
+      'getStatusFilesInfo',
+      {'appType': "WHATSAPP4B"},
+    ).then((value) {
+      setState(() {
+        _tabs[1] = Whatsapp(
+          whatsappFilesImages:
+              filterFilesByFormat(parseStatusFiles(value!), images, 'whatsapp'),
+          whatsappFilesVideo:
+              filterFilesByFormat(parseStatusFiles(value), videos, 'whatsapp'),
+        );
+      });
+    });
+    // SAVED
+    await platform.invokeListMethod(
+      'getStatusFilesInfo',
+      {'appType': "SAVED"},
+    ).then((value) {
+      setState(() {
+        _tabs[2] = Whatsapp(
+          whatsappFilesImages:
+              filterFilesByFormat(parseStatusFiles(value!), images, 'whatsapp'),
+          whatsappFilesVideo:
+              filterFilesByFormat(parseStatusFiles(value), videos, 'whatsapp'),
+        );
+      });
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return _tabs.isEmpty
-        ? const Center(child: CircularProgressIndicator())
-        : Scaffold(
-            body: _tabs[_currentIndex],
-            bottomNavigationBar: BottomNavigationBar(
-              backgroundColor: Theme.of(context).colorScheme.background,
-              selectedItemColor: Theme.of(context).secondaryHeaderColor,
-              currentIndex: _currentIndex,
-              onTap: (index) {
-                setState(() {
-                  _currentIndex = index;
-                });
-              },
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.chat),
-                  label: 'Whatsapp',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.business),
-                  label: 'Whatsapp Business',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.business),
-                  label: 'All Saved',
-                ),
-              ],
-            ),
-          );
+    return Scaffold(
+      body: _tabs[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Theme.of(context).colorScheme.background,
+        selectedItemColor: Theme.of(context).secondaryHeaderColor,
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat),
+            label: 'Whatsapp',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.business),
+            label: 'Whatsapp Business',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.business),
+            label: 'All Saved',
+          ),
+        ],
+      ),
+    );
   }
 
   @override

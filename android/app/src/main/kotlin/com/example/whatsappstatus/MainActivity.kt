@@ -127,14 +127,18 @@ class MainActivity : FlutterActivity() {
             }
         }
 
-        if(appType == "WHATSAPP"){
-            Common.WHATSAPP?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "whatsapp") }
+        if(appType == "SAVED"){
+            Common.SAVEDWHATSAPP?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "whatsapp") }
+            Common.SAVEDWHATSAPP4B?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "whatsapp4b") }
         }
-        else if(appType == "SAVEDWHATSAPP"){
-            Common.SAVEDWHATSAPP?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "whatsapp4b") }
+        else if(appType == "WHATSAPP"){
+            Common.WHATSAPP?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "whatsapp") }
         }
         else if(appType == "WHATSAPP4B"){
             Common.WHATSAPP4B?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "whatsapp4b") }
+        }
+        else if(appType == "SAVEDWHATSAPP"){
+            Common.SAVEDWHATSAPP?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "whatsapp") }
         }
         else if(appType == "SAVEDWHATSAPP4B"){
             Common.SAVEDWHATSAPP4B?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "whatsapp4b") }
