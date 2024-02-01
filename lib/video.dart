@@ -63,68 +63,50 @@ class _VideoWidgetState extends State<VideoWidget> {
           FutureBuilder(
             future: _initializeVideoPlayerFuture,
             builder: (context, snapshot) {
-              /*
-              if (snapshot.connectionState == ConnectionState.done) {
-                return AspectRatio(
-                  aspectRatio: _controller.value.aspectRatio,
-                  child: VideoPlayer(_controller),
-                );
-              } else {
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
-              }*/
-
               return AspectRatio(
                 aspectRatio: _controller.value.aspectRatio,
                 child: VideoPlayer(_controller),
               );
             },
           ),
-          widget.shouldPlay
-              ? GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      if (_controller.value.isPlaying) {
-                        _controller.pause();
-                      } else {
-                        _controller.play();
-                      }
-                    });
-                  },
-                  child: Container(
-                    color: Colors.transparent,
-                    child: Opacity(
-                      opacity: isHover ? 1 : 0,
-                      child: Icon(
-                        _controller.value.isPlaying
-                            ? Icons.pause
-                            : Icons.play_arrow,
-                        size: 80.0,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                )
-              : const SizedBox(),
-          widget.shouldPlay
-              ? Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      borderRadius:
-                          const BorderRadius.only(topLeft: Radius.circular(10)),
-                      color: Colors.white.withOpacity(0.2),
-                    ),
-                    child: Text(
-                      "${(_controller.value.duration - _controller.value.position).toString().substring(2).split('.').first} / ${_controller.value.duration.toString().substring(2).split('.').first}",
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  ),
-                )
-              : const SizedBox(),
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                if (_controller.value.isPlaying) {
+                  _controller.pause();
+                } else {
+                  _controller.play();
+                }
+              });
+            },
+            child: Container(
+              color: Colors.transparent,
+              child: Opacity(
+                opacity: isHover ? 1 : 0,
+                child: Icon(
+                  _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+                  size: 80.0,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                borderRadius:
+                    const BorderRadius.only(topLeft: Radius.circular(10)),
+                color: Colors.white.withOpacity(0.2),
+              ),
+              child: Text(
+                "${(_controller.value.duration - _controller.value.position).toString().substring(2).split('.').first} / ${_controller.value.duration.toString().substring(2).split('.').first}",
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ),
         ],
       ),
     );

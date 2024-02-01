@@ -73,13 +73,17 @@ class _MyHomePageState extends State<MyHomePage> {
           _timer.cancel();
           setState(() {
             _tabs = [
-              const Whatsapp(appType: 'WHATSAPP', channel: 'Whatsapp Status'),
               const Whatsapp(
-                  appType: 'WHATSAPP4B', channel: 'Whatsapp4b Status'),
+                  appType: 'WHATSAPP',
+                  channel: 'Whatsapp Status',
+                  key: PageStorageKey('WHATSAPP')),
+              const Whatsapp(
+                  appType: 'WHATSAPP4B',
+                  channel: 'Whatsapp4b Status',
+                  key: PageStorageKey('WHATSAPP4B')),
               const Center(child: CircularProgressIndicator())
             ];
           });
-          getStatusFiles();
         }
       });
     });
