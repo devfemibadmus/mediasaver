@@ -46,7 +46,7 @@ class MainActivity : FlutterActivity() {
                 "checkStoragePermission" -> result.success(checkStoragePermission())
                 "getStatusFilesInfo" -> {
                     val appType = call.argument<String>("appType")
-                    if (appType != null && folder != null) {
+                    if (appType != null) {
                         result.success(getStatusFilesInfo(appType))
                     } else {
                         result.error("INVALID_PARAMETERS", "Invalid parameters", null)
@@ -137,13 +137,14 @@ class MainActivity : FlutterActivity() {
         else if(appType == "WHATSAPP4B"){
             Common.WHATSAPP4B?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "whatsapp4b") }
         }
+        /*
         else if(appType == "SAVEDWHATSAPP"){
             Common.SAVEDWHATSAPP?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "whatsapp") }
         }
         else if(appType == "SAVEDWHATSAPP4B"){
             Common.SAVEDWHATSAPP4B?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "whatsapp4b") }
         }
-
+        */
         return statusFilesInfo
     }
 

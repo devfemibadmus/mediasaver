@@ -69,6 +69,7 @@ Future<void> saveStatus(String imagePath, String folder) async {
   });
 }
 
-
+List<String> images = ['jpg', 'jpeg', 'gif'];
+List<String> videos = ['mp4', 'mov', 'mp4'];
 
 //

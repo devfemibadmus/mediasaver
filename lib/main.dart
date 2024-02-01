@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:whatsappstatus/model.dart';
+import 'package:whatsappstatus/preview.dart';
 import 'package:whatsappstatus/whatsapp.dart';
 
 void main() {
@@ -48,15 +50,12 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<String> images = ['jpg', 'jpeg', 'gif'];
-  List<String> videos = ['mp4', 'mov', 'mp4'];
   int _currentIndex = 0;
-  final List<Widget> _tabs = [
+  List<Widget> _tabs = [
     const Center(child: CircularProgressIndicator()),
     const Center(child: CircularProgressIndicator()),
     const Center(child: CircularProgressIndicator())
   ];
-  List<StatusFileInfo> files = [];
   late Timer _timer;
   bool permitted = false;
 
@@ -64,16 +63,8 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     platform.invokeMethod("checkStoragePermission").then((value) {
-      if (value) {
-        setState(() {
-          permitted = true;
-        });
-      } else {
-        platform.invokeMethod("requestStoragePermission").then((value) {
-          if (value) {
-            print("GRANTED");
-          }
-        });
+      if (value == false) {
+        platform.invokeMethod("requestStoragePermission");
       }
     });
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -81,9 +72,13 @@ class _MyHomePageState extends State<MyHomePage> {
         if (value) {
           _timer.cancel();
           setState(() {
-            permitted = true;
+            _tabs = [
+              const Whatsapp(appType: 'WHATSAPP', channel: 'Whatsapp Status'),
+              const Whatsapp(
+                  appType: 'WHATSAPP4B', channel: 'Whatsapp4b Status'),
+              const Center(child: CircularProgressIndicator())
+            ];
           });
-          print("object");
           getStatusFiles();
         }
       });
@@ -91,46 +86,48 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> getStatusFiles() async {
-    // WHATSAPP
-    await platform.invokeListMethod(
-      'getStatusFilesInfo',
-      {'appType': "WHATSAPP"},
-    ).then((value) async {
-      setState(() {
-        _tabs[0] = Whatsapp(
-          whatsappFilesImages:
-              filterFilesByFormat(parseStatusFiles(value!), images, 'whatsapp'),
-          whatsappFilesVideo:
-              filterFilesByFormat(parseStatusFiles(value), videos, 'whatsapp'),
-        );
-      });
-    });
-    // WHATSAPP4B
-    await platform.invokeListMethod(
-      'getStatusFilesInfo',
-      {'appType': "WHATSAPP4B"},
-    ).then((value) {
-      setState(() {
-        _tabs[1] = Whatsapp(
-          whatsappFilesImages:
-              filterFilesByFormat(parseStatusFiles(value!), images, 'whatsapp'),
-          whatsappFilesVideo:
-              filterFilesByFormat(parseStatusFiles(value), videos, 'whatsapp'),
-        );
-      });
-    });
-    // SAVED
     await platform.invokeListMethod(
       'getStatusFilesInfo',
       {'appType': "SAVED"},
     ).then((value) {
       setState(() {
-        _tabs[2] = Whatsapp(
-          whatsappFilesImages:
-              filterFilesByFormat(parseStatusFiles(value!), images, 'whatsapp'),
-          whatsappFilesVideo:
-              filterFilesByFormat(parseStatusFiles(value), videos, 'whatsapp'),
-        );
+        if (value!.isNotEmpty) {
+          _tabs[2] = Container(
+            color: Theme.of(context).colorScheme.background,
+            padding: const EdgeInsets.all(6.0),
+            child: GridView.builder(
+              // cacheExtent: 9999,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 6.0,
+                mainAxisSpacing: 6.0,
+              ),
+              itemCount: parseStatusFiles(value).length,
+              itemBuilder: (context, index) {
+                return InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Preview(
+                          previewFile: parseStatusFiles(value),
+                          index: index,
+                          type: 'Image',
+                          theme: Theme.of(context),
+                          savedto: 'nosave',
+                        ),
+                      ),
+                    );
+                  },
+                  child: Image.file(
+                    File(parseStatusFiles(value)[index].path),
+                    fit: BoxFit.cover,
+                  ),
+                );
+              },
+            ),
+          );
+        }
       });
     });
   }
