@@ -81,12 +81,11 @@ class MainActivity : FlutterActivity() {
 
         fun getMediaByte(file: File, format: String): ByteArray {
             try {
-                val retriever = MediaMetadataRetriever()
-                retriever.setDataSource(file.absolutePath)
-
                 // Check if the file is an mp4 video
                 // val format = getFileFormat(file.name)
                 if (format == "mp4") {
+                    val retriever = MediaMetadataRetriever()
+                    retriever.setDataSource(file.absolutePath)
                     val thumbnailBitmap = retriever.getFrameAtTime()
                     val stream = ByteArrayOutputStream()
                     thumbnailBitmap?.compress(Bitmap.CompressFormat.PNG, 100, stream)
@@ -128,14 +127,14 @@ class MainActivity : FlutterActivity() {
         }
 
         if(appType == "SAVED"){
-            Common.SAVEDWHATSAPP?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "whatsapp") }
-            Common.SAVEDWHATSAPP4B?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "whatsapp4b") }
+            Common.SAVEDWHATSAPP?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "Whatsapp Status") }
+            Common.SAVEDWHATSAPP4B?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "Whatsapp4b Status") }
         }
         else if(appType == "WHATSAPP"){
-            Common.WHATSAPP?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "whatsapp") }
+            Common.WHATSAPP?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "Whatsapp Status") }
         }
         else if(appType == "WHATSAPP4B"){
-            Common.WHATSAPP4B?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "whatsapp4b") }
+            Common.WHATSAPP4B?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "Whatsapp4b Status") }
         }
         /*
         else if(appType == "SAVEDWHATSAPP"){
