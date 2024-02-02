@@ -27,9 +27,9 @@ import io.flutter.plugin.common.PluginRegistry.Registrar
 
 object Common {
     val WHATSAPP = File(Environment.getExternalStorageDirectory().toString() + "/Android/media/com.whatsapp/WhatsApp/Media/.Statuses")
-    val SAVEDWHATSAPP = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),"Whatsapp Status")
+    val SAVEDWHATSAPP = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),"Status Saver")
     val WHATSAPP4B = File(Environment.getExternalStorageDirectory().toString() + "/Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses")
-    val SAVEDWHATSAPP4B = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),"Whatsapp4b Status")
+    val SAVEDWHATSAPP4B = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),"Status Saver")
 }
 
 
