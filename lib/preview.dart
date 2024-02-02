@@ -51,13 +51,13 @@ class Preview extends StatefulWidget {
     required this.index,
     required this.type,
     required this.theme,
-    required this.savedto,
+    this.saved = false,
   });
   final List<StatusFileInfo> previewFile;
   final int index;
   final String type;
   final ThemeData theme;
-  final String savedto;
+  final bool saved;
 
   @override
   State<Preview> createState() => _PreviewState();
@@ -78,20 +78,21 @@ class _PreviewState extends State<Preview> {
         title: Text(
             "${!move ? widget.index + 1 : currentIndex + 1} of ${widget.previewFile.length} ${widget.type}"),
         actions: [
-          IconButton(
-            onPressed: () {
-              saveStatus(widget.previewFile[currentIndex].path, widget.savedto)
-                  .then(
-                (value) => scaffold.showSnackBar(
-                  const SnackBar(
-                    content: Text("saved to Gallery"),
-                    duration: Duration(seconds: 2),
-                  ),
-                ),
-              );
-            },
-            icon: const Icon(Icons.download),
-          )
+          widget.saved != true
+              ? IconButton(
+                  onPressed: () {
+                    saveStatus(widget.previewFile[currentIndex].path).then(
+                      (value) => scaffold.showSnackBar(
+                        const SnackBar(
+                          content: Text("saved to Gallery"),
+                          duration: Duration(seconds: 2),
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.download),
+                )
+              : const SizedBox(),
         ],
       ),
       body: PageView.builder(
@@ -106,8 +107,7 @@ class _PreviewState extends State<Preview> {
         itemBuilder: (context, index) {
           return InkWell(
             onLongPress: () {
-              saveStatus(widget.previewFile[currentIndex].path, widget.savedto)
-                  .then(
+              saveStatus(widget.previewFile[currentIndex].path).then(
                 (value) => scaffold.showSnackBar(
                   const SnackBar(
                     content: Text('saved to Gallery'),

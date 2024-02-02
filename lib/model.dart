@@ -62,10 +62,10 @@ List<StatusFileInfo> filterFilesByFormat(
   return filteredFiles.reversed.toList();
 }
 
-Future<void> saveStatus(String imagePath, String folder) async {
+Future<void> saveStatus(String imagePath) async {
   await platform.invokeMethod('saveStatus', {
     'imagePath': imagePath,
-    'folder': folder,
+    'folder': 'Status Saver',
   });
 }
 

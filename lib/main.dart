@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:whatsappstatus/model.dart';
 import 'package:whatsappstatus/preview.dart';
-import 'package:whatsappstatus/whatsapp.dart';
 
 void main() {
   runApp(const MyApp());
@@ -51,13 +50,48 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _currentIndex = 0;
-  List<Widget> _tabs = [
-    const Center(child: CircularProgressIndicator()),
-    const Center(child: CircularProgressIndicator()),
-    const Center(child: CircularProgressIndicator())
+  List<Map<String, dynamic>> _tabs = [
+    {
+      'appType': 'WHATSAPP',
+      'whatsappFilesImages': filterFilesByFormat(
+        parseStatusFiles([]),
+        images,
+        'Whatsapp Status',
+      ),
+      'whatsappFilesVideo': filterFilesByFormat(
+        parseStatusFiles([]),
+        videos,
+        'Whatsapp Status',
+      ),
+    },
+    {
+      'appType': 'WHATSAPP4B',
+      'whatsappFilesImages': filterFilesByFormat(
+        parseStatusFiles([]),
+        images,
+        'Whatsapp4b Status',
+      ),
+      'whatsappFilesVideo': filterFilesByFormat(
+        parseStatusFiles([]),
+        videos,
+        'Whatsapp4b Status',
+      ),
+    },
+    {
+      'appType': 'SAVED',
+      'whatsappFilesImages': filterFilesByFormat(
+        parseStatusFiles([]),
+        images,
+        'Whatsapp4b Status',
+      ),
+      'whatsappFilesVideo': filterFilesByFormat(
+        parseStatusFiles([]),
+        videos,
+        'Whatsapp4b Status',
+      ),
+    },
   ];
   late Timer _timer;
-  bool permitted = false;
 
   @override
   void initState() {
@@ -68,78 +102,116 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     });
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      platform.invokeMethod("checkStoragePermission").then((value) {
+      platform.invokeMethod("checkStoragePermission").then((value) async {
         if (value) {
           _timer.cancel();
-          setState(() {
-            _tabs = [
-              const Whatsapp(
-                  appType: 'WHATSAPP',
-                  channel: 'Whatsapp Status',
-                  key: PageStorageKey('WHATSAPP')),
-              const Whatsapp(
-                  appType: 'WHATSAPP4B',
-                  channel: 'Whatsapp4b Status',
-                  key: PageStorageKey('WHATSAPP4B')),
-              const Center(child: CircularProgressIndicator())
-            ];
-          });
         }
       });
     });
   }
 
-  Future<void> getStatusFiles() async {
-    await platform.invokeListMethod(
-      'getStatusFilesInfo',
-      {'appType': "SAVED"},
-    ).then((value) {
-      setState(() {
-        if (value!.isNotEmpty) {
-          _tabs[2] = Container(
-            color: Theme.of(context).colorScheme.background,
-            padding: const EdgeInsets.all(6.0),
-            child: GridView.builder(
-              // cacheExtent: 9999,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 6.0,
-                mainAxisSpacing: 6.0,
-              ),
-              itemCount: parseStatusFiles(value).length,
-              itemBuilder: (context, index) {
-                return InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => Preview(
-                          previewFile: parseStatusFiles(value),
-                          index: index,
-                          type: 'Image',
-                          theme: Theme.of(context),
-                          savedto: 'nosave',
-                        ),
-                      ),
-                    );
-                  },
-                  child: Image.file(
-                    File(parseStatusFiles(value)[index].path),
-                    fit: BoxFit.cover,
-                  ),
-                );
-              },
-            ),
-          );
-        }
-      });
+  Future<void> fetchAndRefreshData() async {
+    List? newWhatsappData = await platform
+        .invokeListMethod('getStatusFilesInfo', {'appType': 'WHATSAPP'});
+    List? newWhatsapp4bData = await platform
+        .invokeListMethod('getStatusFilesInfo', {'appType': 'WHATSAPP4B'});
+    List? newwhatsappStatus = await platform
+        .invokeListMethod('getStatusFilesInfo', {'appType': 'SAVED'});
+    setState(() {
+      _currentIndex = 0;
+      _tabs = [
+        {
+          'appType': 'WHATSAPP',
+          'whatsappFilesImages': filterFilesByFormat(
+            parseStatusFiles(newWhatsappData!),
+            images,
+            'Whatsapp Status',
+          ),
+          'whatsappFilesVideo': filterFilesByFormat(
+            parseStatusFiles(newWhatsappData),
+            videos,
+            'Whatsapp Status',
+          ),
+        },
+        {
+          'appType': 'WHATSAPP4B',
+          'whatsappFilesImages': filterFilesByFormat(
+            parseStatusFiles(newWhatsapp4bData!),
+            images,
+            'Whatsapp4b Status',
+          ),
+          'whatsappFilesVideo': filterFilesByFormat(
+            parseStatusFiles(newWhatsapp4bData),
+            videos,
+            'Whatsapp4b Status',
+          ),
+        },
+        {
+          'appType': 'SAVED',
+          'whatsappFilesImages': filterFilesByFormat(
+            parseStatusFiles(newwhatsappStatus!),
+            images,
+            'Whatsapp4b Status',
+          ),
+          'whatsappFilesVideo': filterFilesByFormat(
+            parseStatusFiles(newwhatsappStatus),
+            videos,
+            'Whatsapp4b Status',
+          ),
+        },
+      ];
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final scaffold = ScaffoldMessenger.of(context);
     return Scaffold(
-      body: _tabs[_currentIndex],
+      body: DefaultTabController(
+        length: 2,
+        child: Scaffold(
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(90.0),
+            child: AppBar(
+              elevation: 0.0,
+              foregroundColor: theme.primaryColor,
+              backgroundColor: theme.colorScheme.secondary,
+              title: const Text('Status saver no-ads'),
+              actions: [
+                IconButton(
+                  onPressed: () {
+                    fetchAndRefreshData();
+                  },
+                  icon: const Icon(Icons.more_vert),
+                )
+              ],
+              bottom: TabBar(
+                dividerColor: theme.colorScheme.secondary,
+                labelColor: theme.primaryColor,
+                unselectedLabelColor: theme.primaryColor,
+                indicatorColor: theme.primaryColor,
+                tabs: [
+                  Center(
+                    child: Text(
+                        "${_tabs[_currentIndex]['whatsappFilesImages'].length} Images"),
+                  ),
+                  Center(
+                    child: Text(
+                        "${_tabs[_currentIndex]['whatsappFilesVideo'].length} Video"),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          body: TabBarView(
+            children: [
+              _buildTabContent('whatsappFilesImages', theme, scaffold),
+              _buildTabContent('whatsappFilesVideo', theme, scaffold),
+            ],
+          ),
+        ),
+      ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Theme.of(context).colorScheme.background,
         selectedItemColor: Theme.of(context).secondaryHeaderColor,
@@ -165,6 +237,66 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
       ),
     );
+  }
+
+  Widget _buildTabContent(String files, ThemeData theme, scaffold) {
+    print(_currentIndex);
+    print(_tabs[_currentIndex][files].length);
+    return _tabs[_currentIndex][files].isNotEmpty
+        ? GridView.builder(
+            // cacheExtent: 9999,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 6.0,
+              mainAxisSpacing: 6.0,
+            ),
+            itemCount: _tabs[_currentIndex][files].length,
+            itemBuilder: (context, index) {
+              return InkWell(
+                onDoubleTap: () {
+                  if (_tabs[_currentIndex]['appType'] != 'SAVED') {
+                    saveStatus(
+                      _tabs[_currentIndex][files][index].path,
+                    ).then(
+                      (value) => scaffold.showSnackBar(
+                        const SnackBar(
+                          content: Text('saved to Gallery'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      ),
+                    );
+                  }
+                },
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Preview(
+                        previewFile: _tabs[_currentIndex][files],
+                        index: index,
+                        type: files == 'whatsappFilesVideo' ? 'Video' : 'Image',
+                        theme: theme,
+                        saved: _tabs[_currentIndex]['appType'] == 'SAVED',
+                      ),
+                    ),
+                  );
+                },
+                child: files == 'whatsappFilesImages'
+                    ? Image.file(
+                        File(_tabs[_currentIndex][files][index].path),
+                        fit: BoxFit.cover,
+                      )
+                    : Image.memory(
+                        _tabs[_currentIndex][files][index].mediaByte,
+                        fit: BoxFit.cover,
+                      ),
+              );
+            },
+          )
+        : Center(
+            child: Text(
+                '${_tabs[_currentIndex][files].length} ${_tabs[_currentIndex]['appType'].toLowerCase()} status available'),
+          );
   }
 
   @override
