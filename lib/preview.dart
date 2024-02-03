@@ -42,7 +42,6 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
     super.dispose();
   }
 }
-//
 
 class Preview extends StatefulWidget {
   const Preview({
@@ -107,14 +106,16 @@ class _PreviewState extends State<Preview> {
         itemBuilder: (context, index) {
           return InkWell(
             onLongPress: () {
-              saveStatus(widget.previewFile[currentIndex].path).then(
-                (value) => scaffold.showSnackBar(
-                  const SnackBar(
-                    content: Text('saved to Gallery'),
-                    duration: Duration(seconds: 2),
+              if (widget.saved != true) {
+                saveStatus(widget.previewFile[index].path).then(
+                  (value) => scaffold.showSnackBar(
+                    const SnackBar(
+                      content: Text('saved to Gallery'),
+                      duration: Duration(seconds: 2),
+                    ),
                   ),
-                ),
-              );
+                );
+              }
             },
             child: widget.type == "Image"
                 ? Image.file(
@@ -131,4 +132,3 @@ class _PreviewState extends State<Preview> {
     );
   }
 }
-//
