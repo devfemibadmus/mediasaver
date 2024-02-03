@@ -112,13 +112,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> fetchAndRefreshData() async {
     List? newWhatsappData = await platform
-        .invokeListMethod('getStatusFilesInfo', {'appType': 'WHATSAPP'});
-    List? newWhatsapp4bData = await platform
-        .invokeListMethod('getStatusFilesInfo', {'appType': 'WHATSAPP4B'});
+        .invokeListMethod('getStatusFilesInfo', {'appType': 'ALLWHATSAPP'});
     List? newwhatsappStatus = await platform
         .invokeListMethod('getStatusFilesInfo', {'appType': 'SAVED'});
     setState(() {
-      _currentIndex = 0;
       _tabs = [
         {
           'appType': 'WHATSAPP',
@@ -136,12 +133,12 @@ class _MyHomePageState extends State<MyHomePage> {
         {
           'appType': 'WHATSAPP4B',
           'whatsappFilesImages': filterFilesByFormat(
-            parseStatusFiles(newWhatsapp4bData!),
+            parseStatusFiles(newWhatsappData),
             images,
             'Whatsapp4b Status',
           ),
           'whatsappFilesVideo': filterFilesByFormat(
-            parseStatusFiles(newWhatsapp4bData),
+            parseStatusFiles(newWhatsappData),
             videos,
             'Whatsapp4b Status',
           ),
@@ -183,7 +180,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   onPressed: () {
                     fetchAndRefreshData();
                   },
-                  icon: const Icon(Icons.more_vert),
+                  icon: const Icon(Icons.refresh),
                 )
               ],
               bottom: TabBar(
@@ -240,11 +237,9 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _buildTabContent(String files, ThemeData theme, scaffold) {
-    print(_currentIndex);
-    print(_tabs[_currentIndex][files].length);
     return _tabs[_currentIndex][files].isNotEmpty
         ? GridView.builder(
-            // cacheExtent: 9999,
+            cacheExtent: 9999,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
               crossAxisSpacing: 6.0,
