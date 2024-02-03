@@ -1,12 +1,26 @@
 # Whatsapp Status Saver
 
-## To-Do
-   1. Use stream instead of updating full widget
-   2. recently view
-   2. recently post
-   3. image byte return
-   4. delete, repost, share
-   5. query already saved
+# WhatsApp Status Saver - Streamlined Features
+
+WhatsApp Status Saver offers a user-friendly experience for managing and saving WhatsApp status updates. Check out the key features:
+
+| #  | Feature                    | Description                                                                                        | Status |
+| -- | -------------------------- | -------------------------------------------------------------------------------------------------- | ------ |
+| 1  | Efficient Updates          | Uses streams for quick and efficient updates, reducing the need for full widget refresh.           | ✅     |
+| 2  | Recently Viewed            | Access recently saved status updates easily through a dedicated section.                           | ✅     |
+| 3  | Chronological View         | Displays recently viewed status updates in chronological order.                                    | ✅     |
+| 4  | Video Thumbnails           | Provides video thumbnails for a quick preview of the content.                                      | ✅     |
+| 5  | Single Refresh Option      | Allows a single refresh option in development mode for testing purposes.                           | ✅     |
+| 6  | Universal WhatsApp Support | Compatible with various WhatsApp versions for a hassle-free setup.                                 | ✅     |
+| 7  | Media Handling             | Manages file not found issues while streaming status.                                              | ❌     |
+| 8  | Status Management          | Delete, repost, and share saved status updates effortlessly.                                       | ❌     |
+| 9  | Query Functionality        | Check if a status update has already been saved with the query feature.                            | ❌     |
+| 10 | Refresh Handling           | Improved refresh handling for both individual and all status updates.                              | ❌     |
+| 11 | Navigation Menu            | Introduces a navigation menu for seamless user navigation.                                         | ❌     |
+| 12 | WhatsApp Theme             | Adopts a WhatsApp theme for a cohesive and visually appealing interface.                           | ❌     |
+
+Explore the streamlined features of WhatsApp Status Saver and enjoy an enriched experience! If you have any concerns or suggestions, please feel free to share them.
+
 
 ## :bug: flutter file(image/video) not working with android ACTION_OPEN_DOCUMENT_TREE but works fine in kotlin
 
