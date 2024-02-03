@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/services.dart';
 
 const platform = MethodChannel('com.blackstackhub.whatsappstatus');
@@ -30,18 +28,6 @@ class StatusFileInfo {
       source: json['source'],
       mediaByte: json['mediaByte'],
     );
-  }
-}
-
-class StatusFilesList {
-  List<StatusFileInfo> statusFiles;
-
-  StatusFilesList({required this.statusFiles});
-
-  factory StatusFilesList.fromJson(List<dynamic> jsonList) {
-    List<StatusFileInfo> files =
-        jsonList.map((json) => StatusFileInfo.fromJson(json)).toList();
-    return StatusFilesList(statusFiles: files);
   }
 }
 
