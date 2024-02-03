@@ -20,6 +20,9 @@ import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
 import java.io.ByteArrayOutputStream
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
 import java.io.IOException
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -87,26 +90,34 @@ class MainActivity : FlutterActivity() {
                     val retriever = MediaMetadataRetriever()
                     retriever.setDataSource(file.absolutePath)
                     val thumbnailBitmap = retriever.getFrameAtTime()
+
+                    thumbnailBitmap?.let {
+                        val stream = ByteArrayOutputStream()
+                        it.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                        it.recycle() // Release the bitmap resources
+                        return stream.toByteArray()
+                    }
+                    /*
                     val stream = ByteArrayOutputStream()
                     thumbnailBitmap?.compress(Bitmap.CompressFormat.PNG, 100, stream)
                     return stream.toByteArray()
-                } else if (format == "jpg"){
-                    /*
+                    */
+                }
+                /*
+                else if (format == "jpg"){
                     val byteArrayOutputStream = ByteArrayOutputStream()
                     val image = ImageIO.read(File(file.absolutePath))                    
                     ImageIO.write(image, "jpg", byteArrayOutputStream)
                     return byteArrayOutputStream.toByteArray()
-                    */
 
-                    /*
                     val options = BitmapFactory.Options()
                     options.inPreferredConfig = Bitmap.Config.ARGB_8888
                     val bitmap = BitmapFactory.decodeFile(file.absolutePath, options)
                     val byteArrayOutputStream = ByteArrayOutputStream()
                     bitmap?.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
-                    return byteArrayOutputStream.toByteArray()
-                    */
+                    return byteArrayOutputStream.toByteArray()    
                 }
+                */
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -134,6 +145,10 @@ class MainActivity : FlutterActivity() {
             Common.WHATSAPP?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "Whatsapp Status") }
         }
         else if(appType == "WHATSAPP4B"){
+            Common.WHATSAPP4B?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "Whatsapp4b Status") }
+        }
+        else if(appType == "ALLWHATSAPP"){
+            Common.WHATSAPP?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "Whatsapp Status") }
             Common.WHATSAPP4B?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "Whatsapp4b Status") }
         }
         /*
