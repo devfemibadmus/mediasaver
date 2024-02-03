@@ -35,7 +35,7 @@ class _VideoWidgetState extends State<VideoWidget> {
     });
   }
 
-  bool isHover = false;
+  bool isHover = true;
   @override
   void dispose() {
     _controller.dispose();
