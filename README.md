@@ -20,8 +20,21 @@ WhatsApp Status Saver offers a user-friendly experience for managing and saving 
 
 Explore the streamlined features of WhatsApp Status Saver and enjoy an enriched experience! If you have any concerns or suggestions, please feel free to share them.
 
+## Dependecncies :alien: we dont ask much here  :poop:
 
-## :bug: flutter file(image/video) not working with android ACTION_OPEN_DOCUMENT_TREE but works fine in kotlin
+```yaml
+dependencies:
+  flutter:
+    sdk: flutter
+
+
+  # The following adds the Cupertino Icons font to your application.
+  # Use with the CupertinoIcons class for iOS style icons.
+  cupertino_icons: ^1.0.6
+  video_player: ^2.8.2
+```
+
+### :bug: flutter file(image/video) not working with android ACTION_OPEN_DOCUMENT_TREE but works fine in kotlin
 
 ```dart
 // android/ap/src/main/kotlin/*/MainActivity.kt
