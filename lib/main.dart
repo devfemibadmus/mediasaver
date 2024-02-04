@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:whatsappstatus/model.dart';
 import 'package:whatsappstatus/preview.dart';

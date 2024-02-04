@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
@@ -23,9 +22,7 @@ class _VideoWidgetState extends State<VideoWidget> {
   @override
   void initState() {
     super.initState();
-
     _controller = VideoPlayerController.file(widget.videoPath);
-
     _initializeVideoPlayerFuture = _controller.initialize();
     _controller.setLooping(widget.shouldPlay);
     _controller.addListener(() {
@@ -72,22 +69,17 @@ class _VideoWidgetState extends State<VideoWidget> {
           GestureDetector(
             onTap: () {
               setState(() {
-                if (_controller.value.isPlaying) {
-                  _controller.pause();
-                } else {
-                  _controller.play();
-                }
+                _controller.value.isPlaying
+                    ? _controller.pause()
+                    : _controller.play();
               });
             },
-            child: Container(
-              color: Colors.transparent,
-              child: Opacity(
-                opacity: isHover ? 1 : 0,
-                child: Icon(
-                  _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
-                  size: 80.0,
-                  color: Colors.white,
-                ),
+            child: Opacity(
+              opacity: isHover ? 1 : 0,
+              child: Icon(
+                _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+                size: 80.0,
+                color: Colors.white,
               ),
             ),
           ),
@@ -99,7 +91,7 @@ class _VideoWidgetState extends State<VideoWidget> {
               decoration: BoxDecoration(
                 borderRadius:
                     const BorderRadius.only(topLeft: Radius.circular(10)),
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.black.withOpacity(0.5),
               ),
               child: Text(
                 "${(_controller.value.duration - _controller.value.position).toString().substring(2).split('.').first} / ${_controller.value.duration.toString().substring(2).split('.').first}",

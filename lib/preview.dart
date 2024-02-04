@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:whatsappstatus/model.dart';
@@ -21,11 +20,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   void initState() {
     super.initState();
     _controller = VideoPlayerController.file(File(widget.videoPath))
-      ..initialize().then((_) {
-        setState(() {
-          _controller.play();
-        });
-      });
+      ..initialize().then((_) => setState(() => _controller.play()));
   }
 
   @override
@@ -52,6 +47,7 @@ class Preview extends StatefulWidget {
     required this.theme,
     this.saved = false,
   });
+
   final List<StatusFileInfo> previewFile;
   final int index;
   final String type;
@@ -65,6 +61,7 @@ class Preview extends StatefulWidget {
 class _PreviewState extends State<Preview> {
   int currentIndex = 0;
   bool move = false;
+
   @override
   Widget build(BuildContext context) {
     final scaffold = ScaffoldMessenger.of(context);
@@ -75,46 +72,28 @@ class _PreviewState extends State<Preview> {
         backgroundColor: widget.theme.colorScheme.secondary,
         centerTitle: true,
         title: Text(
-            "${!move ? widget.index + 1 : currentIndex + 1} of ${widget.previewFile.length} ${widget.type}"),
+          "${!move ? widget.index + 1 : currentIndex + 1} of ${widget.previewFile.length} ${widget.type}",
+        ),
         actions: [
           PopupMenuButton<String>(
             color: widget.theme.colorScheme.secondary,
             onSelected: (value) {
-              // Perform action based on selected value
-              if (value == "download" && widget.saved != true) {
-                statusAction(
-                        widget.previewFile[!move ? widget.index : currentIndex]
-                            .path,
-                        'saveStatus')
-                    .then(
-                  (value) => scaffold.showSnackBar(
-                    SnackBar(
-                      content: Text(value),
-                    ),
-                  ),
-                );
-              } else if (value == "delete" && widget.saved) {
-                statusAction(
-                        widget.previewFile[!move ? widget.index : currentIndex]
-                            .path,
-                        'deleteStatus')
-                    .then(
-                  (value) => scaffold.showSnackBar(
-                    SnackBar(
-                      content: Text(value),
-                    ),
-                  ),
-                );
-              } else if (value == "share") {
-                shareMedia(widget
-                        .previewFile[!move ? widget.index : currentIndex].path)
-                    .then(
-                  (value) => scaffold.showSnackBar(
-                    SnackBar(
-                      content: Text(value),
-                    ),
-                  ),
-                );
+              final fileInfo =
+                  widget.previewFile[!move ? widget.index : currentIndex];
+              final actionMap = {
+                "download": () => statusAction(fileInfo.path, 'saveStatus'),
+                "delete": () => statusAction(fileInfo.path, 'deleteStatus'),
+                "share": () => shareMedia(fileInfo.path),
+              };
+
+              final actionFunction = actionMap[value];
+
+              if (actionFunction != null) {
+                actionFunction().then((result) => scaffold.showSnackBar(
+                      SnackBar(
+                        content: Text(result.toString()),
+                      ),
+                    ));
               }
             },
             itemBuilder: (BuildContext context) => [
@@ -173,20 +152,16 @@ class _PreviewState extends State<Preview> {
           });
         },
         itemBuilder: (context, index) {
-          return Stack(
-            children: [
-              Center(
-                child: widget.type == "Image"
-                    ? Image.file(
-                        File(widget.previewFile[index].path),
-                        fit: BoxFit.contain,
-                      )
-                    : VideoWidget(
-                        videoPath: File(widget.previewFile[index].path),
-                        shouldPlay: true,
-                      ),
-              ),
-            ],
+          return Center(
+            child: widget.type == "Image"
+                ? Image.file(
+                    File(widget.previewFile[index].path),
+                    fit: BoxFit.contain,
+                  )
+                : VideoWidget(
+                    videoPath: File(widget.previewFile[index].path),
+                    shouldPlay: true,
+                  ),
           );
         },
       ),
