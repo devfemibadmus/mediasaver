@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
           color: Colors.teal,
         ),
         colorScheme: ColorScheme.fromSwatch()
-            .copyWith(background: Colors.grey[900])
+            .copyWith(background: Colors.black)
             .copyWith(secondary: Colors.teal[700]),
       ),
       home: const MyHomePage(),
@@ -50,7 +50,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _currentIndex = 0;
-  List<Map<String, dynamic>> _tabs = [
+  final List<Map<String, dynamic>> _tabs = [
     {
       'appType': 'WHATSAPP',
       'whatsappFilesImages': filterFilesByFormat(
@@ -115,48 +115,22 @@ class _MyHomePageState extends State<MyHomePage> {
         .invokeListMethod('getStatusFilesInfo', {'appType': 'ALLWHATSAPP'});
     List? newwhatsappStatus = await platform
         .invokeListMethod('getStatusFilesInfo', {'appType': 'SAVED'});
+
     setState(() {
-      _tabs = [
-        {
-          'appType': 'WHATSAPP',
-          'whatsappFilesImages': filterFilesByFormat(
-            parseStatusFiles(newWhatsappData!),
-            images,
-            'Whatsapp Status',
-          ),
-          'whatsappFilesVideo': filterFilesByFormat(
-            parseStatusFiles(newWhatsappData),
-            videos,
-            'Whatsapp Status',
-          ),
-        },
-        {
-          'appType': 'WHATSAPP4B',
-          'whatsappFilesImages': filterFilesByFormat(
-            parseStatusFiles(newWhatsappData),
-            images,
-            'Whatsapp4b Status',
-          ),
-          'whatsappFilesVideo': filterFilesByFormat(
-            parseStatusFiles(newWhatsappData),
-            videos,
-            'Whatsapp4b Status',
-          ),
-        },
-        {
-          'appType': 'SAVED',
-          'whatsappFilesImages': filterFilesByFormat(
-            parseStatusFiles(newwhatsappStatus!),
-            images,
-            'Whatsapp4b Status',
-          ),
-          'whatsappFilesVideo': filterFilesByFormat(
-            parseStatusFiles(newwhatsappStatus),
-            videos,
-            'Whatsapp4b Status',
-          ),
-        },
-      ];
+      _tabs[0]['whatsappFilesImages'] = filterFilesByFormat(
+          parseStatusFiles(newWhatsappData!), images, 'Whatsapp Status');
+      _tabs[0]['whatsappFilesVideo'] = filterFilesByFormat(
+          parseStatusFiles(newWhatsappData), videos, 'Whatsapp Status');
+
+      _tabs[1]['whatsappFilesImages'] = filterFilesByFormat(
+          parseStatusFiles(newWhatsappData), images, 'Whatsapp4b Status');
+      _tabs[1]['whatsappFilesVideo'] = filterFilesByFormat(
+          parseStatusFiles(newWhatsappData), videos, 'Whatsapp4b Status');
+
+      _tabs[2]['whatsappFilesImages'] = filterFilesByFormat(
+          parseStatusFiles(newwhatsappStatus!), images, 'Whatsapp4b Status');
+      _tabs[2]['whatsappFilesVideo'] = filterFilesByFormat(
+          parseStatusFiles(newwhatsappStatus), videos, 'Whatsapp4b Status');
     });
   }
 
@@ -250,13 +224,12 @@ class _MyHomePageState extends State<MyHomePage> {
               return InkWell(
                 onDoubleTap: () {
                   if (_tabs[_currentIndex]['appType'] != 'SAVED') {
-                    saveStatus(
-                      _tabs[_currentIndex][files][index].path,
-                    ).then(
+                    statusAction(_tabs[_currentIndex][files][index].path,
+                            'statusAction')
+                        .then(
                       (value) => scaffold.showSnackBar(
-                        const SnackBar(
-                          content: Text('saved to Gallery'),
-                          duration: Duration(seconds: 2),
+                        SnackBar(
+                          content: Text(value),
                         ),
                       ),
                     );
