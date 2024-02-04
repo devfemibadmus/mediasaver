@@ -110,8 +110,11 @@ class MainActivity : FlutterActivity() {
             // Share intent
             val shareIntent = Intent(Intent.ACTION_SEND)
             val shareSubject = "I'm using status saver no-ads, donwload here https://play.google.com/store/apps/dev?id=6763432020387002338"
+            val shareMessage = "Check out this media and download the app!\n$shareSubject"
+            //shareIntent.type = mimeType
             shareIntent.type = mimeType
             shareIntent.putExtra(Intent.EXTRA_SUBJECT, shareSubject)
+            shareIntent.putExtra(Intent.EXTRA_TEXT, shareMessage)
             shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
 
             // Grant temporary read permission to the content URI
@@ -222,6 +225,7 @@ class MainActivity : FlutterActivity() {
         return statusFilesInfo
     }
 
+    // ignore, let try the new one
     /*
     private fun getStatusFilesInfo(): List<Map<String, Any>> {
         val statusFilesInfo = mutableListOf<Map<String, Any>>()
@@ -256,8 +260,39 @@ class MainActivity : FlutterActivity() {
                 whatsapp4b.add(fileInfo)
             }
         }
+        val whatsapp4b = mutableListOf<Map<String, Any>>()
+        Common.WHATSAPP4B?.let {
+            val files = it.listFiles(FileFilter { file ->
+                file.isFile && file.canRead()
+            })
+            files?.forEach { file ->
+                val fileInfo = mutableMapOf<String, Any>()
+                fileInfo["name"] = file.name
+                fileInfo["path"] = file.absolutePath
+                fileInfo["size"] = file.length()
+                fileInfo["format"] = getFileFormat(file.name)
+                fileInfo["source"] = "whatsapp4b"
+                whatsapp4b.add(fileInfo)
+            }
+        }
+        val savedstatus = mutableListOf<Map<String, Any>>()
+        Common.SAVEDSTATUSES?.let {
+            val files = it.listFiles(FileFilter { file ->
+                file.isFile && file.canRead()
+            })
+            files?.forEach { file ->
+                val fileInfo = mutableMapOf<String, Any>()
+                fileInfo["name"] = file.name
+                fileInfo["path"] = file.absolutePath
+                fileInfo["size"] = file.length()
+                fileInfo["format"] = getFileFormat(file.name)
+                fileInfo["source"] = "whatsapp4b"
+                whatsapp4b.add(fileInfo)
+            }
+        }
         statusFilesInfo.addAll(whatsapp)
         statusFilesInfo.addAll(whatsapp4b)
+        statusFilesInfo.addAll(savedstatus)
         return statusFilesInfo
     }
     */
@@ -364,7 +399,7 @@ class MainActivity : FlutterActivity() {
     }
 
 /*
-// This is the wishful use, thoug need to update
+// This is the wishful one, thoug need to update
 
 private val PICK_DIRECTORY_REQUEST_CODE = 123
 private var STATUS_DIRECTORY: DocumentFile? = null
@@ -431,6 +466,6 @@ private fun getAbsolutePath(rootDirectory: DocumentFile, file: DocumentFile): St
     return pathSegments.reversed().joinToString("/")
 }
 
- */
+*/
 
 }
