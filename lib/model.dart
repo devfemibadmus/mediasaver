@@ -48,11 +48,27 @@ List<StatusFileInfo> filterFilesByFormat(
   return filteredFiles.reversed.toList();
 }
 
-Future<void> saveStatus(String imagePath) async {
-  await platform.invokeMethod('saveStatus', {
-    'imagePath': imagePath,
-    'folder': 'Status Saver',
-  });
+Future<String> statusAction(String filePath, String action) async {
+  try {
+    final String result = await platform.invokeMethod(action, {
+      'filePath': filePath,
+    });
+    return result;
+  } on PlatformException catch (e) {
+    print("Error: ${e.message}");
+    return "Error: ${e.message}";
+  }
+}
+
+Future<String> shareMedia(String filePath) async {
+  try {
+    final String result =
+        await platform.invokeMethod('shareMedia', {'filePath': filePath});
+    return result;
+  } on PlatformException catch (e) {
+    print("Error: ${e.message}");
+    return "Error: ${e.message}";
+  }
 }
 
 List<String> images = ['jpg', 'jpeg', 'gif'];
