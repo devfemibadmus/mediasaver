@@ -48,9 +48,11 @@ class _VideoWidgetState extends State<VideoWidget> {
             isHover = true;
           });
           Future.delayed(const Duration(seconds: 3), () {
-            setState(() {
-              isHover = false;
-            });
+            mounted
+                ? setState(() {
+                    isHover = false;
+                  })
+                : null;
           });
         }
       },

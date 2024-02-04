@@ -13,28 +13,20 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    //Brightness platformBrightness = MediaQuery.of(context).platformBrightness;
+    ThemeData buildThemeData(ColorScheme colorScheme) {
+      return ThemeData(
+        primaryColor: Colors.white,
+        secondaryHeaderColor: Colors.teal,
+        appBarTheme: const AppBarTheme(color: Colors.teal),
+        colorScheme: colorScheme.copyWith(secondary: Colors.teal[700]),
+      );
+    }
+
     return MaterialApp(
-      theme: ThemeData.light().copyWith(
-        primaryColor: Colors.white,
-        secondaryHeaderColor: Colors.teal,
-        appBarTheme: const AppBarTheme(
-          color: Colors.teal,
-        ),
-        colorScheme: ColorScheme.fromSwatch()
-            .copyWith(background: Colors.white)
-            .copyWith(secondary: Colors.teal[700]),
-      ),
-      darkTheme: ThemeData.dark().copyWith(
-        primaryColor: Colors.white,
-        secondaryHeaderColor: Colors.teal,
-        appBarTheme: const AppBarTheme(
-          color: Colors.teal,
-        ),
-        colorScheme: ColorScheme.fromSwatch()
-            .copyWith(background: Colors.black)
-            .copyWith(secondary: Colors.teal[700]),
-      ),
+      theme: buildThemeData(
+          ColorScheme.fromSwatch().copyWith(background: Colors.white)),
+      darkTheme: buildThemeData(
+          ColorScheme.fromSwatch().copyWith(background: Colors.black)),
       home: const MyHomePage(),
     );
   }
@@ -110,27 +102,16 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> fetchAndRefreshData() async {
-    List? newWhatsappData = await platform
-        .invokeListMethod('getStatusFilesInfo', {'appType': 'ALLWHATSAPP'});
-    List? newwhatsappStatus = await platform
-        .invokeListMethod('getStatusFilesInfo', {'appType': 'SAVED'});
-
-    setState(() {
-      _tabs[0]['whatsappFilesImages'] = filterFilesByFormat(
-          parseStatusFiles(newWhatsappData!), images, 'Whatsapp Status');
-      _tabs[0]['whatsappFilesVideo'] = filterFilesByFormat(
-          parseStatusFiles(newWhatsappData), videos, 'Whatsapp Status');
-
-      _tabs[1]['whatsappFilesImages'] = filterFilesByFormat(
-          parseStatusFiles(newWhatsappData), images, 'Whatsapp4b Status');
-      _tabs[1]['whatsappFilesVideo'] = filterFilesByFormat(
-          parseStatusFiles(newWhatsappData), videos, 'Whatsapp4b Status');
-
-      _tabs[2]['whatsappFilesImages'] = filterFilesByFormat(
-          parseStatusFiles(newwhatsappStatus!), images, 'Whatsapp4b Status');
-      _tabs[2]['whatsappFilesVideo'] = filterFilesByFormat(
-          parseStatusFiles(newwhatsappStatus), videos, 'Whatsapp4b Status');
-    });
+    for (int i = 0; i < _tabs.length; i++) {
+      List? newData = await platform.invokeListMethod(
+          'getStatusFilesInfo', {'appType': _tabs[i]['appType']});
+      setState(() {
+        _tabs[i]['whatsappFilesImages'] = filterFilesByFormat(
+            parseStatusFiles(newData!), images, _tabs[i]['appType']);
+        _tabs[i]['whatsappFilesVideo'] = filterFilesByFormat(
+            parseStatusFiles(newData), videos, _tabs[i]['appType']);
+      });
+    }
   }
 
   @override
