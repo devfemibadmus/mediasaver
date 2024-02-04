@@ -20,6 +20,9 @@ import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
 import java.io.ByteArrayOutputStream
 
+import androidx.core.content.FileProvider
+import android.webkit.MimeTypeMap
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -29,14 +32,14 @@ import java.io.FileOutputStream
 import io.flutter.plugin.common.PluginRegistry.Registrar
 
 object Common {
+    val SAVEDSTATUSES = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),"Status Saver")
     val WHATSAPP = File(Environment.getExternalStorageDirectory().toString() + "/Android/media/com.whatsapp/WhatsApp/Media/.Statuses")
-    val SAVEDWHATSAPP = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),"Status Saver")
     val WHATSAPP4B = File(Environment.getExternalStorageDirectory().toString() + "/Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses")
-    val SAVEDWHATSAPP4B = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),"Status Saver")
 }
 
 
 class MainActivity : FlutterActivity() {
+    private val FILE_PROVIDER_AUTHORITY = "com.blackstackhub.whatsappstatus.fileprovider"
     private val TAG = "MainActivity"
     private val APP_STORAGE_ACCESS_REQUEST_CODE = 501
     private val CHANNEL = "com.blackstackhub.whatsappstatus"
@@ -56,17 +59,74 @@ class MainActivity : FlutterActivity() {
                     }
                 }
                 "saveStatus" -> {
-                    val imagePath = call.argument<String>("imagePath")
-                    val folder = call.argument<String>("folder")
-                    if (imagePath != null && folder != null) {
-                        saveStatus(imagePath, folder)
-                        result.success(null)
+                    val filePath = call.argument<String>("filePath")
+                    // val folder = call.argument<String>("folder")
+                    if (filePath != null) {
+                        result.success(saveStatus(filePath))
+                    } else {
+                        result.error("INVALID_PARAMETERS", "Invalid parameters", null)
+                    }
+                }
+                "deleteStatus" -> {
+                    val filePath = call.argument<String>("filePath")
+                    if (filePath != null) {
+                        result.success(deleteStatus(filePath))
+                    } else {
+                        result.error("INVALID_PARAMETERS", "Invalid parameters", null)
+                    }
+                }
+                "shareMedia" -> {
+                    val filePath = call.argument<String>("filePath")
+                    if (filePath != null) {
+                        result.success(shareMedia(filePath))
                     } else {
                         result.error("INVALID_PARAMETERS", "Invalid parameters", null)
                     }
                 }
                 else -> result.notImplemented()
             }
+        }
+    }
+
+    private fun shareMedia(filePath: String): Boolean {
+        val file = File(filePath)
+
+        return if (file.exists()) {
+            val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(
+                MimeTypeMap.getFileExtensionFromUrl(file.absolutePath)
+            )
+            val uri: Uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                // Use FileProvider on Android N and above
+                val fileUri = FileProvider.getUriForFile(
+                    applicationContext,
+                    FILE_PROVIDER_AUTHORITY,
+                    file
+                )
+                fileUri
+            } else {
+                Uri.fromFile(file)
+            }
+
+            // Share intent
+            val shareIntent = Intent(Intent.ACTION_SEND)
+            val shareSubject = "I'm using status saver no-ads, donwload here https://play.google.com/store/apps/dev?id=6763432020387002338"
+            shareIntent.type = mimeType
+            shareIntent.putExtra(Intent.EXTRA_SUBJECT, shareSubject)
+            shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
+
+            // Grant temporary read permission to the content URI
+            shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+            try {
+                startActivity(Intent.createChooser(shareIntent, "Share Media"))
+                true
+            } catch (e: Exception) {
+                // Handle exceptions
+                e.printStackTrace()
+                false
+            }
+        } else {
+            false
         }
     }
 
@@ -138,8 +198,8 @@ class MainActivity : FlutterActivity() {
         }
 
         if(appType == "SAVED"){
-            Common.SAVEDWHATSAPP?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "Whatsapp Status") }
-            Common.SAVEDWHATSAPP4B?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "Whatsapp4b Status") }
+            Common.SAVEDSTATUSES?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "Whatsapp Status") }
+            Common.SAVEDSTATUSES?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "Whatsapp4b Status") }
         }
         else if(appType == "WHATSAPP"){
             Common.WHATSAPP?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "Whatsapp Status") }
@@ -233,38 +293,63 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    private fun saveStatus(sourceImagePath: String, folder: String) {
-        val imagePath = File(sourceImagePath)
+    private fun saveStatus(sourceFilePath: String): String {
+        val sourceFile = File(sourceFilePath)
 
-        if (imagePath.exists()) {
-                try {
-                        val galleryDirectory = File(
-                                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
-                                folder
-                        )
+        return if (sourceFile.exists()) {
+            try {
+                val galleryDirectory = Common.SAVEDSTATUSES
 
-                        if (!galleryDirectory.exists()) {
-                                galleryDirectory.mkdirs()
-                        }
-
-                        val timeStamp = System.currentTimeMillis()
-                        val originalExtension = getExtension(imagePath)
-                        val newImageFileName = "IMG_$timeStamp.$originalExtension"
-
-                        val newImageFile = File(galleryDirectory, newImageFileName)
-
-                        FileInputStream(imagePath).use { inputStream ->
-                                FileOutputStream(newImageFile).use { outputStream ->
-                                        val buffer = ByteArray(4 * 1024)
-                                        var bytesRead: Int
-                                        while (inputStream.read(buffer).also { bytesRead = it } >= 0) {
-                                                outputStream.write(buffer, 0, bytesRead)
-                                        }
-                                }
-                        }
-                } catch (e: IOException) {
-                        e.printStackTrace()
+                if (!galleryDirectory.exists()) {
+                    galleryDirectory.mkdirs()
                 }
+
+                val originalFileName = sourceFile.name
+                val originalExtension = getExtension(sourceFile)
+
+                val newImageFile = File(galleryDirectory, originalFileName)
+
+                // If a file with the same name already exists, return "Already Saved"
+                if (newImageFile.exists()) {
+                     return "Already Saved"
+                }
+
+                FileInputStream(sourceFile).use { inputStream ->
+                    FileOutputStream(newImageFile).use { outputStream ->
+                        val buffer = ByteArray(4 * 1024)
+                        var bytesRead: Int
+                        while (inputStream.read(buffer).also { bytesRead = it } >= 0) {
+                            outputStream.write(buffer, 0, bytesRead)
+                        }
+                    }
+                }
+
+                // File saved successfully
+                "Status Saved"
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                    // Error saving file
+                    "Not Saved"
+                }
+        } else {
+            // Source file doesn't exist
+            "Not Saved"
+        }
+    }
+
+    private fun deleteStatus(filePath: String): String {
+        val folder = Common.SAVEDSTATUSES
+        val file = File(filePath)
+
+        return try {
+            if (file.exists() && file.delete()) {
+                "deleted"
+            }else{
+                "not deleted"
+            }
+        } catch (e: SecurityException) {
+            e.printStackTrace()
+            "not deleted"
         }
     }
 
