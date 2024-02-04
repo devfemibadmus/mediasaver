@@ -15,8 +15,10 @@ WhatsApp Status Saver offers a user-friendly experience for managing and saving 
 | 9  | Query Functionality        | Check if a status update has already been saved with the query feature.                            | ✅     |
 | 10 | Refresh Handling           | Improved refresh handling for both individual and all status updates.                              | ❌     |
 | 11 | Navigation Menu            | Introduces a navigation menu for more info.                                                        | ❌     |
-| 11 | Video Playing              | Error while playing viddeo, solve the slight error.                                                | ❌     |
-| 12 | WhatsApp Theme             | Adopts a WhatsApp theme for a cohesive and visually appealing interface.                           | ✅     |
+| 12 | Video Playing              | Error while playing viddeo, solve the slight error.                                                | ❌     |
+| 13 | WhatsApp Theme             | Adopts a WhatsApp theme for a cohesive and visually appealing interface.                           | ✅     |
+| 14 | Platform iOs               | null                                                                                               | ❌     |
+| 15 | Platform Android           | >=5.0                                                                                              | ✅     |
 
 Explore the streamlined features of WhatsApp Status Saver and enjoy an enriched experience! If you have any concerns or suggestions, please feel free to share them.
 
