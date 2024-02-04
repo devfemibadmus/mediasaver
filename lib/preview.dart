@@ -69,7 +69,7 @@ class _PreviewState extends State<Preview> {
   Widget build(BuildContext context) {
     final scaffold = ScaffoldMessenger.of(context);
     return Scaffold(
-      backgroundColor: widget.theme.colorScheme.background,
+      backgroundColor: Colors.black,
       appBar: AppBar(
         foregroundColor: widget.theme.primaryColor,
         backgroundColor: widget.theme.colorScheme.secondary,
@@ -77,21 +77,90 @@ class _PreviewState extends State<Preview> {
         title: Text(
             "${!move ? widget.index + 1 : currentIndex + 1} of ${widget.previewFile.length} ${widget.type}"),
         actions: [
-          widget.saved != true
-              ? IconButton(
-                  onPressed: () {
-                    saveStatus(widget.previewFile[currentIndex].path).then(
-                      (value) => scaffold.showSnackBar(
-                        const SnackBar(
-                          content: Text("saved to Gallery"),
-                          duration: Duration(seconds: 2),
-                        ),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.download),
-                )
-              : const SizedBox(),
+          PopupMenuButton<String>(
+            color: widget.theme.colorScheme.secondary,
+            onSelected: (value) {
+              // Perform action based on selected value
+              if (value == "download" && widget.saved != true) {
+                statusAction(
+                        widget.previewFile[!move ? widget.index : currentIndex]
+                            .path,
+                        'saveStatus')
+                    .then(
+                  (value) => scaffold.showSnackBar(
+                    SnackBar(
+                      content: Text(value),
+                    ),
+                  ),
+                );
+              } else if (value == "delete" && widget.saved) {
+                statusAction(
+                        widget.previewFile[!move ? widget.index : currentIndex]
+                            .path,
+                        'deleteStatus')
+                    .then(
+                  (value) => scaffold.showSnackBar(
+                    SnackBar(
+                      content: Text(value),
+                    ),
+                  ),
+                );
+              } else if (value == "share") {
+                shareMedia(widget
+                        .previewFile[!move ? widget.index : currentIndex].path)
+                    .then(
+                  (value) => scaffold.showSnackBar(
+                    SnackBar(
+                      content: Text(value),
+                    ),
+                  ),
+                );
+              }
+            },
+            itemBuilder: (BuildContext context) => [
+              if (widget.saved != true)
+                const PopupMenuItem<String>(
+                  value: "download",
+                  child: ListTile(
+                    title: Text(
+                      "Download",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    leading: Icon(
+                      Icons.download_for_offline_sharp,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              if (widget.saved)
+                const PopupMenuItem<String>(
+                  value: "delete",
+                  child: ListTile(
+                    title: Text(
+                      "Delete",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    leading: Icon(
+                      Icons.delete,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              const PopupMenuItem<String>(
+                value: "share",
+                child: ListTile(
+                  title: Text(
+                    "Share",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  leading: Icon(
+                    Icons.share,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
       body: PageView.builder(
@@ -104,28 +173,20 @@ class _PreviewState extends State<Preview> {
           });
         },
         itemBuilder: (context, index) {
-          return InkWell(
-            onLongPress: () {
-              if (widget.saved != true) {
-                saveStatus(widget.previewFile[index].path).then(
-                  (value) => scaffold.showSnackBar(
-                    const SnackBar(
-                      content: Text('saved to Gallery'),
-                      duration: Duration(seconds: 2),
-                    ),
-                  ),
-                );
-              }
-            },
-            child: widget.type == "Image"
-                ? Image.file(
-                    File(widget.previewFile[index].path),
-                    fit: BoxFit.contain,
-                  )
-                : VideoWidget(
-                    videoPath: File(widget.previewFile[index].path),
-                    shouldPlay: true,
-                  ),
+          return Stack(
+            children: [
+              Center(
+                child: widget.type == "Image"
+                    ? Image.file(
+                        File(widget.previewFile[index].path),
+                        fit: BoxFit.contain,
+                      )
+                    : VideoWidget(
+                        videoPath: File(widget.previewFile[index].path),
+                        shouldPlay: true,
+                      ),
+              ),
+            ],
           );
         },
       ),
