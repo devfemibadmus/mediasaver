@@ -23,8 +23,19 @@ import java.io.ByteArrayOutputStream
 import androidx.core.content.FileProvider
 import android.webkit.MimeTypeMap
 
+import kotlinx.coroutines.GlobalScope
+
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+
+import android.content.Context
+import android.content.pm.PackageManager
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 import java.io.IOException
 import java.io.FileInputStream
@@ -48,12 +59,30 @@ class MainActivity : FlutterActivity() {
         super.configureFlutterEngine(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
-                "requestStoragePermission" -> result.success(requestStoragePermission())
+                "shareApp" -> result.success(shareApp())
+                "sendEmail" -> result.success(sendEmail())
+                "launchDemo" -> result.success(launchDemo())
                 "checkStoragePermission" -> result.success(checkStoragePermission())
+                "requestStoragePermission" -> result.success(requestStoragePermission())
                 "getStatusFilesInfo" -> {
                     val appType = call.argument<String>("appType")
                     if (appType != null) {
                         result.success(getStatusFilesInfo(appType))
+                    } else {
+                        result.error("INVALID_PARAMETERS", "Invalid parameters", null)
+                    }
+                }
+                "getVideoThumbnailAsync" -> {
+                    val absolutePath = call.argument<String>("absolutePath")
+                    if (absolutePath != null) {
+                        lifecycleScope.launch {
+                            try {
+                                val thumbnail = getVideoThumbnailAsync(absolutePath)
+                                result.success(thumbnail)
+                            } catch (e: Exception) {
+                                result.error("EXCEPTION", "Error during thumbnail retrieval", null)
+                            }
+                        }
                     } else {
                         result.error("INVALID_PARAMETERS", "Invalid parameters", null)
                     }
@@ -88,7 +117,73 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    private fun shareMedia(filePath: String): Boolean {
+    fun getAppVersion(context: Context): String {
+        try {
+            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            return packageInfo.versionName
+        } catch (e: PackageManager.NameNotFoundException) {
+            e.printStackTrace()
+        }
+        return "Unknown"
+    }
+
+    private fun sendEmail(): Boolean{
+        val emailIntent = Intent(Intent.ACTION_SENDTO)
+
+        val locale = Locale.getDefault()
+        val country = locale.displayCountry
+
+        val email = "devfemibadmus@gmail.com"
+        val subject = "Request a new feature for Whatsapp-status-saver"
+        
+        val preBody = "Version: ${getAppVersion(applicationContext)}\nCountry: $country\n\nI want to request for feature..."
+        val mailtoLink = "mailto:$email?subject=$subject&body=$preBody"
+
+        // Set the email address
+        emailIntent.data = Uri.parse(mailtoLink)
+
+        // Check if there is a package that can handle the intent
+        try {
+            startActivity(emailIntent)
+        } catch (e: Exception) {
+            // If no email app is available, open a web browser
+            val webIntent = Intent(Intent.ACTION_VIEW)
+            webIntent.data = Uri.parse("https://github.com/devfemibadmus/whatsapp-status-saver")
+            startActivity(webIntent)
+        }
+        return true
+    }
+
+    private fun launchDemo(): Boolean{
+        val webIntent = Intent(Intent.ACTION_VIEW)
+        webIntent.data = Uri.parse("https://github.com/devfemibadmus/whatsapp-status-saver")
+        startActivity(webIntent)
+        return true
+    }
+
+    private fun shareApp(): Boolean{
+        // Share intent
+        val shareIntent = Intent(Intent.ACTION_SEND)
+        shareIntent.type = "text/plain"
+    
+        // Set the subject and message
+        val shareSubject = "Check out this amazing free status saver no-ads!"
+        val shareMessage = "$shareSubject\n\nDownload the app: https://play.google.com/store/apps/details?id=com.blackstackhub.whatsapp"
+    
+        // shareIntent.putExtra(Intent.EXTRA_SUBJECT, shareSubject)
+        shareIntent.putExtra(Intent.EXTRA_TEXT, shareMessage)
+
+        try {
+            startActivity(Intent.createChooser(shareIntent, "Share via"))
+        } catch (e: Exception) {
+            // Handle exceptions
+            e.printStackTrace()
+            // You might want to return an error message or handle it differently
+        }
+        return true
+    }
+
+    private fun shareMedia(filePath: String): String {
         val file = File(filePath)
 
         return if (file.exists()) {
@@ -109,11 +204,11 @@ class MainActivity : FlutterActivity() {
 
             // Share intent
             val shareIntent = Intent(Intent.ACTION_SEND)
-            val shareSubject = "I'm using status saver no-ads, donwload here https://play.google.com/store/apps/dev?id=6763432020387002338"
-            val shareMessage = "Check out this media and download the app!\n$shareSubject"
+            val shareSubject = "https://play.google.com/store/apps/details?id=com.blackstackhub.whatsapp"
+            val shareMessage = "i save this from free status saver no-ads!\n\n$shareSubject"
             //shareIntent.type = mimeType
             shareIntent.type = mimeType
-            shareIntent.putExtra(Intent.EXTRA_SUBJECT, shareSubject)
+            // shareIntent.putExtra(Intent.EXTRA_SUBJECT, shareSubject)
             shareIntent.putExtra(Intent.EXTRA_TEXT, shareMessage)
             shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
 
@@ -122,14 +217,14 @@ class MainActivity : FlutterActivity() {
 
             try {
                 startActivity(Intent.createChooser(shareIntent, "Share Media"))
-                true
+                "sharing..."
             } catch (e: Exception) {
                 // Handle exceptions
                 e.printStackTrace()
-                false
+                "can't share"
             }
         } else {
-            false
+            "can't share"
         }
     }
 
@@ -142,14 +237,96 @@ class MainActivity : FlutterActivity() {
         }
     }
 
+    private suspend fun createVideoThumbnailAsync(videoPath: String): Bitmap? = withContext(Dispatchers.IO) {
+        val retriever = MediaMetadataRetriever()
+        return@withContext try {
+            retriever.setDataSource(videoPath)
+            retriever.getFrameAtTime()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        } finally {
+            retriever.release()
+        }
+    }
+
+    private suspend fun getVideoThumbnailAsync(absolutePath: String): ByteArray {
+        return withContext(Dispatchers.Default) {
+            try {
+                val bitmap = createVideoThumbnailAsync(absolutePath)
+                if (bitmap != null) {
+                    val stream = ByteArrayOutputStream()
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                    bitmap.recycle()
+                    return@withContext stream.toByteArray()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            return@withContext ByteArray(0)
+        }
+    }
+
+    // the main issue that could lead to skipped frames and performance problems is the synchronous execution of createVideoThumbnail(videoPath) function on the main thread. The MediaMetadataRetriever and getFrameAtTime() methods perform I/O operations and may involve heavy computations, especially for large videos.
+    
+    /*
+    private fun getVideoThumbnail(absolutePath: String): ByteArray {
+
+        fun createVideoThumbnail(videoPath: String): Bitmap? {
+            val retriever = MediaMetadataRetriever()
+
+            try {
+                retriever.setDataSource(videoPath)
+                return retriever.getFrameAtTime()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                retriever.release()
+            }
+
+            return null
+        }
+        try {
+            val bitmap = createVideoThumbnail(absolutePath);
+            if (bitmap != null){
+                val stream = ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                bitmap.recycle();
+                return stream.toByteArray();
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return ByteArray(0)
+    }
+    */
+
     private fun getStatusFilesInfo(appType: String): List<Map<String, Any>> {
         val statusFilesInfo = mutableListOf<Map<String, Any>>()
+
+        fun createVideoThumbnail(videoPath: String): Bitmap? {
+            val retriever = MediaMetadataRetriever()
+
+            try {
+                retriever.setDataSource(videoPath)
+                return retriever.getFrameAtTime()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                retriever.release()
+            }
+
+            return null
+        }
+
 
         fun getMediaByte(file: File, format: String): ByteArray {
             try {
                 // Check if the file is an mp4 video
                 // val format = getFileFormat(file.name)
                 if (format == "mp4") {
+                    // I/Choreographer(25094): Skipped 717 frames!  The application may be doing too much work on its main thread.
+                    /*
                     val retriever = MediaMetadataRetriever()
                     retriever.setDataSource(file.absolutePath)
                     val thumbnailBitmap = retriever.getFrameAtTime()
@@ -160,27 +337,15 @@ class MainActivity : FlutterActivity() {
                         it.recycle() // Release the bitmap resources
                         return stream.toByteArray()
                     }
-                    /*
-                    val stream = ByteArrayOutputStream()
-                    thumbnailBitmap?.compress(Bitmap.CompressFormat.PNG, 100, stream)
-                    return stream.toByteArray()
                     */
+                    val bitmap = createVideoThumbnail(file.absolutePath);
+                    if (bitmap != null){
+                        val stream = ByteArrayOutputStream();
+                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                        bitmap.recycle();
+                        return stream.toByteArray();
+                    }
                 }
-                /*
-                else if (format == "jpg"){
-                    val byteArrayOutputStream = ByteArrayOutputStream()
-                    val image = ImageIO.read(File(file.absolutePath))                    
-                    ImageIO.write(image, "jpg", byteArrayOutputStream)
-                    return byteArrayOutputStream.toByteArray()
-
-                    val options = BitmapFactory.Options()
-                    options.inPreferredConfig = Bitmap.Config.ARGB_8888
-                    val bitmap = BitmapFactory.decodeFile(file.absolutePath, options)
-                    val byteArrayOutputStream = ByteArrayOutputStream()
-                    bitmap?.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
-                    return byteArrayOutputStream.toByteArray()    
-                }
-                */
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -195,24 +360,27 @@ class MainActivity : FlutterActivity() {
                 fileInfo["size"] = file.length()
                 fileInfo["format"] = getFileFormat(file.name)
                 fileInfo["source"] = source
+                fileInfo["mediaByte"] = ByteArray(0)
+                /*
                 fileInfo["mediaByte"] = getMediaByte(file, fileInfo["format"] as String)
+                */
+
                 statusFilesInfo.add(fileInfo)
             }
         }
 
         if(appType == "SAVED"){
-            Common.SAVEDSTATUSES?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "Whatsapp Status") }
-            Common.SAVEDSTATUSES?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "Whatsapp4b Status") }
+            Common.SAVEDSTATUSES?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "SAVED") }
         }
         else if(appType == "WHATSAPP"){
-            Common.WHATSAPP?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "Whatsapp Status") }
+            Common.WHATSAPP?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "WHATSAPP") }
         }
         else if(appType == "WHATSAPP4B"){
-            Common.WHATSAPP4B?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "Whatsapp4b Status") }
+            Common.WHATSAPP4B?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "WHATSAPP4B") }
         }
         else if(appType == "ALLWHATSAPP"){
-            Common.WHATSAPP?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "Whatsapp Status") }
-            Common.WHATSAPP4B?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "Whatsapp4b Status") }
+            Common.WHATSAPP?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "WHATSAPP") }
+            Common.WHATSAPP4B?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "WHATSAPP4B") }
         }
         /*
         else if(appType == "SAVEDWHATSAPP"){
