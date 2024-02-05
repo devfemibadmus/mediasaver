@@ -80,7 +80,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> fetchAndUpdateData() async {
-    print("I'm called");
     setState(() {
       _dataNew = false;
     });
@@ -99,12 +98,14 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {
         _tabs[_currentIndex]['whatsappFilesImages'] = whatsappFilesImages;
         _dataNew = true;
+        _dataLoaded = true;
       });
     }
     if (!listsAreEqual(
         _tabs[_currentIndex]['whatsappFilesVideo'], whatsappFilesVideo)) {
       setState(() {
         _tabs[_currentIndex]['whatsappFilesVideo'] = whatsappFilesVideo;
+        _dataLoaded = true;
         _dataNew = true;
       });
     }
@@ -115,26 +116,20 @@ class _MyHomePageState extends State<MyHomePage> {
       for (int i = 0;
           i < _tabs[_currentIndex]['whatsappFilesVideo'].length;
           i++) {
-        if (_tabs[_currentIndex]['whatsappFilesVideo'][i].mediaByte.isEmpty) {
-          Uint8List? mediaByte = await platform.invokeMethod(
-              'getVideoThumbnailAsync', {
-            'absolutePath': _tabs[_currentIndex]['whatsappFilesVideo'][i].path
-          });
-          setState(() {
-            _tabs[_currentIndex]['whatsappFilesVideo'][i].mediaByte = mediaByte;
-            if (_tabs[_currentIndex]['whatsappFilesVideo'].length - i == 1) {}
-          });
-          print(
-              _tabs[_currentIndex]['whatsappFilesVideo'][i].mediaByte.isEmpty);
-          print(_tabs[_currentIndex]['whatsappFilesVideo'][i].mediaByte);
-          print(_dataNew);
-        }
+        Uint8List? mediaByte = await platform.invokeMethod(
+            'getVideoThumbnailAsync', {
+          'absolutePath': _tabs[_currentIndex]['whatsappFilesVideo'][i].path
+        });
+        setState(() {
+          _tabs[_currentIndex]['whatsappFilesVideo'][i].mediaByte = mediaByte;
+          if (i - _tabs[_currentIndex]['whatsappFilesVideo'].length == 1) {
+            _isProcessing = false;
+          }
+        });
+        print(i);
+        print(_tabs[_currentIndex]['whatsappFilesVideo'].length);
       }
     }
-    setState(() {
-      _isProcessing = false;
-      _dataLoaded = true;
-    });
   }
 
   Future<void> _continuousMethods() async {
