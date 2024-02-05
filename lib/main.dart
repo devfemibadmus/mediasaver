@@ -72,7 +72,12 @@ class _MyHomePageState extends State<MyHomePage> {
         }
       });
     });
-    Timer.periodic(const Duration(seconds: 2), (timer) {
+    fetchAndUpdateData().then((_) async {
+      await getVideoThumbnailAsync().then((value) => setState(() {
+            _dataLoaded = true;
+          }));
+    });
+    Timer.periodic(const Duration(seconds: 5), (timer) {
       if (!_isProcessing) {
         _continuousMethods();
       }
@@ -122,12 +127,10 @@ class _MyHomePageState extends State<MyHomePage> {
         });
         setState(() {
           _tabs[_currentIndex]['whatsappFilesVideo'][i].mediaByte = mediaByte;
-          if (i - _tabs[_currentIndex]['whatsappFilesVideo'].length == 1) {
-            _isProcessing = false;
-          }
+          _isProcessing = false;
         });
-        print(i);
-        print(_tabs[_currentIndex]['whatsappFilesVideo'].length);
+        print(_tabs[_currentIndex]['whatsappFilesVideo'][i].path);
+        print(_tabs[_currentIndex]['whatsappFilesVideo'][i].mediaByte);
       }
     }
   }
