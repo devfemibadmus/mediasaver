@@ -72,12 +72,7 @@ class _MyHomePageState extends State<MyHomePage> {
         }
       });
     });
-    fetchAndUpdateData().then((_) async {
-      await getVideoThumbnailAsync().then((value) => setState(() {
-            _dataLoaded = true;
-          }));
-    });
-    Timer.periodic(const Duration(seconds: 5), (timer) {
+    Timer.periodic(const Duration(seconds: 2), (timer) {
       if (!_isProcessing) {
         _continuousMethods();
       }
@@ -103,14 +98,22 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {
         _tabs[_currentIndex]['whatsappFilesImages'] = whatsappFilesImages;
         _dataNew = true;
-        _dataLoaded = true;
       });
     }
-    if (!listsAreEqual(
-        _tabs[_currentIndex]['whatsappFilesVideo'], whatsappFilesVideo)) {
+    if (_tabs[_currentIndex]['whatsappFilesVideo'].length > 0) {
+      if (!listsAreEqual(
+          _tabs[_currentIndex]['whatsappFilesVideo'], whatsappFilesVideo)) {
+        setState(() {
+          _tabs[_currentIndex]['whatsappFilesVideo'] = mergeVideoLists(
+            _tabs[_currentIndex]['whatsappFilesVideo'],
+            whatsappFilesVideo,
+          );
+          _dataNew = true;
+        });
+      }
+    } else {
       setState(() {
         _tabs[_currentIndex]['whatsappFilesVideo'] = whatsappFilesVideo;
-        _dataLoaded = true;
         _dataNew = true;
       });
     }
@@ -121,18 +124,22 @@ class _MyHomePageState extends State<MyHomePage> {
       for (int i = 0;
           i < _tabs[_currentIndex]['whatsappFilesVideo'].length;
           i++) {
-        Uint8List? mediaByte = await platform.invokeMethod(
-            'getVideoThumbnailAsync', {
-          'absolutePath': _tabs[_currentIndex]['whatsappFilesVideo'][i].path
-        });
-        setState(() {
-          _tabs[_currentIndex]['whatsappFilesVideo'][i].mediaByte = mediaByte;
-          _isProcessing = false;
-        });
-        print(_tabs[_currentIndex]['whatsappFilesVideo'][i].path);
-        print(_tabs[_currentIndex]['whatsappFilesVideo'][i].mediaByte);
+        if (_tabs[_currentIndex]['whatsappFilesVideo'][i].mediaByte.isEmpty) {
+          Uint8List? mediaByte = await platform.invokeMethod(
+              'getVideoThumbnailAsync', {
+            'absolutePath': _tabs[_currentIndex]['whatsappFilesVideo'][i].path
+          });
+          setState(() {
+            _tabs[_currentIndex]['whatsappFilesVideo'][i].mediaByte = mediaByte;
+            if (_tabs[_currentIndex]['whatsappFilesVideo'].length - i == 1) {}
+          });
+        }
       }
     }
+    setState(() {
+      _isProcessing = false;
+      _dataLoaded = true;
+    });
   }
 
   Future<void> _continuousMethods() async {
