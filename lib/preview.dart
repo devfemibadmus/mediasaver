@@ -82,19 +82,18 @@ class _PreviewState extends State<Preview> {
                   widget.previewFile[!move ? widget.index : currentIndex];
               final actionMap = {
                 "download": () => statusAction(fileInfo.path, 'saveStatus'),
-                "delete": () => statusAction(fileInfo.path, 'deleteStatus'),
-                "share": () => shareMedia(fileInfo.path),
+                "delete": () {
+                  Navigator.pop(context);
+                  return statusAction(fileInfo.path, 'deleteStatus');
+                },
+                "share": () => statusAction(fileInfo.path, 'shareMedia'),
               };
 
-              final actionFunction = actionMap[value];
-
-              if (actionFunction != null) {
-                actionFunction().then((result) => scaffold.showSnackBar(
-                      SnackBar(
-                        content: Text(result.toString()),
-                      ),
-                    ));
-              }
+              actionMap[value]!().then((result) => scaffold.showSnackBar(
+                    SnackBar(
+                      content: Text(result.toString()),
+                    ),
+                  ));
             },
             itemBuilder: (BuildContext context) => [
               if (widget.saved != true)
