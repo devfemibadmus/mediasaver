@@ -167,8 +167,8 @@ class MainActivity : FlutterActivity() {
         shareIntent.type = "text/plain"
     
         // Set the subject and message
-        val shareSubject = "Check out this amazing free status saver no-ads!"
-        val shareMessage = "$shareSubject\n\nDownload the app: https://play.google.com/store/apps/details?id=com.blackstackhub.whatsapp"
+        val shareSubject = "Check out this free status saver no-ads!"
+        val shareMessage = "$shareSubject\n\nDownload the app: https://play.google.com/store/apps/details?id=com.blackstackhub.whatsappstatus"
     
         // shareIntent.putExtra(Intent.EXTRA_SUBJECT, shareSubject)
         shareIntent.putExtra(Intent.EXTRA_TEXT, shareMessage)
