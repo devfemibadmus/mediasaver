@@ -26,6 +26,11 @@ class _VideoWidgetState extends State<VideoWidget> {
     _initializeVideoPlayerFuture = _controller.initialize();
     _controller.setLooping(widget.shouldPlay);
     _controller.addListener(() {
+      if (_controller.value.hasError) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Status Gone')));
+        Navigator.pop(context);
+      }
       if (mounted) {
         setState(() {});
       }

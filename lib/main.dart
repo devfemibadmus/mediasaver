@@ -285,10 +285,20 @@ class _MyHomePageState extends State<MyHomePage> {
                           ? Image.file(
                               File(_tabs[_currentIndex][files][index].path),
                               fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: Colors.grey.withOpacity(0.5),
+                                );
+                              },
                             )
                           : Image.memory(
                               _tabs[_currentIndex][files][index].mediaByte,
                               fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: Colors.grey.withOpacity(0.5),
+                                );
+                              },
                             ));
                 },
               )
