@@ -80,8 +80,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> fetchAndUpdateData() async {
-    print("fetchAndUpdateData");
-    print(_isProcessing);
+    // print("fetchAndUpdateData");
+    // print(_isProcessing);
     setState(() {
       _dataNew = false;
     });
@@ -101,26 +101,26 @@ class _MyHomePageState extends State<MyHomePage> {
         _tabs[_currentIndex]['whatsappFilesImages'] = whatsappFilesImages;
         _dataNew = true;
       });
-      print("whatsappFilesImages dataNew");
+      // print("whatsappFilesImages dataNew");
     }
 
     if (!listsAreEqual(
         _tabs[_currentIndex]['whatsappFilesVideo'], whatsappFilesVideo)) {
       setState(() {
-        print("updating videos");
+        // print("updating videos");
         _tabs[_currentIndex]['whatsappFilesVideo'] = mergeVideoLists(
           _tabs[_currentIndex]['whatsappFilesVideo'],
           whatsappFilesVideo,
         );
         _dataNew = true;
       });
-      print("whatsappFilesVideo dataNew");
+      // print("whatsappFilesVideo dataNew");
     }
   }
 
   Future<void> getVideoThumbnailAsync() async {
     if (_dataNew) {
-      print("_dataNew");
+      // print("_dataNew");
       for (int i = 0;
           i < _tabs[_currentIndex]['whatsappFilesVideo'].length;
           i++) {
@@ -140,8 +140,8 @@ class _MyHomePageState extends State<MyHomePage> {
       _isProcessing = false;
       _dataLoaded = true;
     });
-    print("getVideoThumbnailAsync");
-    print(_isProcessing);
+    // print("getVideoThumbnailAsync");
+    // print(_isProcessing);
   }
 
   Future<void> _continuousMethods() async {

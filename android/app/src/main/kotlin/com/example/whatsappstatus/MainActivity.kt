@@ -122,7 +122,7 @@ class MainActivity : FlutterActivity() {
             val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
             return packageInfo.versionName
         } catch (e: PackageManager.NameNotFoundException) {
-            e.printStackTrace()
+            // e.printStackTrace()
         }
         return "Unknown"
     }
@@ -177,7 +177,7 @@ class MainActivity : FlutterActivity() {
             startActivity(Intent.createChooser(shareIntent, "Share via"))
         } catch (e: Exception) {
             // Handle exceptions
-            e.printStackTrace()
+            // e.printStackTrace()
             // You might want to return an error message or handle it differently
         }
         return true
@@ -220,7 +220,7 @@ class MainActivity : FlutterActivity() {
                 "sharing..."
             } catch (e: Exception) {
                 // Handle exceptions
-                e.printStackTrace()
+                // e.printStackTrace()
                 "can't share"
             }
         } else {
@@ -243,7 +243,7 @@ class MainActivity : FlutterActivity() {
             retriever.setDataSource(videoPath)
             retriever.getFrameAtTime()
         } catch (e: Exception) {
-            e.printStackTrace()
+            // e.printStackTrace()
             null
         } finally {
             retriever.release()
@@ -261,7 +261,7 @@ class MainActivity : FlutterActivity() {
                     return@withContext stream.toByteArray()
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                // e.printStackTrace()
             }
             return@withContext ByteArray(0)
         }
@@ -279,7 +279,7 @@ class MainActivity : FlutterActivity() {
                 retriever.setDataSource(videoPath)
                 return retriever.getFrameAtTime()
             } catch (e: Exception) {
-                e.printStackTrace()
+                // e.printStackTrace()
             } finally {
                 retriever.release()
             }
@@ -295,7 +295,7 @@ class MainActivity : FlutterActivity() {
                 return stream.toByteArray();
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            // e.printStackTrace()
         }
         return ByteArray(0)
     }
@@ -311,7 +311,7 @@ class MainActivity : FlutterActivity() {
                 retriever.setDataSource(videoPath)
                 return retriever.getFrameAtTime()
             } catch (e: Exception) {
-                e.printStackTrace()
+                // e.printStackTrace()
             } finally {
                 retriever.release()
             }
@@ -347,7 +347,7 @@ class MainActivity : FlutterActivity() {
                     }
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                // e.printStackTrace()
             }
             return ByteArray(0)
         }
@@ -530,7 +530,7 @@ class MainActivity : FlutterActivity() {
                 // File saved successfully
                 "Status Saved"
                 } catch (e: IOException) {
-                    e.printStackTrace()
+                    // e.printStackTrace()
                     // Error saving file
                     "Not Saved"
                 }
@@ -551,7 +551,7 @@ class MainActivity : FlutterActivity() {
                 "not deleted"
             }
         } catch (e: SecurityException) {
-            e.printStackTrace()
+            // e.printStackTrace()
             "not deleted"
         }
     }
