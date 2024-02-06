@@ -80,6 +80,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> fetchAndUpdateData() async {
+    print("fetchAndUpdateData");
+    print(_isProcessing);
     setState(() {
       _dataNew = false;
     });
@@ -99,28 +101,26 @@ class _MyHomePageState extends State<MyHomePage> {
         _tabs[_currentIndex]['whatsappFilesImages'] = whatsappFilesImages;
         _dataNew = true;
       });
+      print("whatsappFilesImages dataNew");
     }
-    if (_tabs[_currentIndex]['whatsappFilesVideo'].length > 0) {
-      if (!listsAreEqual(
-          _tabs[_currentIndex]['whatsappFilesVideo'], whatsappFilesVideo)) {
-        setState(() {
-          _tabs[_currentIndex]['whatsappFilesVideo'] = mergeVideoLists(
-            _tabs[_currentIndex]['whatsappFilesVideo'],
-            whatsappFilesVideo,
-          );
-          _dataNew = true;
-        });
-      }
-    } else {
+
+    if (!listsAreEqual(
+        _tabs[_currentIndex]['whatsappFilesVideo'], whatsappFilesVideo)) {
       setState(() {
-        _tabs[_currentIndex]['whatsappFilesVideo'] = whatsappFilesVideo;
+        print("updating videos");
+        _tabs[_currentIndex]['whatsappFilesVideo'] = mergeVideoLists(
+          _tabs[_currentIndex]['whatsappFilesVideo'],
+          whatsappFilesVideo,
+        );
         _dataNew = true;
       });
+      print("whatsappFilesVideo dataNew");
     }
   }
 
   Future<void> getVideoThumbnailAsync() async {
     if (_dataNew) {
+      print("_dataNew");
       for (int i = 0;
           i < _tabs[_currentIndex]['whatsappFilesVideo'].length;
           i++) {
@@ -140,6 +140,8 @@ class _MyHomePageState extends State<MyHomePage> {
       _isProcessing = false;
       _dataLoaded = true;
     });
+    print("getVideoThumbnailAsync");
+    print(_isProcessing);
   }
 
   Future<void> _continuousMethods() async {
@@ -163,21 +165,20 @@ class _MyHomePageState extends State<MyHomePage> {
             foregroundColor: theme.primaryColor,
             backgroundColor: theme.colorScheme.secondary,
             title: GestureDetector(
-              onTap: () async => await platform.invokeMethod('launchDemo'),
-              child: const Text('Status saver no-ads'),
-            ),
+                onTap: () async => await platform.invokeMethod('launchDemo'),
+                child: const Text('Status saver no-ads')),
             actions: [
               IconButton(
-                onPressed: () async => await platform.invokeMethod('sendEmail'),
-                icon: const Icon(
-                  Icons.lightbulb,
-                  color: Colors.yellow,
-                ),
-              ),
+                  onPressed: () async =>
+                      await platform.invokeMethod('sendEmail'),
+                  icon: const Icon(
+                    Icons.lightbulb,
+                    color: Colors.yellow,
+                  )),
               IconButton(
-                onPressed: () async => await platform.invokeMethod('shareApp'),
-                icon: const Icon(Icons.share),
-              )
+                  onPressed: () async =>
+                      await platform.invokeMethod('shareApp'),
+                  icon: const Icon(Icons.share))
             ],
             bottom: TabBar(
               dividerColor: theme.colorScheme.secondary,
@@ -186,13 +187,11 @@ class _MyHomePageState extends State<MyHomePage> {
               indicatorColor: theme.primaryColor,
               tabs: [
                 Center(
-                  child: Text(
-                      "${_tabs[_currentIndex]['whatsappFilesImages'].length} Images"),
-                ),
+                    child: Text(
+                        "${_tabs[_currentIndex]['whatsappFilesImages'].length} Images")),
                 Center(
-                  child: Text(
-                      "${_tabs[_currentIndex]['whatsappFilesVideo'].length} Video"),
-                ),
+                    child: Text(
+                        "${_tabs[_currentIndex]['whatsappFilesVideo'].length} Video")),
               ],
             ),
           ),
@@ -233,85 +232,66 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _buildTabContent(String files, scaffold) {
+    final currentTab = _tabs[_currentIndex];
+    final currentFiles = currentTab[files];
+    final appType = currentTab['appType'];
+
     return _dataLoaded
-        ? _tabs[_currentIndex][files].isNotEmpty
+        ? currentFiles.isNotEmpty
             ? GridView.builder(
                 cacheExtent: 9999,
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 6.0,
-                  mainAxisSpacing: 6.0,
-                ),
-                itemCount: _tabs[_currentIndex][files].length,
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 6.0,
+                    mainAxisSpacing: 6.0),
+                itemCount: currentFiles.length,
                 itemBuilder: (context, index) {
-                  // print(files);
+                  final statusFile = currentFiles[index];
                   return InkWell(
-                      onLongPress: () {
-                        statusAction(_tabs[_currentIndex][files][index].path,
-                                'shareMedia')
-                            .then((value) => scaffold
-                                .showSnackBar(SnackBar(content: Text(value))));
-                      },
-                      onDoubleTap: () {
-                        if (_tabs[_currentIndex]['appType'] != 'SAVED') {
-                          statusAction(_tabs[_currentIndex][files][index].path,
-                                  'saveStatus')
-                              .then((value) => scaffold.showSnackBar(
-                                  SnackBar(content: Text(value))));
-                        } else {
-                          statusAction(_tabs[_currentIndex][files][index].path,
-                                  'deleteStatus')
-                              .then((value) => scaffold.showSnackBar(
-                                  SnackBar(content: Text(value))));
-                        }
-                      },
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
+                    onLongPress: () =>
+                        statusAction(statusFile.path, 'shareMedia').then(
+                            (value) => scaffold
+                                .showSnackBar(SnackBar(content: Text(value)))),
+                    onDoubleTap: () {
+                      final action =
+                          appType != 'SAVED' ? 'saveStatus' : 'deleteStatus';
+                      statusAction(statusFile.path, action).then((value) =>
+                          scaffold
+                              .showSnackBar(SnackBar(content: Text(value))));
+                    },
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
                             builder: (context) => Preview(
-                              previewFile: _tabs[_currentIndex][files],
-                              index: index,
-                              type: files == 'whatsappFilesVideo'
-                                  ? 'Video'
-                                  : 'Image',
-                              theme: Theme.of(context),
-                              saved: _tabs[_currentIndex]['appType'] == 'SAVED',
-                            ),
-                          ),
-                        );
-                      },
-                      child: files == 'whatsappFilesImages'
-                          ? Image.file(
-                              File(_tabs[_currentIndex][files][index].path),
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  color: Colors.grey.withOpacity(0.5),
-                                );
-                              },
-                            )
-                          : Image.memory(
-                              _tabs[_currentIndex][files][index].mediaByte,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  color: Colors.grey.withOpacity(0.5),
-                                );
-                              },
-                            ));
+                                previewFile: currentFiles,
+                                index: index,
+                                type: files == 'whatsappFilesVideo'
+                                    ? 'Video'
+                                    : 'Image',
+                                theme: Theme.of(context),
+                                saved: appType == 'SAVED')),
+                      );
+                    },
+                    child: files == 'whatsappFilesImages'
+                        ? Image.file(File(statusFile.path),
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(color: Colors.grey.withOpacity(0.5)))
+                        : Image.memory(statusFile.mediaByte,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(color: Colors.grey.withOpacity(0.5))),
+                  );
                 },
               )
             : Center(
                 child: Text(
-                  '${_tabs[_currentIndex][files].length} ${_tabs[_currentIndex]['appType'].toLowerCase()} status available',
-                  style:
-                      TextStyle(color: Theme.of(context).colorScheme.onPrimary),
-                ),
+                    '${currentFiles.length} ${appType.toLowerCase()} status available',
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary)),
               )
-        : const Center(
-            child: CircularProgressIndicator(),
-          );
+        : const Center(child: CircularProgressIndicator());
   }
 
   @override
