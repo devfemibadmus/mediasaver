@@ -161,10 +161,11 @@ class _MyHomePageState extends State<MyHomePage> {
       return Center(
         child: GestureDetector(
             onTap: () async => await platform.invokeMethod('launchUpdate'),
-            child: const Text(
+            child: const Center(
+                child: Text(
               'Update your app',
               style: TextStyle(fontSize: 24),
-            )),
+            ))),
       );
     }
     return DefaultTabController(
