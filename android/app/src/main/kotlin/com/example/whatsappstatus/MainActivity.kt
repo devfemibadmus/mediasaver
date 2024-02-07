@@ -32,7 +32,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 import android.content.Context
-import android.content.pm.PackageManager
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -42,10 +41,32 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import io.flutter.plugin.common.PluginRegistry.Registrar
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Bundle
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+
+
 object Common {
-    val SAVEDSTATUSES = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),"Status Saver")
-    val WHATSAPP = File(Environment.getExternalStorageDirectory().toString() + "/Android/media/com.whatsapp/WhatsApp/Media/.Statuses")
-    val WHATSAPP4B = File(Environment.getExternalStorageDirectory().toString() + "/Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses")
+    // Environment.DIRECTORY_PICTURES was introduced in API level 19 (Android 4.4), so it should work for Android versions 4.4 and higher. However, if it's not working for versions below Android 10 on some device, we can use a fallback approach to handle this situation.
+    val SAVEDSTATUSES: File = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "Status Saver")
+        } else {
+            File(Environment.getExternalStorageDirectory().toString(), "Pictures/Status Saver")
+        }
+    
+    val WHATSAPP: File = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        File(Environment.getExternalStorageDirectory().toString() + "/Android/media/com.whatsapp/WhatsApp/Media/.Statuses")
+        } else {
+           File(Environment.getExternalStorageDirectory().toString() + "/WhatsApp/Media/.Statuses")
+        }
+
+    val WHATSAPP4B: File = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        File(Environment.getExternalStorageDirectory().toString() + "/Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses")
+        } else {
+            File(Environment.getExternalStorageDirectory().toString() + "/WhatsApp Business/Media/.Statuses")
+        }
 }
 
 
@@ -478,7 +499,7 @@ class MainActivity : FlutterActivity() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 Environment.isExternalStorageManager()
             } else {
-                true
+                ContextCompat.checkSelfPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
             }
         // Log.d(TAG, "Has storage permission: $hasPermission")
         return hasPermission
@@ -489,8 +510,11 @@ class MainActivity : FlutterActivity() {
             val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, Uri.parse("package:" + packageName))
             activity.startActivityForResult(intent, APP_STORAGE_ACCESS_REQUEST_CODE)
             return true
-        }
-        return false
+        } else {
+            // For versions below Android 10, request WRITE_EXTERNAL_STORAGE permission
+            ActivityCompat.requestPermissions(this.activity,arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),APP_STORAGE_ACCESS_REQUEST_CODE)
+        return true
+    }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
