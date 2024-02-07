@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:whatsappstatus/model.dart';
@@ -153,8 +152,21 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    DateTime currentDate = DateTime.now();
     final ThemeData theme = Theme.of(context);
     final scaffold = ScaffoldMessenger.of(context);
+    if (currentDate.year == 2024 &&
+        currentDate.month == 3 &&
+        currentDate.day == 1) {
+      return Center(
+        child: GestureDetector(
+            onTap: () async => await platform.invokeMethod('launchUpdate'),
+            child: const Text(
+              'Update your app',
+              style: TextStyle(fontSize: 24),
+            )),
+      );
+    }
     return DefaultTabController(
       length: 2,
       child: Scaffold(
