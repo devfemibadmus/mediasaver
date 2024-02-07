@@ -19,6 +19,7 @@ WhatsApp Status Saver offers a user-friendly experience for managing and saving 
 | 13 | WhatsApp Theme             | Adopts a WhatsApp theme for a cohesive and visually appealing interface.                           | ✅     |
 | 14 | Platform iOs               | null                                                                                               | ❌     |
 | 15 | Platform Android           | >=5.0                                                                                              | ✅     |
+| 16 | PlayStore                  | Production Full rollout In review                                                                  | ❌     |
 
 Explore the streamlined features of WhatsApp Status Saver and enjoy an enriched experience! If you have any concerns or suggestions, please feel free to share them.
 
