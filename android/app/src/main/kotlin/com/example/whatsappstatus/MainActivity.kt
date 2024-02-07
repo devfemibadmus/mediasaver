@@ -62,6 +62,7 @@ class MainActivity : FlutterActivity() {
                 "shareApp" -> result.success(shareApp())
                 "sendEmail" -> result.success(sendEmail())
                 "launchDemo" -> result.success(launchDemo())
+                "launchUpdate" -> result.success(launchUpdate())
                 "checkStoragePermission" -> result.success(checkStoragePermission())
                 "requestStoragePermission" -> result.success(requestStoragePermission())
                 "getStatusFilesInfo" -> {
@@ -157,6 +158,13 @@ class MainActivity : FlutterActivity() {
     private fun launchDemo(): Boolean{
         val webIntent = Intent(Intent.ACTION_VIEW)
         webIntent.data = Uri.parse("https://github.com/devfemibadmus/whatsapp-status-saver")
+        startActivity(webIntent)
+        return true
+    }
+    
+    private fun launchUpdate(): Boolean{
+        val webIntent = Intent(Intent.ACTION_VIEW)
+        webIntent.data = Uri.parse("https://play.google.com/store/apps/details?id=com.blackstackhub.whatsappstatus")
         startActivity(webIntent)
         return true
     }
