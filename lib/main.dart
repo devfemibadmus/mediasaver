@@ -179,7 +179,8 @@ class _MyHomePageState extends State<MyHomePage> {
             backgroundColor: theme.colorScheme.secondary,
             title: GestureDetector(
                 onTap: () async => await platform.invokeMethod('launchDemo'),
-                child: const Text('Status saver no-ads')),
+                child: const FittedBox(
+                    fit: BoxFit.fitWidth, child: Text('Status saver no-ads'))),
             actions: [
               IconButton(
                   onPressed: () async =>
