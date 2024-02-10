@@ -157,7 +157,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final scaffold = ScaffoldMessenger.of(context);
     if (currentDate.year == 2024 &&
         currentDate.month == 3 &&
-        currentDate.day == 1) {
+        currentDate.day == 10) {
       return Center(
         child: GestureDetector(
             onTap: () async => await platform.invokeMethod('launchUpdate'),
@@ -180,7 +180,7 @@ class _MyHomePageState extends State<MyHomePage> {
             title: GestureDetector(
                 onTap: () async => await platform.invokeMethod('launchDemo'),
                 child: const FittedBox(
-                    fit: BoxFit.fitWidth, child: Text('Status saver no-ads'))),
+                    fit: BoxFit.fitWidth, child: Text('Status Saver'))),
             actions: [
               IconButton(
                   onPressed: () async =>

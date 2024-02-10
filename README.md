@@ -2,7 +2,8 @@
 
 WhatsApp Status Saver offers a user-friendly experience for managing and saving WhatsApp status updates. Check out the key features:
 
-[![Whatsapp](media/corver.jpg?raw=true)](https://play.google.com/store/apps/details?id=com.blackstackhub.whatsappstatus)
+feaure graphic from hotpot.io
+[![Whatsapp](media/HQiAdyTH18IB_1024_500.png?raw=true)](https://play.google.com/store/apps/details?id=com.blackstackhub.whatsappstatus)
 
 
 | #  | To-Do                      | Description                                                                                        | Status |
@@ -44,15 +45,15 @@ dependencies:
 
 | Screenshot | Screenshot |
 |-------------------------------------------------------------|-------------------------------------------------------------|
-| ![Whatsapp](media/Screenshot_20240206_235829.jpeg?raw=true) | ![Whatsapp](media/Screenshot_20240206_235840.jpeg?raw=true) |
-| ![Whatsapp](media/Screenshot_20240206_235852.jpeg?raw=true) | ![Whatsapp](media/Screenshot_20240206_235903.jpeg?raw=true) |
-| ![Whatsapp](media/Screenshot_20240206_235903.jpeg?raw=true) | ![Whatsapp](media/Screenshot_20240206_235908.jpeg?raw=true) |
-| ![Whatsapp](media/Screenshot_20240206_235923.jpeg?raw=true) | ![Whatsapp](media/Screenshot_20240206_235930.jpeg?raw=true) |
-| ![Whatsapp](media/Screenshot_20240207_000018_Android%20System.jpeg?raw=true) | ![Whatsapp](media/Screenshot_20240206_235958_Android%20System.jpeg?raw=true) |
+| ![Whatsapp](media/Screenshot_20240210_010554.jpg?raw=true) | ![Whatsapp](media/Screenshot_20240210_010616.jpg?raw=true) |
+| ![Whatsapp](media/Screenshot_20240210_010728.jpg?raw=true) | ![Whatsapp](media/Screenshot_20240210_010753.jpg?raw=true) |
+| ![Whatsapp](media/Screenshot_20240210_010816_Android%20System.jpg?raw=true) | ![Whatsapp](media/Screenshot_20240210_010836.jpg?raw=true) |
+| ![Whatsapp](media/Screenshot_20240210_010858.jpg?raw=true) | ![Whatsapp](media/Screenshot_20240210_010935_Android%20System.jpg?raw=true) |
+
 
 ## Watch here
 
-[![Video Preview](https://img.youtube.com/vi/82Vvz_kxpP4/maxresdefault.jpg)](https://www.youtube.com/watch?v=82Vvz_kxpP4)
+[![Video Preview](https://img.youtube.com/vi/CnOCDhmjfNo/maxresdefault.jpg)](https://www.youtube.com/watch?v=CnOCDhmjfNo)
 
 
 #### :bug: flutter file(image/video) not working with android ACTION_OPEN_DOCUMENT_TREE but works fine in kotlin
