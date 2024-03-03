@@ -156,7 +156,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final ThemeData theme = Theme.of(context);
     final scaffold = ScaffoldMessenger.of(context);
     if (currentDate.year == 2024 &&
-        currentDate.month == 3 &&
+        currentDate.month == 6 &&
         currentDate.day == 10) {
       return Center(
         child: GestureDetector(
