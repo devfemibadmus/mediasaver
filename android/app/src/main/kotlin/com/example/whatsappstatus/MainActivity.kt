@@ -51,9 +51,9 @@ import androidx.core.content.ContextCompat
 object Common {
     // Environment.DIRECTORY_PICTURES was introduced in API level 19 (Android 4.4), so it should work for Android versions 4.4 and higher. However, if it's not working for versions below Android 10 on some device, we can use a fallback approach to handle this situation.
     val SAVEDSTATUSES: File = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "Status Saver")
+        File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "Media Saver")
         } else {
-            File(Environment.getExternalStorageDirectory().toString(), "Pictures/Status Saver")
+            File(Environment.getExternalStorageDirectory().toString(), "Pictures/Media Saver")
         }
     
     val WHATSAPP: File = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -196,7 +196,7 @@ class MainActivity : FlutterActivity() {
         shareIntent.type = "text/plain"
     
         // Set the subject and message
-        val shareSubject = "Check out this free Status Saver!"
+        val shareSubject = "Check out this free Media Saver!"
         val shareMessage = "$shareSubject\n\nDownload the app: https://play.google.com/store/apps/details?id=com.blackstackhub.whatsappstatus"
     
         // shareIntent.putExtra(Intent.EXTRA_SUBJECT, shareSubject)
@@ -234,7 +234,7 @@ class MainActivity : FlutterActivity() {
             // Share intent
             val shareIntent = Intent(Intent.ACTION_SEND)
             val shareSubject = "https://play.google.com/store/apps/details?id=com.blackstackhub.whatsapp"
-            val shareMessage = "i save this from free Status Saver!\n\n$shareSubject"
+            val shareMessage = "i save this from free Media Saver!\n\n$shareSubject"
             //shareIntent.type = mimeType
             shareIntent.type = mimeType
             // shareIntent.putExtra(Intent.EXTRA_SUBJECT, shareSubject)

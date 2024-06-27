@@ -36,4 +36,4 @@ Users are encouraged to keep their installations up to date to benefit from the 
 
 By participating in my responsible disclosure process, you agree to abide by these guidelines. I reserve the right to update or modify this policy at any time.
 
-Thank you for helping me keep WhatsApp Status Saver safe and secure for all users.
+Thank you for helping me keep WhatsApp Media Saver safe and secure for all users.

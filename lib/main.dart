@@ -180,7 +180,7 @@ class _MyHomePageState extends State<MyHomePage> {
             title: GestureDetector(
                 onTap: () async => await platform.invokeMethod('launchDemo'),
                 child: const FittedBox(
-                    fit: BoxFit.fitWidth, child: Text('Status Saver'))),
+                    fit: BoxFit.fitWidth, child: Text('Media Saver'))),
             actions: [
               IconButton(
                   onPressed: () async =>
@@ -217,15 +217,11 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(
-          backgroundColor: Theme.of(context).colorScheme.background,
-          selectedLabelStyle: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.onPrimary,
-          ),
-          unselectedLabelStyle: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).secondaryHeaderColor,
-          ),
+          backgroundColor: theme.colorScheme.background,
+          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
+          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
+          selectedItemColor: Theme.of(context).colorScheme.onPrimary,
+          unselectedItemColor: Theme.of(context).secondaryHeaderColor,
           currentIndex: _currentIndex,
           onTap: (index) {
             setState(() {
@@ -239,10 +235,10 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.business),
-              label: 'Whatsapp Business',
+              label: 'W4Business',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.business),
+              icon: Icon(Icons.download),
               label: 'All Saved',
             ),
           ],

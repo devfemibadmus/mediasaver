@@ -1,6 +1,6 @@
-# Whatsapp Status Saver
+# Whatsapp Media Saver
 
-WhatsApp Status Saver offers a user-friendly experience for managing and saving WhatsApp status updates. Check out the key features:
+WhatsApp Media Saver offers a user-friendly experience for managing and saving WhatsApp status updates. Check out the key features:
 
 feaure graphic from hotpot.io
 [![Whatsapp](media/HQiAdyTH18IB_1024_500.png?raw=true)](https://play.google.com/store/apps/details?id=com.blackstackhub.whatsappstatus)
@@ -25,7 +25,7 @@ feaure graphic from hotpot.io
 | 15 | Platform Android           | >=5.0                                                                                              | ✅     |
 | 16 | PlayStore                  | Production Full rollout In review                                                                  | ❌     |
 
-Explore the streamlined features of WhatsApp Status Saver and enjoy an enriched experience! If you have any concerns or suggestions, please feel free to share them.
+Explore the streamlined features of WhatsApp Media Saver and enjoy an enriched experience! If you have any concerns or suggestions, please feel free to share them.
 
 ## Dependecncies :alien: we dont ask much here  :poop:
 

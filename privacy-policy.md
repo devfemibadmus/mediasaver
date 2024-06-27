@@ -1,6 +1,6 @@
-# WhatsApp Status Saver Privacy Policy
+# WhatsApp Media Saver Privacy Policy
 
-Welcome to WhatsApp Status Saver! Our privacy policy outlines how we collect, use, and safeguard your personal information when you use our application.
+Welcome to WhatsApp Media Saver! Our privacy policy outlines how we collect, use, and safeguard your personal information when you use our application.
 
 ## Information We Collect
 
@@ -11,7 +11,7 @@ We do not collect any personally identifiable information from our users. We res
 We may collect certain non-personal information automatically when you use our app, such as device information (e.g., device model, operating system version). This information helps us improve our app and provide a better user experience.
 
 ### Media Files
-WhatsApp Status Saver allows you to save and manage media files from WhatsApp and WhatsApp Business. The app may access and store media files on your device to perform these actions. We do not access or store these files on our servers. Our app do not even use the internet.
+WhatsApp Media Saver allows you to save and manage media files from WhatsApp and WhatsApp Business. The app may access and store media files on your device to perform these actions. We do not access or store these files on our servers. Our app do not even use the internet.
 
 ## How We Use Your Information
 
