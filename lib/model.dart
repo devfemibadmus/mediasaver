@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 
-const platform = MethodChannel('com.blackstackhub.whatsappstatus');
+const platform = MethodChannel('com.blackstackhub.mediasaver');
 
 class StatusFileInfo {
   String name, path, format, source;

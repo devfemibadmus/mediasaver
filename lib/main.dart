@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:whatsappstatus/model.dart';
-import 'package:whatsappstatus/preview.dart';
+import 'package:mediasaver/model.dart';
+import 'package:mediasaver/preview.dart';
 
 void main() {
   runApp(const MyApp());
@@ -46,11 +46,17 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _dataNew = false;
   late List _tabs;
   bool _isProcessing = false;
+  List<String> labels = [
+    'Whatsapp',
+    'Whatsapp Business',
+    'Other Platform',
+    'Saved Media'
+  ];
   @override
   void initState() {
     super.initState();
     _tabs = [
-      for (var appType in ['WHATSAPP', 'WHATSAPP4B', 'SAVED'])
+      for (var appType in ['WHATSAPP', 'WHATSAPP4B', '', 'SAVED'])
         {
           'appType': appType,
           'whatsappFilesImages':
@@ -155,9 +161,9 @@ class _MyHomePageState extends State<MyHomePage> {
     DateTime currentDate = DateTime.now();
     final ThemeData theme = Theme.of(context);
     final scaffold = ScaffoldMessenger.of(context);
-    if (currentDate.year == 2024 &&
-        currentDate.month == 6 &&
-        currentDate.day == 10) {
+    if (currentDate.year >= 2024 &&
+        currentDate.month >= 7 &&
+        currentDate.day >= 10) {
       return Center(
         child: GestureDetector(
             onTap: () async => await platform.invokeMethod('launchUpdate'),
@@ -200,20 +206,30 @@ class _MyHomePageState extends State<MyHomePage> {
               unselectedLabelColor: theme.primaryColor,
               indicatorColor: theme.primaryColor,
               tabs: [
-                Center(
-                    child: Text(
-                        "${_tabs[_currentIndex]['whatsappFilesImages'].length} Images")),
-                Center(
-                    child: Text(
-                        "${_tabs[_currentIndex]['whatsappFilesVideo'].length} Video")),
+                if ([0, 1, 3].contains(_currentIndex))
+                  Center(
+                      child: Text(
+                          "${_tabs[_currentIndex]['whatsappFilesImages'].length} Images")),
+                if ([0, 1, 3].contains(_currentIndex))
+                  Center(
+                      child: Text(
+                          "${_tabs[_currentIndex]['whatsappFilesVideo'].length} Video")),
+                if (_currentIndex == 2) Center(child: Text("Other Platform")),
+                if (_currentIndex == 2) Center(child: Text("Promotions")),
               ],
             ),
           ),
         ),
         body: TabBarView(
           children: [
-            _buildTabContent('whatsappFilesImages', scaffold),
-            _buildTabContent('whatsappFilesVideo', scaffold),
+            if ([0, 1, 3].contains(_currentIndex))
+              _buildTabContent('whatsappFilesImages', scaffold),
+            if ([0, 1, 3].contains(_currentIndex))
+              _buildTabContent('whatsappFilesImages', scaffold),
+            if (_currentIndex == 2)
+              _buildTabContent('mediasavessssr', scaffold),
+            if (_currentIndex == 2)
+              _buildTabContent('mediasavessssr', scaffold),
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(
@@ -228,18 +244,22 @@ class _MyHomePageState extends State<MyHomePage> {
               _currentIndex = index;
             });
           },
-          items: const [
+          items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.chat),
-              label: 'Whatsapp',
+              icon: const Icon(Icons.chat),
+              label: labels[0],
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.business),
-              label: 'W4Business',
+              icon: const Icon(Icons.business),
+              label: labels[1],
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.download),
-              label: 'All Saved',
+              icon: const Icon(Icons.link_rounded),
+              label: labels[2],
+            ),
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.download),
+              label: labels[3],
             ),
           ],
         ),
@@ -248,6 +268,9 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _buildTabContent(String files, scaffold) {
+    if (_currentIndex == 2) {
+      return Text("Media downloader from url");
+    }
     final currentTab = _tabs[_currentIndex];
     final currentFiles = currentTab[files];
     final appType = currentTab['appType'];

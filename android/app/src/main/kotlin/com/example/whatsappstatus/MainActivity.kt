@@ -1,4 +1,4 @@
-package com.blackstackhub.whatsappstatus
+package com.blackstackhub.mediasaver
 
 import android.content.Intent
 import android.net.Uri
@@ -71,10 +71,10 @@ object Common {
 
 
 class MainActivity : FlutterActivity() {
-    private val FILE_PROVIDER_AUTHORITY = "com.blackstackhub.whatsappstatus.fileprovider"
+    private val FILE_PROVIDER_AUTHORITY = "com.blackstackhub.mediasaver.fileprovider"
     private val TAG = "MainActivity"
     private val APP_STORAGE_ACCESS_REQUEST_CODE = 501
-    private val CHANNEL = "com.blackstackhub.whatsappstatus"
+    private val CHANNEL = "com.blackstackhub.mediasaver"
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -156,9 +156,9 @@ class MainActivity : FlutterActivity() {
         val country = locale.displayCountry
 
         val email = "devfemibadmus@gmail.com"
-        val subject = "Request a new feature for Whatsapp-status-saver"
+        val subject = "Request a new feature for Media-Saver"
         
-        val preBody = "Version: ${getAppVersion(applicationContext)}\nCountry: $country\n\nI want to request for feature..."
+        val preBody = "Version: ${getAppVersion(applicationContext)}\nCountry: $country\n\nI want to request feature for..."
         val mailtoLink = "mailto:$email?subject=$subject&body=$preBody"
 
         // Set the email address
@@ -170,7 +170,7 @@ class MainActivity : FlutterActivity() {
         } catch (e: Exception) {
             // If no email app is available, open a web browser
             val webIntent = Intent(Intent.ACTION_VIEW)
-            webIntent.data = Uri.parse("https://github.com/devfemibadmus/whatsapp-status-saver")
+            webIntent.data = Uri.parse("https://github.com/devfemibadmus/Media-Saver")
             startActivity(webIntent)
         }
         return true
@@ -178,14 +178,14 @@ class MainActivity : FlutterActivity() {
 
     private fun launchDemo(): Boolean{
         val webIntent = Intent(Intent.ACTION_VIEW)
-        webIntent.data = Uri.parse("https://github.com/devfemibadmus/whatsapp-status-saver")
+        webIntent.data = Uri.parse("https://github.com/devfemibadmus/Media-Saver")
         startActivity(webIntent)
         return true
     }
     
     private fun launchUpdate(): Boolean{
         val webIntent = Intent(Intent.ACTION_VIEW)
-        webIntent.data = Uri.parse("https://play.google.com/store/apps/details?id=com.blackstackhub.whatsappstatus")
+        webIntent.data = Uri.parse("https://play.google.com/store/apps/details?id=com.blackstackhub.mediasaver")
         startActivity(webIntent)
         return true
     }
@@ -197,7 +197,7 @@ class MainActivity : FlutterActivity() {
     
         // Set the subject and message
         val shareSubject = "Check out this free Media Saver!"
-        val shareMessage = "$shareSubject\n\nDownload the app: https://play.google.com/store/apps/details?id=com.blackstackhub.whatsappstatus"
+        val shareMessage = "$shareSubject\n\nDownload the app: https://play.google.com/store/apps/details?id=com.blackstackhub.mediasaver"
     
         // shareIntent.putExtra(Intent.EXTRA_SUBJECT, shareSubject)
         shareIntent.putExtra(Intent.EXTRA_TEXT, shareMessage)

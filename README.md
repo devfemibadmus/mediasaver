@@ -3,7 +3,7 @@
 WhatsApp Media Saver offers a user-friendly experience for managing and saving WhatsApp status updates. Check out the key features:
 
 feaure graphic from hotpot.io
-[![Whatsapp](media/HQiAdyTH18IB_1024_500.png?raw=true)](https://play.google.com/store/apps/details?id=com.blackstackhub.whatsappstatus)
+[![Whatsapp](media/HQiAdyTH18IB_1024_500.png?raw=true)](https://play.google.com/store/apps/details?id=com.blackstackhub.mediasaver)
 
 
 | #  | To-Do                      | Description                                                                                        | Status |
