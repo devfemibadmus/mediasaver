@@ -48,7 +48,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _isProcessing = false;
   List<String> labels = [
     'Whatsapp',
-    'Whatsapp Business',
+    'W4Business',
     'Other Platform',
     'Saved Media'
   ];
@@ -214,8 +214,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   Center(
                       child: Text(
                           "${_tabs[_currentIndex]['whatsappFilesVideo'].length} Video")),
-                if (_currentIndex == 2) Center(child: Text("Other Platform")),
-                if (_currentIndex == 2) Center(child: Text("Promotions")),
+                if (_currentIndex == 2)
+                  const Center(child: Text("Other Platform")),
+                if (_currentIndex == 2) const Center(child: Text("Promotions")),
               ],
             ),
           ),
@@ -226,10 +227,8 @@ class _MyHomePageState extends State<MyHomePage> {
               _buildTabContent('whatsappFilesImages', scaffold),
             if ([0, 1, 3].contains(_currentIndex))
               _buildTabContent('whatsappFilesImages', scaffold),
-            if (_currentIndex == 2)
-              _buildTabContent('mediasavessssr', scaffold),
-            if (_currentIndex == 2)
-              _buildTabContent('mediasavessssr', scaffold),
+            if (_currentIndex == 2) _buildTabContent('otherplatform', scaffold),
+            if (_currentIndex == 2) _buildTabContent('promoton', scaffold),
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(
@@ -269,7 +268,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget _buildTabContent(String files, scaffold) {
     if (_currentIndex == 2) {
-      return Text("Media downloader from url");
+      return files == "otherplatform"
+          ? const Text("Media downloader from url")
+          : const Center(child: Text("No Promotion"));
     }
     final currentTab = _tabs[_currentIndex];
     final currentFiles = currentTab[files];
