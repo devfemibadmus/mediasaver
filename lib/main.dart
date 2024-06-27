@@ -218,8 +218,14 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         bottomNavigationBar: BottomNavigationBar(
           backgroundColor: Theme.of(context).colorScheme.background,
-          selectedItemColor: Theme.of(context).colorScheme.onPrimary,
-          unselectedItemColor: Theme.of(context).secondaryHeaderColor,
+          selectedLabelStyle: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onPrimary,
+          ),
+          unselectedLabelStyle: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).secondaryHeaderColor,
+          ),
           currentIndex: _currentIndex,
           onTap: (index) {
             setState(() {
