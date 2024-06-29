@@ -47,6 +47,13 @@ import android.os.Bundle
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 
+import android.content.ClipData
+import android.content.ClipboardManager
+
+import okhttp3.OkHttpClient
+import okhttp3.Request
+
+
 
 object Common {
     // Environment.DIRECTORY_PICTURES was introduced in API level 19 (Android 4.4), so it should work for Android versions 4.4 and higher. However, if it's not working for versions below Android 10 on some device, we can use a fallback approach to handle this situation.
@@ -84,8 +91,19 @@ class MainActivity : FlutterActivity() {
                 "sendEmail" -> result.success(sendEmail())
                 "launchDemo" -> result.success(launchDemo())
                 "launchUpdate" -> result.success(launchUpdate())
+                "getClipboardContent" -> result.success(getClipboardContent())
                 "checkStoragePermission" -> result.success(checkStoragePermission())
                 "requestStoragePermission" -> result.success(requestStoragePermission())
+                "downloadFile" -> {
+                    val fileUrl = call.arguments<String>()
+                    if (fileUrl != null) {
+                        result.success(downloadAndSaveFile(fileUrl) { progress ->
+                            MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).invokeMethod("updateProgress", progress)
+                        })
+                    } else {
+                        result.error("INVALID_PARAMETERS", "Invalid parameters", null)
+                    }
+                }
                 "getStatusFilesInfo" -> {
                     val appType = call.argument<String>("appType")
                     if (appType != null) {
@@ -181,6 +199,18 @@ class MainActivity : FlutterActivity() {
         webIntent.data = Uri.parse("https://github.com/devfemibadmus/Media-Saver")
         startActivity(webIntent)
         return true
+    }
+
+    private fun getClipboardContent(): String{
+        val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        if (clipboardManager.hasPrimaryClip()) {
+            val clipData: ClipData? = clipboardManager.primaryClip
+            if (clipData != null && clipData.itemCount > 0) {
+                val item = clipData.getItemAt(0)
+                return item.text.toString()
+            }
+        }
+        return ""
     }
     
     private fun launchUpdate(): Boolean{
@@ -531,8 +561,8 @@ class MainActivity : FlutterActivity() {
     private fun saveStatus(sourceFilePath: String): String {
         val sourceFile = File(sourceFilePath)
 
-        return if (sourceFile.exists()) {
-            try {
+        if (sourceFile.exists()) {
+            return try {
                 val galleryDirectory = Common.SAVEDSTATUSES
 
                 if (!galleryDirectory.exists()) {
@@ -595,6 +625,56 @@ class MainActivity : FlutterActivity() {
                 "jpg"
         } else {
                 name.substring(lastDotIndex + 1).toLowerCase()
+        }
+    }
+
+
+    private fun downloadAndSaveFile(fileUrl: String, progressCallback: (Double) -> Unit): String {
+        val client = OkHttpClient()
+
+        val request = Request.Builder()
+            .url(fileUrl)
+            .build()
+
+        return try {
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) {
+                    return "Download Failed"
+                }
+
+                val galleryDirectory = Common.SAVEDSTATUSES
+                if (!galleryDirectory.exists()) {
+                    galleryDirectory.mkdirs()
+                }
+
+                val fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1)
+                val saveFile = File(galleryDirectory, fileName)
+
+                if (saveFile.exists()) {
+                    return "Already Saved"
+                }
+
+                response.body?.byteStream()?.use { inputStream ->
+                    FileOutputStream(saveFile).use { outputStream ->
+                        val buffer = ByteArray(4 * 1024)
+                        val totalBytes = response.body?.contentLength() ?: -1L
+                        var bytesRead: Int
+                        var bytesReadTotal: Long = 0
+
+                        while (inputStream.read(buffer).also { bytesRead = it } >= 0) {
+                            outputStream.write(buffer, 0, bytesRead)
+                            bytesReadTotal += bytesRead
+                            val progress = if (totalBytes > 0) (bytesReadTotal.toDouble() / totalBytes) * 100 else -1.0
+                            progressCallback(progress)
+                        }
+                    }
+                }
+
+                "Status Saved"
+            }
+        } catch (e: IOException) {
+            e.printStackTrace()
+            "Not Saved"
         }
     }
 
