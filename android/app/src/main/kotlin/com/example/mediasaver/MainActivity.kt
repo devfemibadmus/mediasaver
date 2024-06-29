@@ -561,8 +561,8 @@ class MainActivity : FlutterActivity() {
     private fun saveStatus(sourceFilePath: String): String {
         val sourceFile = File(sourceFilePath)
 
-        if (sourceFile.exists()) {
-            return try {
+        return if (sourceFile.exists()) {
+            try {
                 val galleryDirectory = Common.SAVEDSTATUSES
 
                 if (!galleryDirectory.exists()) {
