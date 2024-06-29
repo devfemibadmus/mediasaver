@@ -107,18 +107,3 @@ Future<String> downloadYoutubeVideo(String videoUrl) async {
     return "Private Video";
   }
 }
-
-class DownloadService {
-  static Future<String> downloadFile(String url) async {
-    final String result = await platform.invokeMethod('downloadFile', url);
-    return result;
-  }
-
-  static void setDownloadProgressHandler(Function(double) handler) {
-    platform.setMethodCallHandler((call) async {
-      if (call.method == 'updateProgress') {
-        handler(call.arguments);
-      }
-    });
-  }
-}
