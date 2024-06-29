@@ -1,7 +1,10 @@
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 const platform = MethodChannel('com.blackstackhub.mediasaver');
 
+// BULLET TRAIN
 class StatusFileInfo {
   String name, path, format, source;
   int size;
@@ -73,4 +76,34 @@ List<StatusFileInfo> mergeVideoLists(
     }
     return fileInfo;
   }).toList();
+}
+
+Future<String> fetchClipboardContent() async {
+  String clipboardContent = await platform.invokeMethod('getClipboardContent');
+  return clipboardContent;
+}
+
+bool isValidUrl(String value) {
+  return value.startsWith('https://') || value.startsWith('http://');
+}
+
+Future<String> downloadYoutubeVideo(String videoUrl) async {
+  const String apiUrl = 'http://192.168.209.103/youtube/';
+
+  final response = await http.post(
+    Uri.parse(apiUrl),
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: {'url': videoUrl},
+  );
+
+  if (response.statusCode == 200) {
+    final responseData = json.decode(response.body);
+    if (responseData.containsKey('media_url')) {
+      return responseData['media_url'];
+    } else {
+      return "Try again later";
+    }
+  } else {
+    return "Private Video";
+  }
 }
