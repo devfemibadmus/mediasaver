@@ -46,6 +46,20 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _dataNew = false;
   late List _tabs;
   bool _isProcessing = false;
+
+  final TextEditingController _textController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
+  /*
+  final _formKey = GlobalKey<FormState>();
+  String _selectedQuality = 'default';
+  */
+  double downloadPercentage = 0.0;
+  bool linkready = false;
+  bool validlink = false;
+  String? thumbnailUrl;
+  String? errorMessage;
+  String pastebtn = "Paste";
+
   List<String> labels = [
     'Whatsapp',
     'W4Business',
@@ -55,6 +69,13 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
+
+    DownloadService.setDownloadProgressHandler((progress) {
+      setState(() {
+        downloadPercentage = progress;
+      });
+    });
+
     _tabs = [
       for (var appType in ['WHATSAPP', 'WHATSAPP4B', '', 'SAVED'])
         {
@@ -216,7 +237,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           "${_tabs[_currentIndex]['whatsappFilesVideo'].length} Video")),
                 if (_currentIndex == 2)
                   const Center(child: Text("Other Platform")),
-                if (_currentIndex == 2) const Center(child: Text("Promotions")),
+                if (_currentIndex == 2) const Center(child: Text("Quotes")),
               ],
             ),
           ),
@@ -226,9 +247,9 @@ class _MyHomePageState extends State<MyHomePage> {
             if ([0, 1, 3].contains(_currentIndex))
               _buildTabContent('whatsappFilesImages', scaffold),
             if ([0, 1, 3].contains(_currentIndex))
-              _buildTabContent('whatsappFilesImages', scaffold),
+              _buildTabContent('whatsappFilesVideo', scaffold),
             if (_currentIndex == 2) _buildTabContent('otherplatform', scaffold),
-            if (_currentIndex == 2) _buildTabContent('promoton', scaffold),
+            if (_currentIndex == 2) _buildTabContent('quotes', scaffold),
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(
@@ -268,9 +289,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget _buildTabContent(String files, scaffold) {
     if (_currentIndex == 2) {
-      return files == "otherplatform"
-          ? const Text("Media downloader from url")
-          : const Center(child: Text("No Promotion"));
+      return files == "quotes"
+          ? Center(
+              child: Text("No Quotes",
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary)))
+          : platformMediaDownloaderWidget(scaffold);
     }
     final currentTab = _tabs[_currentIndex];
     final currentFiles = currentTab[files];
@@ -334,9 +358,215 @@ class _MyHomePageState extends State<MyHomePage> {
         : const Center(child: CircularProgressIndicator());
   }
 
+  Widget platformMediaDownloaderWidget(scaffold) {
+    return StatefulBuilder(
+      builder: (context, setState) {
+        return Padding(
+          padding: const EdgeInsets.all(10),
+          child: Column(
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: TextFormField(
+                      onChanged: ((value) {
+                        setState(() {
+                          if (isValidUrl(value)) {
+                            _textController.text = value;
+                            errorMessage = null;
+                            if (_focusNode.hasFocus) pastebtn = "Search";
+                          } else {
+                            errorMessage = 'Not a valid URL';
+                            pastebtn = "Paste";
+                          }
+                        });
+                      }),
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.onPrimary),
+                      controller: _textController,
+                      focusNode: _focusNode,
+                      cursorColor: Theme.of(context).colorScheme.onPrimary,
+                      decoration: InputDecoration(
+                        border: const OutlineInputBorder(),
+                        errorText: errorMessage,
+                        labelText: 'Media url',
+                        labelStyle: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary),
+                        contentPadding: const EdgeInsets.all(5.0),
+                        isDense: true,
+                        enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color:
+                                    Theme.of(context).colorScheme.onPrimary)),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.secondary),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 15),
+                  ElevatedButton(
+                    // handle the button text to know wether search or paste
+                    onPressed: () {
+                      _focusNode.unfocus();
+                      fetchClipboardContent().then(
+                        (value) => setState(() {
+                          if (pastebtn == "Paste") {
+                            _textController.text = value;
+                          }
+                          if (isValidUrl(_textController.text)) {
+                            linkready = true;
+                            errorMessage = null;
+                            fecthMediaFromServer(_textController.text).then(
+                              (value) {
+                                linkready = false;
+                                if (isValidUrl(value[0])) {
+                                  thumbnailUrl = value[1];
+                                  DownloadService.downloadFile(value[0])
+                                      .then((result) {
+                                    print('Download result: $result');
+                                  });
+                                } else {
+                                  errorMessage = value[0];
+                                  pastebtn = "Paste";
+                                }
+                              },
+                            );
+                          } else {
+                            errorMessage = 'Not a valid URL';
+                            linkready = false;
+                          }
+                        }),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.all(6),
+                      minimumSize: Size.zero,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: Text(
+                      pastebtn,
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.secondary),
+                    ),
+                  )
+                ],
+              ),
+              const SizedBox(height: 20),
+              if (linkready && thumbnailUrl == null)
+                const CircularProgressIndicator(),
+              if (thumbnailUrl != null)
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Image.network(thumbnailUrl!),
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.8),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    SizedBox.square(
+                      dimension: 70,
+                      child: CircularProgressIndicator(
+                        value: downloadPercentage,
+                        color: Theme.of(context).colorScheme.secondary,
+                        strokeWidth: 10.0,
+                      ),
+                    ),
+                    Text(
+                      '${(downloadPercentage * 100).toInt()}%',
+                      style: TextStyle(
+                        fontSize: 18.0,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              /*
+              Form(
+                key: _formKey,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(
+                      flex: 2,
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedQuality,
+                        decoration: InputDecoration(
+                          labelText: 'Video Quality',
+                          labelStyle: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                          ),
+                          border: InputBorder.none,
+                        ),
+                        items: [
+                          'default',
+                          '144p',
+                          '240p',
+                          '360p',
+                          '480p',
+                          '720p',
+                          '1080p'
+                        ]
+                            .map((quality) => DropdownMenuItem(
+                                  value: quality,
+                                  child: Text(quality),
+                                ))
+                            .toList(),
+                        onChanged: (newValue) {
+                          setState(() {
+                            _selectedQuality = newValue!;
+                          });
+                        },
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please select a video quality';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    // Adjust the space between the dropdown and the button
+                    Flexible(
+                      flex: 5,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (_formKey.currentState!.validate()) {
+                            print('Video url is: ${_textController.text}');
+                            print('Selected video quality: $_selectedQuality');
+                          }
+                        },
+                        child: Text(
+                          'Download',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.secondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              */
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
     _timer.cancel();
+    _textController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 }
