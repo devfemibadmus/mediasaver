@@ -55,7 +55,10 @@ class _MyHomePageState extends State<MyHomePage> {
   */
   double downloadPercentage = 0.0;
   bool linkready = false;
-  bool validlink = false;
+  bool downloadBtnClicked = false;
+  bool downloaded = false;
+  String? medialPath;
+  String? medialUrl;
   String? thumbnailUrl;
   String? errorMessage;
   String pastebtn = "Paste";
@@ -69,13 +72,6 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-
-    DownloadService.setDownloadProgressHandler((progress) {
-      setState(() {
-        downloadPercentage = progress;
-      });
-    });
-
     _tabs = [
       for (var appType in ['WHATSAPP', 'WHATSAPP4B', '', 'SAVED'])
         {
@@ -126,8 +122,8 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {
         _tabs[_currentIndex]['whatsappFilesImages'] = whatsappFilesImages;
         _dataNew = true;
+        // print("whatsappFilesImages dataNew");
       });
-      // print("whatsappFilesImages dataNew");
     }
 
     if (!listsAreEqual(
@@ -171,10 +167,12 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _continuousMethods() async {
-    _isProcessing = true;
-    await fetchAndUpdateData().then((_) async {
-      await getVideoThumbnailAsync();
-    });
+    if (_tabs[_currentIndex]['appType'] != '') {
+      _isProcessing = true;
+      await fetchAndUpdateData().then((_) async {
+        await getVideoThumbnailAsync();
+      });
+    }
   }
 
   @override
@@ -409,36 +407,56 @@ class _MyHomePageState extends State<MyHomePage> {
                   ElevatedButton(
                     // handle the button text to know wether search or paste
                     onPressed: () {
+                      // print("clicked");
                       _focusNode.unfocus();
-                      fetchClipboardContent().then(
-                        (value) => setState(() {
+                      setState(() {
+                        downloadPercentage = 0.0;
+                        linkready = false;
+                        downloadBtnClicked = false;
+                        downloaded = false;
+                        medialPath = null;
+                        medialUrl = null;
+                        thumbnailUrl = null;
+                        errorMessage = null;
+                      });
+                      fetchClipboardContent().then((value) {
+                        setState(() {
                           if (pastebtn == "Paste") {
                             _textController.text = value;
+                            _textController.value =
+                                TextEditingValue(text: value);
+                            // print("pasted");
                           }
                           if (isValidUrl(_textController.text)) {
                             linkready = true;
                             errorMessage = null;
-                            fecthMediaFromServer(_textController.text).then(
-                              (value) {
-                                linkready = false;
-                                if (isValidUrl(value[0])) {
-                                  thumbnailUrl = value[1];
-                                  DownloadService.downloadFile(value[0])
-                                      .then((result) {
-                                    print('Download result: $result');
-                                  });
-                                } else {
-                                  errorMessage = value[0];
-                                  pastebtn = "Paste";
-                                }
-                              },
-                            );
+                            thumbnailUrl = null;
+                            // print("linkready $linkready");
                           } else {
                             errorMessage = 'Not a valid URL';
                             linkready = false;
                           }
-                        }),
-                      );
+                        });
+
+                        if (isValidUrl(value)) {
+                          fecthMediaFromServer(value).then(
+                            (value) {
+                              setState(() {
+                                linkready = false;
+                                // print("linkready $linkready");
+                                if (isValidUrl(value[0])) {
+                                  thumbnailUrl = value[1];
+                                  medialUrl = value[0];
+                                } else {
+                                  errorMessage = value[0];
+                                  pastebtn = "Paste";
+                                }
+                              });
+                            },
+                          );
+                        }
+                        ;
+                      });
                     },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.all(6),
@@ -456,37 +474,146 @@ class _MyHomePageState extends State<MyHomePage> {
                 ],
               ),
               const SizedBox(height: 20),
-              if (linkready && thumbnailUrl == null)
-                const CircularProgressIndicator(),
+              if (linkready) const CircularProgressIndicator(),
               if (thumbnailUrl != null)
                 Stack(
                   alignment: Alignment.center,
                   children: [
-                    Image.network(thumbnailUrl!),
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.8),
-                        shape: BoxShape.circle,
+                    // Image.network(thumbnailUrl!),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8.0),
+                      child: Image.network(
+                        thumbnailUrl!,
+                        fit: BoxFit.cover,
+                        height: MediaQuery.of(context).size.height / 1.7,
+                        width: MediaQuery.of(context).size.width,
                       ),
                     ),
-                    SizedBox.square(
-                      dimension: 70,
-                      child: CircularProgressIndicator(
-                        value: downloadPercentage,
-                        color: Theme.of(context).colorScheme.secondary,
-                        strokeWidth: 10.0,
+                    /*
+                    if (downloadBtnClicked)
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.8),
+                          shape: BoxShape.circle,
+                        ),
                       ),
-                    ),
-                    Text(
-                      '${(downloadPercentage * 100).toInt()}%',
-                      style: TextStyle(
-                        fontSize: 18.0,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onPrimary,
+                    if (downloadBtnClicked)
+                      SizedBox.square(
+                        dimension: 70,
+                        child: CircularProgressIndicator(
+                          value: downloadPercentage,
+                          color: Theme.of(context).colorScheme.secondary,
+                          strokeWidth: 10.0,
+                        ),
                       ),
-                    ),
+                    if (downloadBtnClicked)
+                      Text(
+                        '${(downloadPercentage * 100).toInt()}%',
+                        style: TextStyle(
+                          fontSize: 18.0,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onPrimary,
+                        ),
+                      ),
+                    */
+                    if (!downloaded)
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            downloadBtnClicked = true;
+                          });
+                          downloadFile(medialUrl!).then((result) {
+                            setState(() {
+                              downloadBtnClicked = !result[0];
+                              downloaded = result[0];
+                              medialPath = result[1];
+                            });
+                          });
+                        },
+                        icon: Icon(
+                          Icons.download,
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
+                        label: Text(
+                          "Download",
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.secondary,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    if (downloadBtnClicked) const CircularProgressIndicator(),
+                    if (downloaded)
+                      Positioned(
+                        top: 0,
+                        right: 0,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onPrimary
+                                .withOpacity(0.4),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(25),
+                              bottomLeft: Radius.circular(25),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              IconButton(
+                                color: Theme.of(context).colorScheme.secondary,
+                                onPressed: (() {
+                                  statusAction(medialPath!, 'deleteStatus')
+                                      .then((value) {
+                                    scaffold.showSnackBar(
+                                        SnackBar(content: Text(value)));
+                                    setState(() {
+                                      downloadPercentage = 0.0;
+                                      linkready = false;
+                                      downloadBtnClicked = false;
+                                      downloaded = false;
+                                      medialUrl = null;
+                                      thumbnailUrl = null;
+                                      errorMessage = null;
+                                      pastebtn = "Paste";
+                                      _textController.text = '';
+                                    });
+                                  });
+                                }),
+                                icon: const Icon(Icons.delete),
+                              ),
+                              IconButton(
+                                color: Theme.of(context).colorScheme.secondary,
+                                onPressed: (() {
+                                  statusAction(medialPath!, 'shareMedia').then(
+                                      (value) => scaffold.showSnackBar(
+                                          SnackBar(content: Text(value))));
+                                }),
+                                icon: const Icon(Icons.share),
+                              ),
+                              IconButton(
+                                color: Theme.of(context).colorScheme.secondary,
+                                onPressed: (() {
+                                  _focusNode.requestFocus();
+                                  setState(() {
+                                    downloadPercentage = 0.0;
+                                    linkready = false;
+                                    downloadBtnClicked = false;
+                                    downloaded = false;
+                                    medialUrl = null;
+                                    thumbnailUrl = null;
+                                    errorMessage = null;
+                                    pastebtn = "Paste";
+                                    _textController.text = '';
+                                  });
+                                }),
+                                icon: const Icon(Icons.close),
+                              )
+                            ],
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               /*
