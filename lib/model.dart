@@ -87,38 +87,38 @@ bool isValidUrl(String value) {
   return value.startsWith('https://') || value.startsWith('http://');
 }
 
-Future<String> downloadYoutubeVideo(String videoUrl) async {
-  const String apiUrl = 'http://192.168.209.103/youtube/';
+Future<List> fecthMediaFromServer(String videoUrl) async {
+  // print("videoUrl $videoUrl");
+  const String apiUrl = 'http://192.168.94.103/';
 
   final response = await http.post(
     Uri.parse(apiUrl),
     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
     body: {'url': videoUrl},
   );
+  // print(response.body);
 
   if (response.statusCode == 200) {
     final responseData = json.decode(response.body);
-    if (responseData.containsKey('media_url')) {
-      return responseData['media_url'];
+    if (responseData.containsKey('media_url') &&
+        responseData.containsKey('thumbnail_url')) {
+      return [responseData['media_url'], responseData['thumbnail_url']];
     } else {
-      return "Try again later";
+      return ["Try again later", "Try again later"];
     }
   } else {
-    return "Private Video";
+    return ["Private Video", "Private Video"];
   }
 }
 
-class DownloadService {
-  static Future<String> downloadFile(String url) async {
-    final String result = await platform.invokeMethod('downloadFile', url);
-    return result;
+Future<List> downloadFile(String url) async {
+  /*
+  final String result = await platform.invokeMethod('downloadFile', url);
+  print('Download result: $result');
+  if (result != "downloaded") {
+    return false;
   }
-
-  static void setDownloadProgressHandler(Function(double) handler) {
-    platform.setMethodCallHandler((call) async {
-      if (call.method == 'updateProgress') {
-        handler(call.arguments);
-      }
-    });
-  }
+  */
+  // print(url);
+  return [true, "file://"];
 }
