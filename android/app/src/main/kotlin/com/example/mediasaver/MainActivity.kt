@@ -58,9 +58,10 @@ import okhttp3.Request
 object Common {
     // Environment.DIRECTORY_PICTURES was introduced in API level 19 (Android 4.4), so it should work for Android versions 4.4 and higher. However, if it's not working for versions below Android 10 on some device, we can use a fallback approach to handle this situation.
     val SAVEDSTATUSES: File = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "Media Saver")
+        File(Environment.getExternalStorageDirectory().toString(), "Media Saver")
+        // File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "Media Saver")
         } else {
-            File(Environment.getExternalStorageDirectory().toString(), "Pictures/Media Saver")
+            File(Environment.getExternalStorageDirectory().toString(), "Media Saver")
         }
     
     val WHATSAPP: File = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -263,8 +264,8 @@ class MainActivity : FlutterActivity() {
 
             // Share intent
             val shareIntent = Intent(Intent.ACTION_SEND)
-            val shareSubject = "https://play.google.com/store/apps/details?id=com.blackstackhub.whatsapp"
-            val shareMessage = "i save this from free Media Saver!\n\n$shareSubject"
+            val shareSubject = "https://play.google.com/store/apps/details?id=com.blackstackhub.mediasaver"
+            val shareMessage = "I save this from free Media Saver!\n\n$shareSubject"
             //shareIntent.type = mimeType
             shareIntent.type = mimeType
             // shareIntent.putExtra(Intent.EXTRA_SUBJECT, shareSubject)
@@ -567,6 +568,9 @@ class MainActivity : FlutterActivity() {
 
                 if (!galleryDirectory.exists()) {
                     galleryDirectory.mkdirs()
+                    val intent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
+                    intent.data = Uri.fromFile(Common.SAVEDSTATUSES)
+                    applicationContext.sendBroadcast(intent)
                 }
 
                 val originalFileName = sourceFile.name
@@ -588,6 +592,7 @@ class MainActivity : FlutterActivity() {
                         }
                     }
                 }
+
 
                 // File saved successfully
                 "Status Saved"
