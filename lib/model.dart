@@ -111,14 +111,15 @@ Future<List> fecthMediaFromServer(String videoUrl) async {
   }
 }
 
-Future<List> downloadFile(String url) async {
-  /*
-  final String result = await platform.invokeMethod('downloadFile', url);
+Future<List> downloadFile(String fileUrl) async {
+  final String result =
+      await platform.invokeMethod('downloadFile', {'fileUrl': fileUrl});
   print('Download result: $result');
-  if (result != "downloaded") {
-    return false;
+  if (result.contains("Already Saved")) {
+    return ["Already Saved", result.replaceFirst("Already Saved: ", "")];
+  } else if (result.contains("/storage/emulated/0")) {
+    return [true, result];
+  } else {
+    return [false, "file://"];
   }
-  */
-  // print(url);
-  return [true, "file://"];
 }
