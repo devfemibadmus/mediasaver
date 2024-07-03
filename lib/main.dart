@@ -518,18 +518,41 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                       ),
                     */
-                    if (!downloaded)
+                    if (!downloaded && !downloadBtnClicked)
                       ElevatedButton.icon(
                         onPressed: () {
                           setState(() {
                             downloadBtnClicked = true;
                           });
                           downloadFile(medialUrl!).then((result) {
-                            setState(() {
-                              downloadBtnClicked = !result[0];
-                              downloaded = result[0];
-                              medialPath = result[1];
-                            });
+                            if (result[0] == true) {
+                              setState(() {
+                                downloadBtnClicked = false;
+                                downloaded = true;
+                                medialPath = result[1];
+                              });
+                            } else if (result[0] == "Already Saved") {
+                              setState(() {
+                                downloadBtnClicked = false;
+                                downloaded = true;
+                                medialPath = result[1];
+                              });
+                              scaffold.showSnackBar(
+                                SnackBar(
+                                  content: Text(result[0]),
+                                ),
+                              );
+                            } else if (result[0] == false) {
+                              setState(() {
+                                downloadBtnClicked = false;
+                                downloaded = false;
+                              });
+                              scaffold.showSnackBar(
+                                SnackBar(
+                                  content: Text(result[1]),
+                                ),
+                              );
+                            }
                           });
                         },
                         icon: Icon(
