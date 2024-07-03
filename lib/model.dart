@@ -89,7 +89,8 @@ bool isValidUrl(String value) {
 
 Future<List> fecthMediaFromServer(String videoUrl) async {
   // print("videoUrl $videoUrl");
-  const String apiUrl = 'http://192.168.94.103/';
+  const String apiUrl =
+      'https://devfemibadmus.blackstackhub.com/mediasaver/app/';
 
   final response = await http.post(
     Uri.parse(apiUrl),
