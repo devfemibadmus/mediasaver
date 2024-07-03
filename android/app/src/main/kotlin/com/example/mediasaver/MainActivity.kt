@@ -50,8 +50,12 @@ import androidx.core.content.ContextCompat
 import android.content.ClipData
 import android.content.ClipboardManager
 
+
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import java.io.InputStream
 
 
 
@@ -96,11 +100,18 @@ class MainActivity : FlutterActivity() {
                 "checkStoragePermission" -> result.success(checkStoragePermission())
                 "requestStoragePermission" -> result.success(requestStoragePermission())
                 "downloadFile" -> {
-                    val fileUrl = call.arguments<String>()
+                    val fileUrl = call.argument<String>("fileUrl")
                     if (fileUrl != null) {
+                        CoroutineScope(Dispatchers.Main).launch {
+                            val filePath = downloadAndSaveFile(fileUrl)
+                            result.success(filePath)
+                        }
+                        /*
+                        result.success(downloadAndSaveFile(fileUrl))
                         result.success(downloadAndSaveFile(fileUrl) { progress ->
                             MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).invokeMethod("updateProgress", progress)
                         })
+                        */
                     } else {
                         result.error("INVALID_PARAMETERS", "Invalid parameters", null)
                     }
@@ -544,8 +555,8 @@ class MainActivity : FlutterActivity() {
         } else {
             // For versions below Android 10, request WRITE_EXTERNAL_STORAGE permission
             ActivityCompat.requestPermissions(this.activity,arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),APP_STORAGE_ACCESS_REQUEST_CODE)
-        return true
-    }
+            return true
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -561,6 +572,8 @@ class MainActivity : FlutterActivity() {
 
     private fun saveStatus(sourceFilePath: String): String {
         val sourceFile = File(sourceFilePath)
+        val intent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
+        intent.data = Uri.fromFile(Common.SAVEDSTATUSES)
 
         return if (sourceFile.exists()) {
             try {
@@ -568,9 +581,6 @@ class MainActivity : FlutterActivity() {
 
                 if (!galleryDirectory.exists()) {
                     galleryDirectory.mkdirs()
-                    val intent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
-                    intent.data = Uri.fromFile(Common.SAVEDSTATUSES)
-                    applicationContext.sendBroadcast(intent)
                 }
 
                 val originalFileName = sourceFile.name
@@ -592,6 +602,7 @@ class MainActivity : FlutterActivity() {
                         }
                     }
                 }
+                applicationContext.sendBroadcast(intent)
 
 
                 // File saved successfully
@@ -634,54 +645,59 @@ class MainActivity : FlutterActivity() {
     }
 
 
-    private fun downloadAndSaveFile(fileUrl: String, progressCallback: (Double) -> Unit): String {
-        val client = OkHttpClient()
+    private suspend fun downloadAndSaveFile(fileUrl: String): String {
+            return withContext(Dispatchers.IO) {
+                val intent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
+                intent.data = Uri.fromFile(Common.SAVEDSTATUSES)
+                val client = OkHttpClient()
+                val request = Request.Builder()
+                    .url(fileUrl)
+                    .build()
 
-        val request = Request.Builder()
-            .url(fileUrl)
-            .build()
-
-        return try {
-            client.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) {
-                    return "Download Failed"
-                }
-
-                val galleryDirectory = Common.SAVEDSTATUSES
-                if (!galleryDirectory.exists()) {
-                    galleryDirectory.mkdirs()
-                }
-
-                val fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1)
-                val saveFile = File(galleryDirectory, fileName)
-
-                if (saveFile.exists()) {
-                    return "Already Saved"
-                }
-
-                response.body?.byteStream()?.use { inputStream ->
-                    FileOutputStream(saveFile).use { outputStream ->
-                        val buffer = ByteArray(4 * 1024)
-                        val totalBytes = response.body?.contentLength() ?: -1L
-                        var bytesRead: Int
-                        var bytesReadTotal: Long = 0
-
-                        while (inputStream.read(buffer).also { bytesRead = it } >= 0) {
-                            outputStream.write(buffer, 0, bytesRead)
-                            bytesReadTotal += bytesRead
-                            val progress = if (totalBytes > 0) (bytesReadTotal.toDouble() / totalBytes) * 100 else -1.0
-                            progressCallback(progress)
+                try {
+                    client.newCall(request).execute().use { response ->
+                        if (!response.isSuccessful) {
+                            return@withContext "Download Failed"
                         }
-                    }
-                }
 
-                "Status Saved"
+                        val galleryDirectory = Common.SAVEDSTATUSES
+                        if (!galleryDirectory.exists()) {
+                            galleryDirectory.mkdirs()
+                        }
+
+                        val fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1)
+                        val saveFile = File(galleryDirectory, fileName)
+
+                        if (saveFile.exists()) {
+                            return@withContext "Already Saved: " + saveFile.absolutePath
+                        }
+
+                        val inputStream: InputStream? = response.body?.byteStream()
+                        val outputStream = FileOutputStream(saveFile)
+                        val buffer = ByteArray(2048)
+                        var bytesRead: Int
+
+                        inputStream.use { input ->
+                            outputStream.use { output ->
+                                while (input?.read(buffer).also { bytesRead = it ?: -1 } != -1) {
+                                    output.write(buffer, 0, bytesRead)
+                                }
+                            }
+                        }
+                        applicationContext.sendBroadcast(intent)
+
+                        // Return the absolute path of the saved file
+                        return@withContext saveFile.absolutePath
+                    }
+                } catch (e: SecurityException) {
+                    e.printStackTrace()
+                    return@withContext "Security Exception: Not Saved"
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                    return@withContext "IO Exception: Not Saved"
+                }
             }
-        } catch (e: IOException) {
-            e.printStackTrace()
-            "Not Saved"
         }
-    }
 
 /*
 // This is the wishful one, thoug need to update
