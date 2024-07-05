@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mediasaver/model.dart';
 import 'package:mediasaver/preview.dart';
 
@@ -17,8 +17,8 @@ class MyApp extends StatelessWidget {
     ThemeData buildThemeData(ColorScheme colorScheme) {
       return ThemeData(
         primaryColor: Colors.white,
-        secondaryHeaderColor: Colors.teal,
-        colorScheme: colorScheme.copyWith(secondary: Colors.teal[700]),
+        secondaryHeaderColor: Colors.red,
+        colorScheme: colorScheme.copyWith(secondary: Colors.red),
       );
     }
 
@@ -57,11 +57,23 @@ class _MyHomePageState extends State<MyHomePage> {
   bool linkready = false;
   bool downloadBtnClicked = false;
   bool downloaded = false;
+  bool showedDialog = false;
   String? medialPath;
   String? medialUrl;
   String? thumbnailUrl;
   String? errorMessage;
   String pastebtn = "Paste";
+  List<String> dialogContent = [
+    'Opensource free for all 100% secured and trusted. Click here to see.',
+    'Download any media(video/image) from any platform, website, TikTok, Instagram, Youtube, Facebook, X...\n\nDouble tap to save status or to delete existing ones.\n\nHold to share saved or not saved status.\n\nMany more functions, click on the bulb to request features.',
+    'This app requires access to storage permission. Click here for more information.',
+  ];
+  List<String> dialogTitle = [
+    'About App',
+    'Features',
+    'Storage Access Required',
+  ];
+  int currentDialogIndex = 0;
 
   List<String> labels = [
     'Whatsapp',
@@ -84,14 +96,33 @@ class _MyHomePageState extends State<MyHomePage> {
     ];
     platform.invokeMethod("checkStoragePermission").then((value) {
       if (value == false) {
-        platform.invokeMethod("requestStoragePermission");
+        _showDialog();
+        setState(() {
+          showedDialog = true;
+        });
       }
     });
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       platform.invokeMethod("checkStoragePermission").then((value) async {
+        print("checkStoragePermission $value");
         if (value) {
           _timer.cancel();
+          if (showedDialog) {
+            setState(() {
+              showedDialog = false;
+              Navigator.of(context).pop();
+            });
+          }
+        } else {
+          if (!showedDialog) {
+            print("showing new Dialog");
+            _showDialog();
+            setState(() {
+              showedDialog = true;
+            });
+          }
         }
+        print("showedDialog $showedDialog");
       });
     });
     Timer.periodic(const Duration(seconds: 2), (timer) {
@@ -99,6 +130,97 @@ class _MyHomePageState extends State<MyHomePage> {
         _continuousMethods();
       }
     });
+  }
+
+  void _showDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: Theme.of(context).colorScheme.secondary,
+              title: Text(
+                dialogTitle[currentDialogIndex],
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              content: GestureDetector(
+                onTap: (() async {
+                  if (currentDialogIndex == dialogContent.length - 1) {
+                    await platform.invokeMethod('launchPrivacyPolicy');
+                  }
+                  if (currentDialogIndex == dialogContent.length - 3) {
+                    await platform.invokeMethod('launchDemo');
+                  }
+                }),
+                child: Text(
+                  dialogContent[currentDialogIndex],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    SystemNavigator.pop();
+                  },
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                  ),
+                ),
+                if (currentDialogIndex != 0)
+                  TextButton(
+                    onPressed: currentDialogIndex > 0
+                        ? () {
+                            setState(() {
+                              currentDialogIndex--;
+                            });
+                          }
+                        : null,
+                    child: Text(
+                      'Back',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
+                  ),
+                if (currentDialogIndex != dialogContent.length - 1)
+                  TextButton(
+                    onPressed: currentDialogIndex < dialogContent.length - 1
+                        ? () {
+                            setState(() {
+                              currentDialogIndex++;
+                            });
+                          }
+                        : null,
+                    child: Text(
+                      'Next',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
+                  ),
+                if (currentDialogIndex == dialogContent.length - 1)
+                  TextButton(
+                    onPressed: () {
+                      platform.invokeMethod("requestStoragePermission");
+                    },
+                    child: Text(
+                      'Okay',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   Future<void> fetchAndUpdateData() async {
