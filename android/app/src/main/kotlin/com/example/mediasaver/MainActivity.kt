@@ -96,6 +96,7 @@ class MainActivity : FlutterActivity() {
                 "sendEmail" -> result.success(sendEmail())
                 "launchDemo" -> result.success(launchDemo())
                 "launchUpdate" -> result.success(launchUpdate())
+                "launchPrivacyPolicy" -> result.success(launchPrivacyPolicy())
                 "getClipboardContent" -> result.success(getClipboardContent())
                 "checkStoragePermission" -> result.success(checkStoragePermission())
                 "requestStoragePermission" -> result.success(requestStoragePermission())
@@ -209,6 +210,13 @@ class MainActivity : FlutterActivity() {
     private fun launchDemo(): Boolean{
         val webIntent = Intent(Intent.ACTION_VIEW)
         webIntent.data = Uri.parse("https://github.com/devfemibadmus/Media-Saver")
+        startActivity(webIntent)
+        return true
+    }
+
+    private fun launchPrivacyPolicy(): Boolean{
+        val webIntent = Intent(Intent.ACTION_VIEW)
+        webIntent.data = Uri.parse("https://devfemibadmus.blackstackub/mediasaver#storagepermission")
         startActivity(webIntent)
         return true
     }
