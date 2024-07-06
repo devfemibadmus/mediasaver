@@ -209,7 +209,7 @@ class MainActivity : FlutterActivity() {
 
     private fun launchDemo(): Boolean{
         val webIntent = Intent(Intent.ACTION_VIEW)
-        webIntent.data = Uri.parse("https://github.com/devfemibadmus/Media-Saver")
+        webIntent.data = Uri.parse("https://devfemibadmus.blackstackub/mediasaver")
         startActivity(webIntent)
         return true
     }
