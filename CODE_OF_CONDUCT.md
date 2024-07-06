@@ -1,6 +1,6 @@
 # Code of Conduct
 
-As a contributor, you can help me keep the WhatsApp Media Saver community open and inclusive. Please read and follow this code of conduct:
+As a contributor, you can help me keep the Media Saver community open and inclusive. Please read and follow this code of conduct:
 
 ## My Pledge
 
