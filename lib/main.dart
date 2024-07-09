@@ -14,19 +14,23 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    ThemeData buildThemeData(ColorScheme colorScheme) {
+    ThemeData buildThemeData(ColorScheme colorScheme, Color secondaryColor) {
       return ThemeData(
         primaryColor: Colors.white,
         secondaryHeaderColor: Colors.black,
-        colorScheme: colorScheme.copyWith(secondary: Colors.black),
+        colorScheme: colorScheme.copyWith(secondary: secondaryColor),
       );
     }
 
     return MaterialApp(
-      theme: buildThemeData(ColorScheme.fromSwatch()
-          .copyWith(background: Colors.white, onPrimary: Colors.black)),
-      darkTheme: buildThemeData(ColorScheme.fromSwatch()
-          .copyWith(background: Colors.black, onPrimary: Colors.white)),
+      theme: buildThemeData(
+          ColorScheme.fromSwatch()
+              .copyWith(background: Colors.white, onPrimary: Colors.black),
+          Colors.black),
+      darkTheme: buildThemeData(
+          ColorScheme.fromSwatch()
+              .copyWith(background: Colors.black, onPrimary: Colors.white),
+          Colors.white),
       home: const MyHomePage(),
     );
   }
@@ -379,7 +383,7 @@ class _MyHomePageState extends State<MyHomePage> {
           selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
           unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
           selectedItemColor: Theme.of(context).colorScheme.secondary,
-          unselectedItemColor: Theme.of(context).secondaryHeaderColor,
+          unselectedItemColor: Theme.of(context).colorScheme.secondary,
           currentIndex: _currentIndex,
           onTap: (index) {
             setState(() {
