@@ -3,7 +3,6 @@
 Media Saver offers a user-friendly experience for managing and saving medias. Check out the key features:
 
 
-
 | #  | To-Do                      | Description                                                                                        | Status |
 | -- | -------------------------- | -------------------------------------------------------------------------------------------------- | ------ |
 | 1  | Efficient Updates          | Uses streams for quick and efficient updates, reducing the need for full widget refresh.           | ✅     |
