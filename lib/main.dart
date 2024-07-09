@@ -17,8 +17,8 @@ class MyApp extends StatelessWidget {
     ThemeData buildThemeData(ColorScheme colorScheme) {
       return ThemeData(
         primaryColor: Colors.white,
-        secondaryHeaderColor: Colors.red,
-        colorScheme: colorScheme.copyWith(secondary: Colors.red),
+        secondaryHeaderColor: Colors.black,
+        colorScheme: colorScheme.copyWith(secondary: Colors.black),
       );
     }
 
@@ -104,7 +104,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       platform.invokeMethod("checkStoragePermission").then((value) async {
-        print("checkStoragePermission $value");
+        // print("checkStoragePermission $value");
         if (value) {
           _timer.cancel();
           if (showedDialog) {
@@ -115,14 +115,14 @@ class _MyHomePageState extends State<MyHomePage> {
           }
         } else {
           if (!showedDialog) {
-            print("showing new Dialog");
+            // print("showing new Dialog");
             _showDialog();
             setState(() {
               showedDialog = true;
             });
           }
         }
-        print("showedDialog $showedDialog");
+        // print("showedDialog $showedDialog");
       });
     });
     Timer.periodic(const Duration(seconds: 2), (timer) {
@@ -143,7 +143,8 @@ class _MyHomePageState extends State<MyHomePage> {
               backgroundColor: Theme.of(context).colorScheme.secondary,
               title: Text(
                 dialogTitle[currentDialogIndex],
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, color: Colors.white),
               ),
               content: GestureDetector(
                 onTap: (() async {
@@ -156,6 +157,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 }),
                 child: Text(
                   dialogContent[currentDialogIndex],
+                  style: const TextStyle(color: Colors.white),
                 ),
               ),
               actions: [
@@ -164,10 +166,10 @@ class _MyHomePageState extends State<MyHomePage> {
                     Navigator.of(context).pop();
                     SystemNavigator.pop();
                   },
-                  child: Text(
+                  child: const Text(
                     'Cancel',
                     style: TextStyle(
-                      color: Theme.of(context).colorScheme.onPrimary,
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -180,10 +182,10 @@ class _MyHomePageState extends State<MyHomePage> {
                             });
                           }
                         : null,
-                    child: Text(
+                    child: const Text(
                       'Back',
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimary,
+                        color: Colors.white,
                       ),
                     ),
                   ),
@@ -196,10 +198,10 @@ class _MyHomePageState extends State<MyHomePage> {
                             });
                           }
                         : null,
-                    child: Text(
+                    child: const Text(
                       'Next',
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimary,
+                        color: Colors.white,
                       ),
                     ),
                   ),
@@ -208,10 +210,10 @@ class _MyHomePageState extends State<MyHomePage> {
                     onPressed: () {
                       platform.invokeMethod("requestStoragePermission");
                     },
-                    child: Text(
+                    child: const Text(
                       'Okay',
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimary,
+                        color: Colors.white,
                       ),
                     ),
                   ),
@@ -304,7 +306,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final scaffold = ScaffoldMessenger.of(context);
     if (currentDate.year >= 2024 &&
         currentDate.month >= 7 &&
-        currentDate.day >= 10) {
+        currentDate.day >= 20) {
       return Center(
         child: GestureDetector(
             onTap: () async => await platform.invokeMethod('launchUpdate'),
@@ -323,7 +325,7 @@ class _MyHomePageState extends State<MyHomePage> {
           child: AppBar(
             elevation: 0.0,
             foregroundColor: theme.primaryColor,
-            backgroundColor: theme.colorScheme.secondary,
+            backgroundColor: theme.secondaryHeaderColor,
             title: GestureDetector(
                 onTap: () async => await platform.invokeMethod('launchDemo'),
                 child: const FittedBox(
@@ -373,10 +375,10 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(
-          backgroundColor: theme.colorScheme.background,
+          backgroundColor: Colors.transparent,
           selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
           unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
-          selectedItemColor: Theme.of(context).colorScheme.onPrimary,
+          selectedItemColor: Theme.of(context).colorScheme.secondary,
           unselectedItemColor: Theme.of(context).secondaryHeaderColor,
           currentIndex: _currentIndex,
           onTap: (index) {
@@ -473,7 +475,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Text(
                     '${currentFiles.length} ${appType.toLowerCase()} status available',
                     style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimary)),
+                        color: Theme.of(context).colorScheme.secondary)),
               )
         : const Center(child: CircularProgressIndicator());
   }
@@ -505,19 +507,19 @@ class _MyHomePageState extends State<MyHomePage> {
                           color: Theme.of(context).colorScheme.onPrimary),
                       controller: _textController,
                       focusNode: _focusNode,
-                      cursorColor: Theme.of(context).colorScheme.onPrimary,
+                      cursorColor: Theme.of(context).colorScheme.secondary,
                       decoration: InputDecoration(
                         border: const OutlineInputBorder(),
                         errorText: errorMessage,
                         labelText: 'Media url',
                         labelStyle: TextStyle(
-                            color: Theme.of(context).colorScheme.onPrimary),
+                            color: Theme.of(context).colorScheme.secondary),
                         contentPadding: const EdgeInsets.all(5.0),
                         isDense: true,
                         enabledBorder: OutlineInputBorder(
                             borderSide: BorderSide(
                                 color:
-                                    Theme.of(context).colorScheme.onPrimary)),
+                                    Theme.of(context).colorScheme.secondary)),
                         focusedBorder: OutlineInputBorder(
                           borderSide: BorderSide(
                               color: Theme.of(context).colorScheme.secondary),
@@ -577,7 +579,6 @@ class _MyHomePageState extends State<MyHomePage> {
                             },
                           );
                         }
-                        ;
                       });
                     },
                     style: ElevatedButton.styleFrom(
