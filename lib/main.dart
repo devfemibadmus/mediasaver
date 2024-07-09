@@ -595,7 +595,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     child: Text(
                       pastebtn,
                       style: TextStyle(
-                          color: Theme.of(context).colorScheme.secondary),
+                          color: Theme.of(context).secondaryHeaderColor),
                     ),
                   )
                 ],
