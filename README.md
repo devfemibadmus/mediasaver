@@ -1,6 +1,9 @@
-# Media Saver
+# Media Saver formerly(WhatsApp status saver)
 
 Media Saver offers a user-friendly experience for managing and saving medias. Check out the key features:
+
+feaure graphic from hotpot.io
+[![Whatsapp](media/HQiAdyTH18IB_1024_500.png?raw=true)](https://play.google.com/store/apps/details?id=com.blackstackhub.mediasaver)
 
 
 | #  | To-Do                      | Description                                                                                        | Status |
@@ -38,4 +41,18 @@ dependencies:
   video_player: ^2.8.2
   http: ^1.2.0
 ```
+
+## Media
+
+| Screenshot | Screenshot |
+|-------------------------------------------------------------|-------------------------------------------------------------|
+| ![Whatsapp](media/Screenshot_20240210_010554.jpg?raw=true) | ![Whatsapp](media/Screenshot_20240210_010616.jpg?raw=true) |
+| ![Whatsapp](media/Screenshot_20240210_010728.jpg?raw=true) | ![Whatsapp](media/Screenshot_20240210_010753.jpg?raw=true) |
+| ![Whatsapp](media/Screenshot_20240210_010816_Android%20System.jpg?raw=true) | ![Whatsapp](media/Screenshot_20240210_010836.jpg?raw=true) |
+| ![Whatsapp](media/Screenshot_20240210_010858.jpg?raw=true) | ![Whatsapp](media/Screenshot_20240210_010935_Android%20System.jpg?raw=true) |
+
+
+## Watch here
+
+[![Video Preview](https://img.youtube.com/vi/CnOCDhmjfNo/maxresdefault.jpg)](https://www.youtube.com/watch?v=CnOCDhmjfNo)
 
