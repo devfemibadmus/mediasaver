@@ -25,10 +25,12 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       theme: buildThemeData(
           ColorScheme.fromSwatch()
+              // ignore: deprecated_member_use
               .copyWith(background: Colors.white, onPrimary: Colors.black),
           Colors.black),
       darkTheme: buildThemeData(
           ColorScheme.fromSwatch()
+              // ignore: deprecated_member_use
               .copyWith(background: Colors.black, onPrimary: Colors.white),
           Colors.white),
       home: const MyHomePage(),
@@ -309,7 +311,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final ThemeData theme = Theme.of(context);
     final scaffold = ScaffoldMessenger.of(context);
     if (currentDate.year >= 2024 &&
-        currentDate.month >= 7 &&
+        currentDate.month >= 9 &&
         currentDate.day >= 20) {
       return Center(
         child: GestureDetector(
