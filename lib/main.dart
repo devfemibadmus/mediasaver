@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mediasaver/model.dart';
 import 'package:mediasaver/preview.dart';
+import 'package:mediasaver/model/status.dart';
+import 'package:mediasaver/model/variable.dart';
 
 void main() {
   runApp(const MyApp());
