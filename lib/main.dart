@@ -374,7 +374,8 @@ class _MyHomePageState extends State<MyHomePage> {
                           "${_tabs[_currentIndex]['whatsappFilesVideo'].length} Video")),
                 if (_currentIndex == 2)
                   const Center(child: Text("Other Platform")),
-                if (_currentIndex == 2) const Center(child: Text("Quotes")),
+                if (_currentIndex == 2)
+                  const Center(child: Text("How It Works")),
               ],
             ),
           ),
@@ -386,7 +387,7 @@ class _MyHomePageState extends State<MyHomePage> {
             if ([0, 1, 3].contains(_currentIndex))
               _buildTabContent('whatsappFilesVideo', scaffold),
             if (_currentIndex == 2) _buildTabContent('otherplatform', scaffold),
-            if (_currentIndex == 2) _buildTabContent('quotes', scaffold),
+            if (_currentIndex == 2) _buildTabContent('howitwork', scaffold),
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(
@@ -426,7 +427,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget _buildTabContent(String files, scaffold) {
     if (_currentIndex == 2) {
-      return files == "quotes"
+      return files == "howitwork"
           ? const Center(
               child: AndroidView(
                 viewType: 'webview',
