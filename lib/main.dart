@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mediasaver/model.dart';
+import 'package:mediasaver/model/tiktok.dart';
 import 'package:mediasaver/preview.dart';
 import 'package:mediasaver/model/status.dart';
 import 'package:mediasaver/model/variable.dart';
@@ -66,10 +67,16 @@ class _MyHomePageState extends State<MyHomePage> {
   bool downloadBtnClicked = false;
   bool downloaded = false;
   bool showedDialog = false;
+
+  TikTokImage? imageData;
+  TikTokVideo? videoData;
+  bool? isvideo;
+  VideoQuality? selectedQuality;
   String? medialPath;
   String? medialUrl;
   String? thumbnailUrl;
   String? errorMessage;
+
   String pastebtn = "Paste";
   List<String> dialogContent = [
     'Opensource free for all 100% secured and trusted. Click here to see.',
@@ -420,10 +427,13 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget _buildTabContent(String files, scaffold) {
     if (_currentIndex == 2) {
       return files == "quotes"
-          ? Center(
-              child: Text("No Quotes",
-                  style: TextStyle(
-                      color: Theme.of(context).colorScheme.onPrimary)))
+          ? const Center(
+              child: AndroidView(
+                viewType: 'webview',
+                creationParams: <String, dynamic>{},
+                creationParamsCodec: StandardMessageCodec(),
+              ),
+            )
           : platformMediaDownloaderWidget(scaffold);
     }
     final currentTab = _tabs[_currentIndex];
@@ -571,16 +581,25 @@ class _MyHomePageState extends State<MyHomePage> {
                         });
 
                         if (isValidUrl(value)) {
-                          fecthMediaFromServer(value).then(
+                          fetchMediaFromServer(value).then(
                             (value) {
                               setState(() {
                                 linkready = false;
-                                // print("linkready $linkready");
-                                if (isValidUrl(value[0])) {
-                                  thumbnailUrl = value[1];
-                                  medialUrl = value[0];
+                                if (value != null) {
+                                  if (value['success'] == true) {
+                                    isvideo = value['type'] == 'video';
+                                    if (value['type'] == 'video') {
+                                      videoData = value['data'];
+                                      selectedQuality = videoData!.videos.first;
+                                    } else {
+                                      imageData = value['data'];
+                                    }
+                                  } else {
+                                    errorMessage = value['error'];
+                                    pastebtn = "Paste";
+                                  }
                                 } else {
-                                  errorMessage = value[0];
+                                  errorMessage = 'Try again!';
                                   pastebtn = "Paste";
                                 }
                               });
@@ -606,62 +625,140 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               const SizedBox(height: 20),
               if (linkready) const CircularProgressIndicator(),
-              if (thumbnailUrl != null)
+              if (videoData != null)
                 Stack(
                   alignment: Alignment.center,
                   children: [
-                    // Image.network(thumbnailUrl!),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8.0),
                       child: Image.network(
-                        thumbnailUrl!,
+                        videoData!.cover,
                         fit: BoxFit.cover,
-                        height: MediaQuery.of(context).size.height / 1.7,
-                        width: MediaQuery.of(context).size.width,
+                        height: MediaQuery.of(context).size.height / 3,
+                        width: MediaQuery.of(context).size.width / 2,
                       ),
                     ),
-                    /*
-                    if (downloadBtnClicked)
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.8),
-                          shape: BoxShape.circle,
+                    if (downloadBtnClicked) const CircularProgressIndicator(),
+                    if (downloaded)
+                      Positioned(
+                        top: 0,
+                        right: 0,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.9),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(25),
+                              bottomLeft: Radius.circular(25),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              IconButton(
+                                color: Colors.red,
+                                onPressed: (() {
+                                  statusAction(medialPath!, 'deleteStatus')
+                                      .then((value) {
+                                    scaffold.showSnackBar(
+                                        SnackBar(content: Text(value)));
+                                    setState(() {
+                                      downloadPercentage = 0.0;
+                                      linkready = false;
+                                      downloadBtnClicked = false;
+                                      downloaded = false;
+                                      medialUrl = null;
+                                      thumbnailUrl = null;
+                                      errorMessage = null;
+                                      pastebtn = "Paste";
+                                      _textController.text = '';
+                                    });
+                                  });
+                                }),
+                                icon: const Icon(Icons.delete),
+                              ),
+                              IconButton(
+                                color: Theme.of(context).primaryColor,
+                                onPressed: (() {
+                                  statusAction(medialPath!, 'shareMedia').then(
+                                      (value) => scaffold.showSnackBar(
+                                          SnackBar(content: Text(value))));
+                                }),
+                                icon: const Icon(Icons.share),
+                              ),
+                              IconButton(
+                                color: Colors.red,
+                                onPressed: (() {
+                                  _focusNode.requestFocus();
+                                  setState(() {
+                                    downloadPercentage = 0.0;
+                                    linkready = false;
+                                    downloadBtnClicked = false;
+                                    downloaded = false;
+                                    videoData = null;
+                                    errorMessage = null;
+                                    pastebtn = "Paste";
+                                    _textController.text = '';
+                                  });
+                                }),
+                                icon: const Icon(Icons.close),
+                              )
+                            ],
+                          ),
                         ),
                       ),
-                    if (downloadBtnClicked)
-                      SizedBox.square(
-                        dimension: 70,
-                        child: CircularProgressIndicator(
-                          value: downloadPercentage,
-                          color: Theme.of(context).colorScheme.secondary,
-                          strokeWidth: 10.0,
-                        ),
-                      ),
-                    if (downloadBtnClicked)
-                      Text(
-                        '${(downloadPercentage * 100).toInt()}%',
+                  ],
+                ),
+              if (videoData != null)
+                Text('${videoData!.id}\n${videoData!.desc}'),
+              if (videoData != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 40),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      DropdownButton<VideoQuality>(
+                        dropdownColor: Colors.transparent,
                         style: TextStyle(
-                          fontSize: 18.0,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.onPrimary,
-                        ),
+                            color: Theme.of(context).colorScheme.onPrimary),
+                        value: selectedQuality,
+                        onChanged: (VideoQuality? newValue) {
+                          setState(() {
+                            selectedQuality = newValue!;
+                          });
+                        },
+                        items: videoData!.videos
+                            .map<DropdownMenuItem<VideoQuality>>(
+                                (VideoQuality quality) {
+                          String formattedSize =
+                              '${(quality.size / (1024 * 1024)).toStringAsFixed(2)} MB';
+                          String displayText =
+                              'Quality: ${quality.quality.toUpperCase()}, Size: $formattedSize';
+                          return DropdownMenuItem<VideoQuality>(
+                            value: quality,
+                            child: Text(displayText),
+                          );
+                        }).toList(),
+                        elevation: 0,
                       ),
-                    */
-                    if (!downloaded && !downloadBtnClicked)
-                      ElevatedButton.icon(
+                      const SizedBox(width: 10),
+                      TextButton.icon(
                         onPressed: () {
                           setState(() {
                             downloadBtnClicked = true;
                           });
-                          downloadFile(medialUrl!).then((result) {
+                          downloadFile(selectedQuality!.address,
+                                  '${videoData!.id}_${(selectedQuality!.size / (1024 * 1024)).toStringAsFixed(2)}MB')
+                              .then((result) {
                             if (result[0] == true) {
                               setState(() {
                                 downloadBtnClicked = false;
                                 downloaded = true;
                                 medialPath = result[1];
                               });
+                              scaffold.showSnackBar(
+                                const SnackBar(
+                                  content: Text("Video Saved"),
+                                ),
+                              );
                             } else if (result[0] == "Already Saved") {
                               setState(() {
                                 downloadBtnClicked = false;
@@ -690,152 +787,11 @@ class _MyHomePageState extends State<MyHomePage> {
                           Icons.download,
                           color: Theme.of(context).colorScheme.secondary,
                         ),
-                        label: Text(
-                          "Download",
-                          style: TextStyle(
-                              color: Theme.of(context).colorScheme.secondary,
-                              fontWeight: FontWeight.bold),
-                        ),
+                        label: const Text(""),
                       ),
-                    if (downloadBtnClicked) const CircularProgressIndicator(),
-                    if (downloaded)
-                      Positioned(
-                        top: 0,
-                        right: 0,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onPrimary
-                                .withOpacity(0.4),
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(25),
-                              bottomLeft: Radius.circular(25),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              IconButton(
-                                color: Theme.of(context).colorScheme.secondary,
-                                onPressed: (() {
-                                  statusAction(medialPath!, 'deleteStatus')
-                                      .then((value) {
-                                    scaffold.showSnackBar(
-                                        SnackBar(content: Text(value)));
-                                    setState(() {
-                                      downloadPercentage = 0.0;
-                                      linkready = false;
-                                      downloadBtnClicked = false;
-                                      downloaded = false;
-                                      medialUrl = null;
-                                      thumbnailUrl = null;
-                                      errorMessage = null;
-                                      pastebtn = "Paste";
-                                      _textController.text = '';
-                                    });
-                                  });
-                                }),
-                                icon: const Icon(Icons.delete),
-                              ),
-                              IconButton(
-                                color: Theme.of(context).colorScheme.secondary,
-                                onPressed: (() {
-                                  statusAction(medialPath!, 'shareMedia').then(
-                                      (value) => scaffold.showSnackBar(
-                                          SnackBar(content: Text(value))));
-                                }),
-                                icon: const Icon(Icons.share),
-                              ),
-                              IconButton(
-                                color: Theme.of(context).colorScheme.secondary,
-                                onPressed: (() {
-                                  _focusNode.requestFocus();
-                                  setState(() {
-                                    downloadPercentage = 0.0;
-                                    linkready = false;
-                                    downloadBtnClicked = false;
-                                    downloaded = false;
-                                    medialUrl = null;
-                                    thumbnailUrl = null;
-                                    errorMessage = null;
-                                    pastebtn = "Paste";
-                                    _textController.text = '';
-                                  });
-                                }),
-                                icon: const Icon(Icons.close),
-                              )
-                            ],
-                          ),
-                        ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
-              /*
-              Form(
-                key: _formKey,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Flexible(
-                      flex: 2,
-                      child: DropdownButtonFormField<String>(
-                        value: _selectedQuality,
-                        decoration: InputDecoration(
-                          labelText: 'Video Quality',
-                          labelStyle: TextStyle(
-                            color: Theme.of(context).colorScheme.onPrimary,
-                          ),
-                          border: InputBorder.none,
-                        ),
-                        items: [
-                          'default',
-                          '144p',
-                          '240p',
-                          '360p',
-                          '480p',
-                          '720p',
-                          '1080p'
-                        ]
-                            .map((quality) => DropdownMenuItem(
-                                  value: quality,
-                                  child: Text(quality),
-                                ))
-                            .toList(),
-                        onChanged: (newValue) {
-                          setState(() {
-                            _selectedQuality = newValue!;
-                          });
-                        },
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please select a video quality';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                    // Adjust the space between the dropdown and the button
-                    Flexible(
-                      flex: 5,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          if (_formKey.currentState!.validate()) {
-                            print('Video url is: ${_textController.text}');
-                            print('Selected video quality: $_selectedQuality');
-                          }
-                        },
-                        child: Text(
-                          'Download',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.secondary,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              */
             ],
           ),
         );
