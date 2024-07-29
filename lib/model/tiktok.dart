@@ -183,15 +183,16 @@ class TikTokBot {
   Future<Map<String, dynamic>?> fetchMedia(String url) async {
     final response = await http.post(
       Uri.parse(apiUrl),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'url': url}),
+      body: {'url': url},
     );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
+      //print(data);
       return data;
     } else {
-      print('Error: Failed to fetch media data.');
+      print(response.body);
+      print("response.body");
       return null;
     }
   }
