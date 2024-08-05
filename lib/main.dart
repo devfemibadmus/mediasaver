@@ -429,11 +429,7 @@ class _MyHomePageState extends State<MyHomePage> {
     if (_currentIndex == 2) {
       return files == "howitwork"
           ? const Center(
-              child: AndroidView(
-                viewType: 'webview',
-                creationParams: <String, dynamic>{},
-                creationParamsCodec: StandardMessageCodec(),
-              ),
+              child: Text('wait'),
             )
           : platformMediaDownloaderWidget(scaffold);
     }

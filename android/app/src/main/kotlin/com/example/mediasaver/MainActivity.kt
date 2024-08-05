@@ -1,4 +1,4 @@
-package com.blackstackhub.mediasaver
+package github.devfemibadmus.mediasaver
 
 import android.content.Intent
 import android.net.Uri
@@ -58,17 +58,6 @@ import okhttp3.Request
 import java.io.InputStream
 
 
-import android.view.View
-import android.webkit.WebView
-import android.webkit.WebViewClient
-import io.flutter.plugin.platform.PlatformView
-import io.flutter.plugin.platform.PlatformViewFactory
-import io.flutter.plugin.platform.PlatformViewsController
-import io.flutter.plugin.platform.PlatformViewsController.PlatformViewRegistry
-
-
-
-
 object Common {
     // Environment.DIRECTORY_PICTURES was introduced in API level 19 (Android 4.4), so it should work for Android versions 4.4 and higher. However, if it's not working for versions below Android 10 on some device, we can use a fallback approach to handle this situation.
     val SAVEDSTATUSES: File = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -93,15 +82,13 @@ object Common {
 
 
 class MainActivity : FlutterActivity() {
-    private val FILE_PROVIDER_AUTHORITY = "com.blackstackhub.mediasaver.fileprovider"
+    private val FILE_PROVIDER_AUTHORITY = "github.devfemibadmus.mediasaver.fileprovider"
     private val TAG = "MainActivity"
     private val APP_STORAGE_ACCESS_REQUEST_CODE = 501
-    private val CHANNEL = "com.blackstackhub.mediasaver"
+    private val CHANNEL = "github.devfemibadmus.mediasaver"
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        val platformViewRegistry = flutterEngine.platformViewsController.platformViewRegistry
-        platformViewRegistry.registerViewFactory("webview", WebViewFactory())
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "shareApp" -> result.success(shareApp())
@@ -177,29 +164,6 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    private class WebViewFactory: PlatformViewFactory(StandardMessageCodec.INSTANCE) {
-        override fun create(context: Context, viewId: Int, args: Any?): PlatformView {
-            return WebViewPlatformView(context)
-        }
-    }
-
-    private class WebViewPlatformView(context: Context) : PlatformView {
-        private val webView: WebView = WebView(context).apply {
-            webViewClient = WebViewClient()
-            settings.javaScriptEnabled = true
-        }
-
-        init {
-            webView.loadUrl("https://devfemibadmus.blackstackhub.com/webmedia/how-it-work")
-        }
-
-        override fun getView(): View {
-            return webView
-        }
-
-        override fun dispose() {}
-    }
-
     fun getAppVersion(context: Context): String {
         try {
             val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
@@ -265,7 +229,7 @@ class MainActivity : FlutterActivity() {
     
     private fun launchUpdate(): Boolean{
         val webIntent = Intent(Intent.ACTION_VIEW)
-        webIntent.data = Uri.parse("https://play.google.com/store/apps/details?id=com.blackstackhub.mediasaver")
+        webIntent.data = Uri.parse("https://play.google.com/store/apps/details?id=github.devfemibadmus.mediasaver")
         startActivity(webIntent)
         return true
     }
@@ -277,7 +241,7 @@ class MainActivity : FlutterActivity() {
     
         // Set the subject and message
         val shareSubject = "Check out this free Media Saver!"
-        val shareMessage = "$shareSubject\n\nDownload the app: https://play.google.com/store/apps/details?id=com.blackstackhub.mediasaver"
+        val shareMessage = "$shareSubject\n\nDownload the app: https://play.google.com/store/apps/details?id=github.devfemibadmus.mediasaver"
     
         // shareIntent.putExtra(Intent.EXTRA_SUBJECT, shareSubject)
         shareIntent.putExtra(Intent.EXTRA_TEXT, shareMessage)
@@ -313,7 +277,7 @@ class MainActivity : FlutterActivity() {
 
             // Share intent
             val shareIntent = Intent(Intent.ACTION_SEND)
-            val shareSubject = "https://play.google.com/store/apps/details?id=com.blackstackhub.mediasaver"
+            val shareSubject = "https://play.google.com/store/apps/details?id=github.devfemibadmus.mediasaver"
             val shareMessage = "I save this from free Media Saver!\n\n$shareSubject"
             //shareIntent.type = mimeType
             shareIntent.type = mimeType

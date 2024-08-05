@@ -1,3 +1,3 @@
 import 'package:flutter/services.dart';
 
-const platform = MethodChannel('com.blackstackhub.mediasaver');
+const platform = MethodChannel('github.devfemibadmus.mediasaver');

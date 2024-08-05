@@ -3,7 +3,7 @@
 Media Saver offers a user-friendly experience for managing and saving medias. Check out the key features:
 
 feaure graphic from hotpot.io
-[![Whatsapp](media/HQiAdyTH18IB_1024_500.png?raw=true)](https://play.google.com/store/apps/details?id=com.blackstackhub.mediasaver)
+[![Whatsapp](media/HQiAdyTH18IB_1024_500.png?raw=true)](https://play.google.com/store/apps/details?id=github.devfemibadmus.mediasaver)
 
 
 | #  | To-Do                      | Description                                                                                        | Status |
@@ -21,7 +21,7 @@ feaure graphic from hotpot.io
 | 11 | Navigation Menu            | Introduces a navigation menu for more info.                                                        | ❌     |
 | 12 | Video Playing              | Error while playing viddeo, solve the slight error.                                                | ✅     |
 | 14 | Platform iOs               | null                                                                                               | ❌     |
-| 14 | Platform Web               | null                                                                                               | ❌     |
+| 14 | Platform Web               | Checkout [webmedia](https://github.com/devfemibadmus/webmedia) and [easyfileshare](https://github.com/devfemibadmus/easyfileshare)| ✅     |
 | 15 | Platform Android           | >=5.0                                                                                              | ✅     |
 | 16 | PlayStore                  | Production Full rollout In review                                                                  | ❌     |
 
