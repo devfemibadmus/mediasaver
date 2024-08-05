@@ -58,6 +58,16 @@ import okhttp3.Request
 import java.io.InputStream
 
 
+import android.view.View
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import io.flutter.plugin.platform.PlatformView
+import io.flutter.plugin.platform.PlatformViewFactory
+import io.flutter.plugin.platform.PlatformViewsController
+import io.flutter.plugin.platform.PlatformViewsController.PlatformViewRegistry
+
+
+
 
 object Common {
     // Environment.DIRECTORY_PICTURES was introduced in API level 19 (Android 4.4), so it should work for Android versions 4.4 and higher. However, if it's not working for versions below Android 10 on some device, we can use a fallback approach to handle this situation.
@@ -90,6 +100,8 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        val platformViewRegistry = flutterEngine.platformViewsController.platformViewRegistry
+        platformViewRegistry.registerViewFactory("webview", WebViewFactory())
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "shareApp" -> result.success(shareApp())
@@ -102,17 +114,12 @@ class MainActivity : FlutterActivity() {
                 "requestStoragePermission" -> result.success(requestStoragePermission())
                 "downloadFile" -> {
                     val fileUrl = call.argument<String>("fileUrl")
-                    if (fileUrl != null) {
+                    val fileId = call.argument<String>("fileId")
+                    if (fileUrl != null && fileId !=null) {
                         CoroutineScope(Dispatchers.Main).launch {
-                            val filePath = downloadAndSaveFile(fileUrl)
+                            val filePath = downloadAndSaveFile(fileUrl, fileId)
                             result.success(filePath)
                         }
-                        /*
-                        result.success(downloadAndSaveFile(fileUrl))
-                        result.success(downloadAndSaveFile(fileUrl) { progress ->
-                            MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).invokeMethod("updateProgress", progress)
-                        })
-                        */
                     } else {
                         result.error("INVALID_PARAMETERS", "Invalid parameters", null)
                     }
@@ -168,6 +175,29 @@ class MainActivity : FlutterActivity() {
                 else -> result.notImplemented()
             }
         }
+    }
+
+    private class WebViewFactory: PlatformViewFactory(StandardMessageCodec.INSTANCE) {
+        override fun create(context: Context, viewId: Int, args: Any?): PlatformView {
+            return WebViewPlatformView(context)
+        }
+    }
+
+    private class WebViewPlatformView(context: Context) : PlatformView {
+        private val webView: WebView = WebView(context).apply {
+            webViewClient = WebViewClient()
+            settings.javaScriptEnabled = true
+        }
+
+        init {
+            webView.loadUrl("https://devfemibadmus.blackstackhub.com/webmedia/how-it-work")
+        }
+
+        override fun getView(): View {
+            return webView
+        }
+
+        override fun dispose() {}
     }
 
     fun getAppVersion(context: Context): String {
@@ -653,7 +683,7 @@ class MainActivity : FlutterActivity() {
     }
 
 
-    private suspend fun downloadAndSaveFile(fileUrl: String): String {
+    private suspend fun downloadAndSaveFile(fileUrl: String, fileId: String): String {
             return withContext(Dispatchers.IO) {
                 val intent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
                 intent.data = Uri.fromFile(Common.SAVEDSTATUSES)
@@ -667,13 +697,15 @@ class MainActivity : FlutterActivity() {
                         if (!response.isSuccessful) {
                             return@withContext "Download Failed"
                         }
+                        val mimeType = response.header("Content-Type")
+                        val fileExtension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
 
                         val galleryDirectory = Common.SAVEDSTATUSES
                         if (!galleryDirectory.exists()) {
                             galleryDirectory.mkdirs()
                         }
 
-                        val fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1)
+                        val fileName = "mediasaver_$fileId.$fileExtension"
                         val saveFile = File(galleryDirectory, fileName)
 
                         if (saveFile.exists()) {
@@ -705,76 +737,23 @@ class MainActivity : FlutterActivity() {
                     return@withContext "IO Exception: Not Saved"
                 }
             }
-        }
-
-/*
-// This is the wishful one, thoug need to update
-
-private val PICK_DIRECTORY_REQUEST_CODE = 123
-private var STATUS_DIRECTORY: DocumentFile? = null
-private var BASE_DIRECTORY: Uri = Uri.parse("/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/")
-
-private fun requestSpecificFolderAccess(): Boolean {
-    val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-    intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, BASE_DIRECTORY)
-    startActivityForResult(intent, PICK_DIRECTORY_REQUEST_CODE)
-    return true
+    }
 }
 
-override fun onActivityResult(requestCode: Int, resultCode: Int, resultData: Intent?) {
-    super.onActivityResult(requestCode, resultCode, resultData)
-    if (requestCode == PICK_DIRECTORY_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
-        val treeUri: Uri? = resultData?.data
-        treeUri?.let {
-            // Take persistable URI permission
-            contentResolver.takePersistableUriPermission(
-                it,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-            )
-            // Append .Statuses to the existing URI
-            STATUS_DIRECTORY = DocumentFile.fromTreeUri(this, Uri.withAppendedPath(it, ".Statuses"))
+class WebViewActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_web_view)
+
+        val url = intent.getStringExtra("url")
+        val webView: WebView = findViewById(R.id.webView)
+
+        webView.webViewClient = WebViewClient()
+        webView.settings.javaScriptEnabled = true
+
+        if (url != null) {
+            webView.loadUrl(url)
         }
     }
 }
 
-private fun getStatusFilesInfo(): List<Map<String, Any>> {
-    val statusFilesInfo = mutableListOf<Map<String, Any>>()
-
-    STATUS_DIRECTORY?.let { rootDirectory ->
-        rootDirectory.listFiles()?.forEach { file ->
-            if (file.isFile && file.canRead()) {
-                val fileInfo = mutableMapOf<String, Any>()
-                fileInfo["name"] = file.name ?: "DefaultName"
-                fileInfo["path"] = file.absolutePath
-                fileInfo["size"] = file.length()
-                fileInfo["format"] = getFileFormat(file.name ?: "DefaultName")
-                statusFilesInfo.add(fileInfo)
-            } else {
-                val fileInfo = mutableMapOf<String, Any>()
-                fileInfo["name"] = "DefaultName"
-                fileInfo["path"] = "DefaultPath"
-                fileInfo["size"] = 0L
-                fileInfo["format"] = "DefaultFormat"
-                statusFilesInfo.add(fileInfo)
-            }
-        }
-    }
-
-    return statusFilesInfo
-}
-
-private fun getAbsolutePath(rootDirectory: DocumentFile, file: DocumentFile): String {
-    val pathSegments = mutableListOf(file.name ?: "DefaultName")
-    var parent = file.getParentFile()
-
-    while (parent != null && parent != rootDirectory) {
-        pathSegments.add(parent.name ?: "DefaultName")
-        parent = parent.getParentFile()
-    }
-
-    return pathSegments.reversed().joinToString("/")
-}
-
-*/
-
-}
