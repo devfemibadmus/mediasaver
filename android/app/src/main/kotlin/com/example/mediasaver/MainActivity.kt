@@ -704,20 +704,3 @@ class MainActivity : FlutterActivity() {
     }
 }
 
-class WebViewActivity : AppCompatActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_web_view)
-
-        val url = intent.getStringExtra("url")
-        val webView: WebView = findViewById(R.id.webView)
-
-        webView.webViewClient = WebViewClient()
-        webView.settings.javaScriptEnabled = true
-
-        if (url != null) {
-            webView.loadUrl(url)
-        }
-    }
-}
-
