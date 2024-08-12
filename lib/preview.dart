@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
-import 'package:mediasaver/model/status.dart';
+import 'package:mediasaver/model/whatsapp.dart';
 import 'package:mediasaver/video.dart';
 
 // EDIT: popup_menu.dart
