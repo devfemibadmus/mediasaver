@@ -19,23 +19,38 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     ThemeData buildThemeData(ColorScheme colorScheme, Color secondaryColor) {
       return ThemeData(
-        primaryColor: Colors.white,
-        secondaryHeaderColor: Colors.black,
-        colorScheme: colorScheme.copyWith(secondary: secondaryColor),
+        primaryColor: colorScheme.primary,
+        secondaryHeaderColor: secondaryColor,
+        colorScheme: colorScheme,
       );
     }
 
     return MaterialApp(
       theme: buildThemeData(
-          ColorScheme.fromSwatch()
-              // ignore: deprecated_member_use
-              .copyWith(background: Colors.white, onPrimary: Colors.black),
-          Colors.black),
+        ColorScheme.fromSwatch(
+          brightness: Brightness.light,
+          primarySwatch: Colors.grey,
+        ).copyWith(
+          primary: Colors.black,
+          secondary: Colors.white,
+          surface: Colors.black,
+          onPrimary: Colors.white,
+        ),
+        Colors.black,
+      ),
       darkTheme: buildThemeData(
-          ColorScheme.fromSwatch()
-              // ignore: deprecated_member_use
-              .copyWith(background: Colors.black, onPrimary: Colors.white),
-          Colors.white),
+        ColorScheme.fromSwatch(
+          brightness: Brightness.dark,
+          primarySwatch: Colors.grey,
+        ).copyWith(
+          primary: Colors.white,
+          secondary: Colors.black,
+          surface: Colors.white,
+          onPrimary: Colors.black,
+          onSecondary: Colors.white,
+        ),
+        Colors.white,
+      ),
       home: const MyHomePage(),
     );
   }
@@ -155,11 +170,18 @@ class _MyHomePageState extends State<MyHomePage> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius.circular(10), // Optional: Adjust corner radius
+                side:
+                    BorderSide(color: Theme.of(context).primaryColor, width: 2),
+              ),
               backgroundColor: Theme.of(context).colorScheme.secondary,
               title: Text(
                 dialogTitle[currentDialogIndex],
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold, color: Colors.white),
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).primaryColor),
               ),
               content: GestureDetector(
                 onTap: (() async {
@@ -172,7 +194,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 }),
                 child: Text(
                   dialogContent[currentDialogIndex],
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: Theme.of(context).primaryColor),
                 ),
               ),
               actions: [
@@ -181,10 +203,10 @@ class _MyHomePageState extends State<MyHomePage> {
                     Navigator.of(context).pop();
                     SystemNavigator.pop();
                   },
-                  child: const Text(
+                  child: Text(
                     'Cancel',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: Theme.of(context).primaryColor,
                     ),
                   ),
                 ),
@@ -197,10 +219,10 @@ class _MyHomePageState extends State<MyHomePage> {
                             });
                           }
                         : null,
-                    child: const Text(
+                    child: Text(
                       'Back',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: Theme.of(context).primaryColor,
                       ),
                     ),
                   ),
@@ -213,10 +235,10 @@ class _MyHomePageState extends State<MyHomePage> {
                             });
                           }
                         : null,
-                    child: const Text(
+                    child: Text(
                       'Next',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: Theme.of(context).primaryColor,
                       ),
                     ),
                   ),
@@ -225,10 +247,10 @@ class _MyHomePageState extends State<MyHomePage> {
                     onPressed: () {
                       platform.invokeMethod("requestStoragePermission");
                     },
-                    child: const Text(
+                    child: Text(
                       'Okay',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: Theme.of(context).primaryColor,
                       ),
                     ),
                   ),
@@ -335,12 +357,13 @@ class _MyHomePageState extends State<MyHomePage> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
+        backgroundColor: theme.colorScheme.secondary,
         appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(90.0),
+          preferredSize: const Size.fromHeight(70.0),
           child: AppBar(
             elevation: 0.0,
             foregroundColor: theme.primaryColor,
-            backgroundColor: theme.secondaryHeaderColor,
+            backgroundColor: theme.colorScheme.secondary,
             title: GestureDetector(
                 onTap: () async => await platform.invokeMethod('launchDemo'),
                 child: const FittedBox(
@@ -391,11 +414,12 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(
-          backgroundColor: Colors.transparent,
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: theme.colorScheme.secondary,
           selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
           unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
-          selectedItemColor: Theme.of(context).colorScheme.secondary,
-          unselectedItemColor: Theme.of(context).colorScheme.secondary,
+          selectedItemColor: theme.primaryColor,
+          unselectedItemColor: theme.primaryColor,
           currentIndex: _currentIndex,
           onTap: (index) {
             setState(() {
@@ -489,8 +513,7 @@ class _MyHomePageState extends State<MyHomePage> {
             : Center(
                 child: Text(
                     '${currentFiles.length} ${appType.toLowerCase()} status available',
-                    style: TextStyle(
-                        color: Theme.of(context).colorScheme.secondary)),
+                    style: TextStyle(color: Theme.of(context).primaryColor)),
               )
         : const Center(child: CircularProgressIndicator());
   }

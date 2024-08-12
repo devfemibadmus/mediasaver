@@ -4,6 +4,10 @@ import 'package:video_player/video_player.dart';
 import 'package:mediasaver/model/status.dart';
 import 'package:mediasaver/video.dart';
 
+// EDIT: popup_menu.dart
+// const double _kMenuMinWidth = 0.0 * _kMenuWidthStep;
+// const double _kMenuScreenPadding = 0.0;
+
 class VideoPlayerWidget extends StatefulWidget {
   final String videoPath;
   const VideoPlayerWidget({super.key, required this.videoPath});
@@ -65,7 +69,7 @@ class _PreviewState extends State<Preview> {
   Widget build(BuildContext context) {
     final scaffold = ScaffoldMessenger.of(context);
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: widget.theme.colorScheme.secondary,
       appBar: AppBar(
         foregroundColor: widget.theme.primaryColor,
         backgroundColor: widget.theme.colorScheme.secondary,
@@ -92,27 +96,19 @@ class _PreviewState extends State<Preview> {
             },
             itemBuilder: (BuildContext context) => [
               if (widget.saved != true)
-                const PopupMenuItem<String>(
+                PopupMenuItem<String>(
                   value: "download",
-                  child: ListTile(
-                      title: Text("Download",
-                          style: TextStyle(color: Colors.white)),
-                      leading: Icon(Icons.download_for_offline_sharp,
-                          color: Colors.white)),
+                  child: Icon(Icons.download_for_offline_sharp,
+                      color: widget.theme.primaryColor),
                 ),
               if (widget.saved)
-                const PopupMenuItem<String>(
+                PopupMenuItem<String>(
                   value: "delete",
-                  child: ListTile(
-                      title:
-                          Text("Delete", style: TextStyle(color: Colors.white)),
-                      leading: Icon(Icons.delete, color: Colors.white)),
+                  child: Icon(Icons.delete, color: widget.theme.primaryColor),
                 ),
-              const PopupMenuItem<String>(
+              PopupMenuItem<String>(
                 value: "share",
-                child: ListTile(
-                    title: Text("Share", style: TextStyle(color: Colors.white)),
-                    leading: Icon(Icons.share, color: Colors.white)),
+                child: Icon(Icons.share, color: widget.theme.primaryColor),
               ),
             ],
           ),
