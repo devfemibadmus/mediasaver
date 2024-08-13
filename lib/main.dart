@@ -159,7 +159,7 @@ class _MyHomePageState extends State<MyHomePage> {
         top: 0,
         bottom: 0,
         child: Material(
-          color: Colors.transparent,
+          color: Colors.red,
           child: Center(
             child: CircularProgressIndicator(),
           ),
@@ -700,29 +700,15 @@ class _MyHomePageState extends State<MyHomePage> {
                         TextButton(
                           onPressed: () {
                             _showOverlay;
-                            downloadFile(media.address,
-                                    '${mediaData!.id}_${index}_${formattedSize}MB')
+                            downloadFile(
+                                    media.address, '${mediaData!.id}_$index')
                                 .then((result) {
                               _removeOverlay;
-                              if (result[0] == true) {
-                                scaffold.showSnackBar(
-                                  const SnackBar(
-                                    content: Text("Video Saved"),
-                                  ),
-                                );
-                              } else if (result[0] == "Already Saved") {
-                                scaffold.showSnackBar(
-                                  SnackBar(
-                                    content: Text(result[0]),
-                                  ),
-                                );
-                              } else if (result[0] == false) {
-                                scaffold.showSnackBar(
-                                  SnackBar(
-                                    content: Text(result[1]),
-                                  ),
-                                );
-                              }
+                              scaffold.showSnackBar(
+                                SnackBar(
+                                  content: Text(result),
+                                ),
+                              );
                             });
                           },
                           child: Icon(

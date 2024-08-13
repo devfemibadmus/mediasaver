@@ -673,7 +673,7 @@ class MainActivity : FlutterActivity() {
                         val saveFile = File(galleryDirectory, fileName)
 
                         if (saveFile.exists()) {
-                            return@withContext "Already Saved: " + saveFile.absolutePath
+                            return@withContext "Already Saved"
                         }
 
                         val inputStream: InputStream? = response.body?.byteStream()
@@ -690,8 +690,11 @@ class MainActivity : FlutterActivity() {
                         }
                         applicationContext.sendBroadcast(intent)
 
-                        // Return the absolute path of the saved file
-                        return@withContext saveFile.absolutePath
+                        return@withContext when {
+                            mimeType?.startsWith("video/") == true -> "Video saved"
+                            mimeType?.startsWith("image/") == true -> "Image saved"
+                            else -> "File saved"
+                        }
                     }
                 } catch (e: SecurityException) {
                     e.printStackTrace()

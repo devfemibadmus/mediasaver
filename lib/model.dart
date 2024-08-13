@@ -13,17 +13,10 @@ bool isValidUrl(String value) {
   return value.startsWith('https://') || value.startsWith('http://');
 }
 
-Future<List> downloadFile(String fileUrl, String fileId) async {
+Future<String> downloadFile(String fileUrl, String fileId) async {
   final String result = await platform
       .invokeMethod('downloadFile', {'fileUrl': fileUrl, 'fileId': fileId});
-  // print('Download result: $result');
-  if (result.contains("Already Saved")) {
-    return ["Already Saved", result.replaceFirst("Already Saved: ", "")];
-  } else if (result.contains("/storage/emulated/0")) {
-    return [true, result];
-  } else {
-    return [false, result];
-  }
+  return result;
 }
 
 Future<Map<String, dynamic>?> fetchMediaFromServer(String url) async {
@@ -32,7 +25,6 @@ Future<Map<String, dynamic>?> fetchMediaFromServer(String url) async {
 
   if (api.isValidUrl(url)) {
     final video = await api.fetchMedia(url);
-    // print(video);
     if (video != null && video['success']) {
       return {
         'success': true,
@@ -41,11 +33,9 @@ Future<Map<String, dynamic>?> fetchMediaFromServer(String url) async {
       };
     }
   } else {
-    // print('Unsupported URL format.');
     return {
       'error': 'Unsupported URL format.',
     };
   }
-  // print("null ooo");
   return null;
 }
