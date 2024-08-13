@@ -72,10 +72,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   final TextEditingController _textController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
-  /*
-  final _formKey = GlobalKey<FormState>();
-  String _selectedQuality = 'default';
-  */
+
   double downloadPercentage = 0.0;
   bool linkready = false;
   bool showedDialog = false;
