@@ -672,6 +672,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                         TextButton(
                           onPressed: () async {
+                            if (isDownloadingMap[index] == true) return;
                             setState(() {
                               isDownloadingMap[index] = true;
                             });
