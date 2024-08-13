@@ -76,7 +76,7 @@ class _MyHomePageState extends State<MyHomePage> {
   double downloadPercentage = 0.0;
   bool linkready = false;
   bool showedDialog = false;
-  bool isDownloading = false;
+  Map<int, bool> isDownloadingMap = {};
 
   WebMedia? mediaData;
   Media? selectedQuality;
@@ -662,7 +662,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             style: TextStyle(
                                 color: Theme.of(context).primaryColor),
                           );
-
+                    bool isDownloading = isDownloadingMap[index] ?? false;
                     return Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: <Widget>[
@@ -673,14 +673,14 @@ class _MyHomePageState extends State<MyHomePage> {
                         TextButton(
                           onPressed: () async {
                             setState(() {
-                              isDownloading = true;
+                              isDownloadingMap[index] = true;
                             });
 
                             final result = await downloadFile(
                                 media.address, '${mediaData!.id}_$index');
 
                             setState(() {
-                              isDownloading = false;
+                              isDownloadingMap[index] = false;
                             });
 
                             scaffold.showSnackBar(
