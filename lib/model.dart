@@ -1,5 +1,5 @@
 import 'package:mediasaver/model/variable.dart';
-import 'package:mediasaver/model/tiktok.dart';
+import 'package:mediasaver/model/webmedia.dart';
 
 // BULLET TRAIN
 
@@ -26,33 +26,25 @@ Future<List> downloadFile(String fileUrl, String fileId) async {
 }
 
 Future<Map<String, dynamic>?> fetchMediaFromServer(String url) async {
-  final bot = TikTokBot(
-      apiUrl: 'https://devfemibadmus.blackstackhub.com/webmedia/api/');
+  final api =
+      Api(apiUrl: 'https://devfemibadmus.blackstackhub.com/webmedia/api/');
 
-  if (bot.isVideoUrl(url)) {
-    final video = await bot.fetchMedia(url);
-    if (video != null && video['data']['is_video'] == true) {
-      return {
-        'success': true,
-        'type': 'video',
-        'data': TikTokVideo.fromJson(video['data'])
-      };
-    }
-  } else if (bot.isImageUrl(url)) {
-    final image = await bot.fetchMedia(url);
-    if (image != null && image['data']['is_image'] == true) {
+  if (api.isValidUrl(url)) {
+    final video = await api.fetchMedia(url);
+    // print(video);
+    if (video != null && video['success']) {
       return {
         'success': true,
         'type': 'image',
-        'data': TikTokImage.fromJson(image['data'])
+        'data': WebMedia.fromJson(video['data'])
       };
     }
   } else {
-    print('Unsupported URL format.');
+    // print('Unsupported URL format.');
     return {
       'error': 'Unsupported URL format.',
     };
   }
-  print("null ooo");
+  // print("null ooo");
   return null;
 }
