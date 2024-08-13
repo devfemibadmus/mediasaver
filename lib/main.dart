@@ -79,11 +79,11 @@ class _MyHomePageState extends State<MyHomePage> {
   double downloadPercentage = 0.0;
   bool linkready = false;
   bool showedDialog = false;
+  bool isDownloading = false;
 
   WebMedia? mediaData;
   Media? selectedQuality;
   String? errorMessage;
-  OverlayEntry? _overlayEntry;
 
   String pastebtn = "Paste";
   List<String> dialogContent = [
@@ -148,30 +148,6 @@ class _MyHomePageState extends State<MyHomePage> {
         _continuousMethods();
       }
     });
-  }
-
-  void _showOverlay() {
-    final overlay = Overlay.of(context);
-    _overlayEntry = OverlayEntry(
-      builder: (context) => const Positioned(
-        left: 0,
-        right: 0,
-        top: 0,
-        bottom: 0,
-        child: Material(
-          color: Colors.red,
-          child: Center(
-            child: CircularProgressIndicator(),
-          ),
-        ),
-      ),
-    );
-    overlay.insert(_overlayEntry!);
-  }
-
-  void _removeOverlay() {
-    _overlayEntry?.remove();
-    _overlayEntry = null;
   }
 
   void _showDialog() {
@@ -698,24 +674,31 @@ class _MyHomePageState extends State<MyHomePage> {
                           child: disc,
                         ),
                         TextButton(
-                          onPressed: () {
-                            _showOverlay;
-                            downloadFile(
-                                    media.address, '${mediaData!.id}_$index')
-                                .then((result) {
-                              _removeOverlay;
-                              scaffold.showSnackBar(
-                                SnackBar(
-                                  content: Text(result),
-                                ),
-                              );
+                          onPressed: () async {
+                            setState(() {
+                              isDownloading = true;
                             });
+
+                            final result = await downloadFile(
+                                media.address, '${mediaData!.id}_$index');
+
+                            setState(() {
+                              isDownloading = false;
+                            });
+
+                            scaffold.showSnackBar(
+                              SnackBar(
+                                content: Text(result),
+                              ),
+                            );
                           },
-                          child: Icon(
-                            Icons.download,
-                            color: Theme.of(context).primaryColor,
-                          ),
-                        ),
+                          child: isDownloading
+                              ? const CircularProgressIndicator()
+                              : Icon(
+                                  Icons.download,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                        )
                       ],
                     );
                   }).toList(),
