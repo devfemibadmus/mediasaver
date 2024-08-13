@@ -98,12 +98,7 @@ class _MyHomePageState extends State<MyHomePage> {
   ];
   int currentDialogIndex = 0;
 
-  List<String> labels = [
-    'Whatsapp',
-    'W4Business',
-    'Other Platform',
-    'Saved Media'
-  ];
+  List<String> labels = ['Whatsapp', 'W4Business', 'Web Download', 'Saved'];
   @override
   void initState() {
     super.initState();
