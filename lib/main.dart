@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mediasaver/model.dart';
-import 'package:mediasaver/model/tiktok.dart';
+import 'package:mediasaver/model/webmedia.dart';
 import 'package:mediasaver/preview.dart';
 import 'package:mediasaver/model/whatsapp.dart';
 import 'package:mediasaver/model/variable.dart';
@@ -79,18 +79,12 @@ class _MyHomePageState extends State<MyHomePage> {
   */
   double downloadPercentage = 0.0;
   bool linkready = false;
-  bool downloadBtnClicked = false;
-  bool downloaded = false;
   bool showedDialog = false;
 
-  TikTokImage? imageData;
-  TikTokVideo? videoData;
-  bool? isvideo;
-  VideoQuality? selectedQuality;
-  String? medialPath;
-  String? medialUrl;
-  String? thumbnailUrl;
+  WebMedia? mediaData;
+  Media? selectedQuality;
   String? errorMessage;
+  OverlayEntry? _overlayEntry;
 
   String pastebtn = "Paste";
   List<String> dialogContent = [
@@ -160,6 +154,30 @@ class _MyHomePageState extends State<MyHomePage> {
         _continuousMethods();
       }
     });
+  }
+
+  void _showOverlay() {
+    final overlay = Overlay.of(context);
+    _overlayEntry = OverlayEntry(
+      builder: (context) => const Positioned(
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+        child: Material(
+          color: Colors.transparent,
+          child: Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+      ),
+    );
+    overlay.insert(_overlayEntry!);
+  }
+
+  void _removeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
   }
 
   void _showDialog() {
@@ -521,7 +539,8 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget platformMediaDownloaderWidget(scaffold) {
     return StatefulBuilder(
       builder: (context, setState) {
-        return Padding(
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.all(10),
           child: Column(
             children: <Widget>[
@@ -531,6 +550,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     child: TextFormField(
                       onChanged: ((value) {
                         setState(() {
+                          linkready = false;
                           if (isValidUrl(value)) {
                             _textController.text = value;
                             errorMessage = null;
@@ -541,32 +561,30 @@ class _MyHomePageState extends State<MyHomePage> {
                           }
                         });
                       }),
-                      style: TextStyle(
-                          color: Theme.of(context).colorScheme.onPrimary),
+                      style: TextStyle(color: Theme.of(context).primaryColor),
                       controller: _textController,
                       focusNode: _focusNode,
-                      cursorColor: Theme.of(context).colorScheme.secondary,
+                      cursorColor: Theme.of(context).primaryColor,
                       decoration: InputDecoration(
                         border: const OutlineInputBorder(),
                         errorText: errorMessage,
                         labelText: 'Media url',
-                        labelStyle: TextStyle(
-                            color: Theme.of(context).colorScheme.secondary),
+                        labelStyle:
+                            TextStyle(color: Theme.of(context).primaryColor),
                         contentPadding: const EdgeInsets.all(5.0),
                         isDense: true,
                         enabledBorder: OutlineInputBorder(
                             borderSide: BorderSide(
-                                color:
-                                    Theme.of(context).colorScheme.secondary)),
+                                color: Theme.of(context).primaryColor)),
                         focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: Theme.of(context).colorScheme.secondary),
+                          borderSide:
+                              BorderSide(color: Theme.of(context).primaryColor),
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 15),
-                  ElevatedButton(
+                  TextButton(
                     // handle the button text to know wether search or paste
                     onPressed: () {
                       // print("clicked");
@@ -574,11 +592,6 @@ class _MyHomePageState extends State<MyHomePage> {
                       setState(() {
                         downloadPercentage = 0.0;
                         linkready = false;
-                        downloadBtnClicked = false;
-                        downloaded = false;
-                        medialPath = null;
-                        medialUrl = null;
-                        thumbnailUrl = null;
                         errorMessage = null;
                       });
                       fetchClipboardContent().then((value) {
@@ -592,7 +605,6 @@ class _MyHomePageState extends State<MyHomePage> {
                           if (isValidUrl(_textController.text)) {
                             linkready = true;
                             errorMessage = null;
-                            thumbnailUrl = null;
                             // print("linkready $linkready");
                           } else {
                             errorMessage = 'Not a valid URL';
@@ -607,13 +619,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                 linkready = false;
                                 if (value != null) {
                                   if (value['success'] == true) {
-                                    isvideo = value['type'] == 'video';
-                                    if (value['type'] == 'video') {
-                                      videoData = value['data'];
-                                      selectedQuality = videoData!.videos.first;
-                                    } else {
-                                      imageData = value['data'];
-                                    }
+                                    mediaData = value['data'];
+                                    selectedQuality = mediaData!.medias?.first;
                                   } else {
                                     errorMessage = value['error'];
                                     pastebtn = "Paste";
@@ -629,189 +636,111 @@ class _MyHomePageState extends State<MyHomePage> {
                       });
                     },
                     style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.secondary,
                       padding: const EdgeInsets.all(6),
                       minimumSize: Size.zero,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    child: Text(
-                      pastebtn,
-                      style: TextStyle(
-                          color: Theme.of(context).secondaryHeaderColor),
-                    ),
+                    child: pastebtn == "Paste"
+                        ? const Icon(Icons.paste)
+                        : const Icon(Icons.search),
                   )
                 ],
               ),
               const SizedBox(height: 20),
               if (linkready) const CircularProgressIndicator(),
-              if (videoData != null)
+              if (linkready) const SizedBox(height: 50),
+              if (mediaData != null)
                 Stack(
                   alignment: Alignment.center,
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8.0),
                       child: Image.network(
-                        videoData!.cover,
+                        mediaData!.cover,
                         fit: BoxFit.cover,
                         height: MediaQuery.of(context).size.height / 3,
                         width: MediaQuery.of(context).size.width / 2,
                       ),
                     ),
-                    if (downloadBtnClicked) const CircularProgressIndicator(),
-                    if (downloaded)
-                      Positioned(
-                        top: 0,
-                        right: 0,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.9),
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(25),
-                              bottomLeft: Radius.circular(25),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              IconButton(
-                                color: Colors.red,
-                                onPressed: (() {
-                                  statusAction(medialPath!, 'deleteStatus')
-                                      .then((value) {
-                                    scaffold.showSnackBar(
-                                        SnackBar(content: Text(value)));
-                                    setState(() {
-                                      downloadPercentage = 0.0;
-                                      linkready = false;
-                                      downloadBtnClicked = false;
-                                      downloaded = false;
-                                      medialUrl = null;
-                                      thumbnailUrl = null;
-                                      errorMessage = null;
-                                      pastebtn = "Paste";
-                                      _textController.text = '';
-                                    });
-                                  });
-                                }),
-                                icon: const Icon(Icons.delete),
-                              ),
-                              IconButton(
-                                color: Theme.of(context).primaryColor,
-                                onPressed: (() {
-                                  statusAction(medialPath!, 'shareMedia').then(
-                                      (value) => scaffold.showSnackBar(
-                                          SnackBar(content: Text(value))));
-                                }),
-                                icon: const Icon(Icons.share),
-                              ),
-                              IconButton(
-                                color: Colors.red,
-                                onPressed: (() {
-                                  _focusNode.requestFocus();
-                                  setState(() {
-                                    downloadPercentage = 0.0;
-                                    linkready = false;
-                                    downloadBtnClicked = false;
-                                    downloaded = false;
-                                    videoData = null;
-                                    errorMessage = null;
-                                    pastebtn = "Paste";
-                                    _textController.text = '';
-                                  });
-                                }),
-                                icon: const Icon(Icons.close),
-                              )
-                            ],
-                          ),
-                        ),
-                      ),
                   ],
                 ),
-              if (videoData != null)
-                Text('${videoData!.id}\n${videoData!.desc}'),
-              if (videoData != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 40),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      DropdownButton<VideoQuality>(
-                        dropdownColor: Colors.transparent,
-                        style: TextStyle(
-                            color: Theme.of(context).colorScheme.onPrimary),
-                        value: selectedQuality,
-                        onChanged: (VideoQuality? newValue) {
-                          setState(() {
-                            selectedQuality = newValue!;
-                          });
-                        },
-                        items: videoData!.videos
-                            .map<DropdownMenuItem<VideoQuality>>(
-                                (VideoQuality quality) {
-                          String formattedSize =
-                              '${(quality.size / (1024 * 1024)).toStringAsFixed(2)} MB';
-                          String displayText =
-                              'Quality: ${quality.quality.toUpperCase()}, Size: $formattedSize';
-                          return DropdownMenuItem<VideoQuality>(
-                            value: quality,
-                            child: Text(displayText),
+              if (mediaData != null)
+                mediaData!.desc == ""
+                    ? Text(mediaData!.id)
+                    : Text(mediaData!.desc),
+              if (mediaData != null) const SizedBox(height: 20),
+              if (mediaData != null && mediaData!.medias != null)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: mediaData!.medias!.asMap().entries.map((entry) {
+                    int index = entry.key;
+                    Media media = entry.value;
+                    String formattedSize = media.size != null
+                        ? '${(int.parse(media.size!) / (1024 * 1024)).toStringAsFixed(2)} MB'
+                        : 'Size not available';
+
+                    String displayText =
+                        'Quality: $index, Size: $formattedSize';
+
+                    Widget disc = media.cover != null
+                        ? Image.network(
+                            media.cover!,
+                            height: 150,
+                          )
+                        : Text(
+                            displayText,
+                            style: TextStyle(
+                                color: Theme.of(context).primaryColor),
                           );
-                        }).toList(),
-                        elevation: 0,
-                      ),
-                      const SizedBox(width: 10),
-                      TextButton.icon(
-                        onPressed: () {
-                          setState(() {
-                            downloadBtnClicked = true;
-                          });
-                          downloadFile(selectedQuality!.address,
-                                  '${videoData!.id}_${(selectedQuality!.size / (1024 * 1024)).toStringAsFixed(2)}MB')
-                              .then((result) {
-                            if (result[0] == true) {
-                              setState(() {
-                                downloadBtnClicked = false;
-                                downloaded = true;
-                                medialPath = result[1];
-                              });
-                              scaffold.showSnackBar(
-                                const SnackBar(
-                                  content: Text("Video Saved"),
-                                ),
-                              );
-                            } else if (result[0] == "Already Saved") {
-                              setState(() {
-                                downloadBtnClicked = false;
-                                downloaded = true;
-                                medialPath = result[1];
-                              });
-                              scaffold.showSnackBar(
-                                SnackBar(
-                                  content: Text(result[0]),
-                                ),
-                              );
-                            } else if (result[0] == false) {
-                              setState(() {
-                                downloadBtnClicked = false;
-                                downloaded = false;
-                              });
-                              scaffold.showSnackBar(
-                                SnackBar(
-                                  content: Text(result[1]),
-                                ),
-                              );
-                            }
-                          });
-                        },
-                        icon: Icon(
-                          Icons.download,
-                          color: Theme.of(context).colorScheme.secondary,
+
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: <Widget>[
+                        Padding(
+                          padding: const EdgeInsets.all(10),
+                          child: disc,
                         ),
-                        label: const Text(""),
-                      ),
-                    ],
-                  ),
+                        TextButton(
+                          onPressed: () {
+                            _showOverlay;
+                            downloadFile(media.address,
+                                    '${mediaData!.id}_${index}_${formattedSize}MB')
+                                .then((result) {
+                              _removeOverlay;
+                              if (result[0] == true) {
+                                scaffold.showSnackBar(
+                                  const SnackBar(
+                                    content: Text("Video Saved"),
+                                  ),
+                                );
+                              } else if (result[0] == "Already Saved") {
+                                scaffold.showSnackBar(
+                                  SnackBar(
+                                    content: Text(result[0]),
+                                  ),
+                                );
+                              } else if (result[0] == false) {
+                                scaffold.showSnackBar(
+                                  SnackBar(
+                                    content: Text(result[1]),
+                                  ),
+                                );
+                              }
+                            });
+                          },
+                          child: Icon(
+                            Icons.download,
+                            color: Theme.of(context).primaryColor,
+                          ),
+                        ),
+                      ],
+                    );
+                  }).toList(),
                 ),
+              const SizedBox(height: 50),
             ],
           ),
         );
