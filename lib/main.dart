@@ -6,7 +6,6 @@ import 'package:mediasaver/model.dart';
 import 'package:mediasaver/platforms/webmedia.dart';
 import 'package:mediasaver/pages/preview.dart';
 import 'package:mediasaver/platforms/whatsapp.dart';
-import 'package:mediasaver/model.dart';
 
 void main() {
   runApp(const MyApp());
