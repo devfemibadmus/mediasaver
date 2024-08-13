@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import 'package:mediasaver/model/variable.dart';
+import 'package:mediasaver/model.dart';
 
 // BULLET TRAIN
 class StatusFileInfo {

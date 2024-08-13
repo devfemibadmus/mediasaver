@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
-import 'package:mediasaver/model/whatsapp.dart';
-import 'package:mediasaver/video.dart';
+import 'package:mediasaver/platforms/whatsapp.dart';
+import 'package:mediasaver/pages/video.dart';
 
 // EDIT: popup_menu.dart
 // const double _kMenuMinWidth = 0.0 * _kMenuWidthStep;

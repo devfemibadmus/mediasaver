@@ -1,6 +1,7 @@
-import 'package:mediasaver/model/variable.dart';
-import 'package:mediasaver/model/webmedia.dart';
+import 'package:mediasaver/platforms/webmedia.dart';
+import 'package:flutter/services.dart';
 
+const platform = MethodChannel('github.devfemibadmus.mediasaver');
 // BULLET TRAIN
 
 Future<String> fetchClipboardContent() async {
