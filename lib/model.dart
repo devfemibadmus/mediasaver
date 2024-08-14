@@ -1,5 +1,5 @@
-import 'package:mediasaver/models/webmedia.dart';
 import 'package:flutter/services.dart';
+import 'package:mediasaver/platforms/webMedia/models/webmedia.dart';
 
 const platform = MethodChannel('github.devfemibadmus.mediasaver');
 // BULLET TRAIN
