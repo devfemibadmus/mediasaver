@@ -1,9 +1,8 @@
 import 'dart:async';
-import 'dart:io';
+import 'package:mediasaver/wws.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mediasaver/model.dart';
-import 'package:mediasaver/platforms/whatsapp/pages/preview.dart';
 import 'package:mediasaver/platforms/whatsapp/models/whatsapp.dart';
 import 'package:mediasaver/platforms/webMedia/webmedias.dart';
 
@@ -63,16 +62,16 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _currentIndex = 0;
   late Timer _timer;
-  bool _dataLoaded = false;
-  bool _dataNew = false;
+  bool showedDialog = false;
+  int currentDialogIndex = 0;
+
   late List _tabs;
+  bool _dataNew = false;
+  int _currentIndex = 0;
+  bool _dataLoaded = false;
   bool _isProcessing = false;
 
-  bool showedDialog = false;
-
-  String pastebtn = "Paste";
   List<String> dialogContent = [
     'Opensource free for all 100% secured and trusted. Click here to see.',
     'Download any media(video/image) from any platform, website, TikTok, Instagram, Youtube, Facebook, X...\n\nDouble tap to save status or to delete existing ones.\n\nHold to share saved or not saved status.\n\nMany more functions, click on the bulb to request features.',
@@ -83,14 +82,13 @@ class _MyHomePageState extends State<MyHomePage> {
     'Features',
     'Storage Access Required',
   ];
-  int currentDialogIndex = 0;
 
   List<String> labels = ['Whatsapp', 'W4Business', 'Web Download', 'Saved'];
   @override
   void initState() {
     super.initState();
     _tabs = [
-      for (var appType in ['WHATSAPP', 'WHATSAPP4B', '', 'SAVED'])
+      for (var appType in ['WHATSAPP', 'WHATSAPP4B', 'WEBMEDIA', 'SAVED'])
         {
           'appType': appType,
           'whatsappFilesImages':
@@ -303,7 +301,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _continuousMethods() async {
-    if (_tabs[_currentIndex]['appType'] != '') {
+    if (_tabs[_currentIndex]['appType'] != 'WEBMEDIA') {
       _isProcessing = true;
       await fetchAndUpdateData().then((_) async {
         await getVideoThumbnailAsync();
@@ -313,22 +311,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    DateTime currentDate = DateTime.now();
     final ThemeData theme = Theme.of(context);
-    final scaffold = ScaffoldMessenger.of(context);
-    if (currentDate.year >= 2024 &&
-        currentDate.month >= 9 &&
-        currentDate.day >= 20) {
-      return Center(
-        child: GestureDetector(
-            onTap: () async => await platform.invokeMethod('launchUpdate'),
-            child: const Center(
-                child: Text(
-              'Update your app',
-              style: TextStyle(fontSize: 24),
-            ))),
-      );
-    }
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -356,36 +339,159 @@ class _MyHomePageState extends State<MyHomePage> {
                       await platform.invokeMethod('shareApp'),
                   icon: const Icon(Icons.share))
             ],
-            bottom: TabBar(
-              dividerColor: theme.colorScheme.secondary,
-              labelColor: theme.primaryColor,
-              unselectedLabelColor: theme.primaryColor,
-              indicatorColor: theme.primaryColor,
-              tabs: [
-                if ([0, 1, 3].contains(_currentIndex))
-                  Center(
-                      child: Text(
-                          "${_tabs[_currentIndex]['whatsappFilesImages'].length} Images")),
-                if ([0, 1, 3].contains(_currentIndex))
-                  Center(
-                      child: Text(
-                          "${_tabs[_currentIndex]['whatsappFilesVideo'].length} Video")),
-                if (_currentIndex == 2)
-                  const Center(child: Text("Other Platform")),
-                if (_currentIndex == 2)
-                  const Center(child: Text("How It Works")),
-              ],
-            ),
           ),
         ),
-        body: TabBarView(
+        body: IndexedStack(
+          index: _currentIndex,
           children: [
-            if ([0, 1, 3].contains(_currentIndex))
-              _buildTabContent('whatsappFilesImages', scaffold),
-            if ([0, 1, 3].contains(_currentIndex))
-              _buildTabContent('whatsappFilesVideo', scaffold),
-            if (_currentIndex == 2) _buildTabContent('otherplatform', scaffold),
-            if (_currentIndex == 2) _buildTabContent('howitwork', scaffold),
+            DefaultTabController(
+              length: 2,
+              child: Column(
+                children: [
+                  TabBar(
+                    dividerColor: theme.colorScheme.secondary,
+                    labelColor: theme.primaryColor,
+                    unselectedLabelColor: theme.primaryColor,
+                    indicatorColor: theme.primaryColor,
+                    tabs: [
+                      Center(
+                        child: Text(
+                            "${_tabs[_currentIndex]['whatsappFilesImages'].length} Images"),
+                      ),
+                      Center(
+                        child: Text(
+                            "${_tabs[_currentIndex]['whatsappFilesVideo'].length} Video"),
+                      ),
+                    ],
+                  ),
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        GridManager(
+                          tabs: _tabs,
+                          currentIndex: _currentIndex,
+                          dataLoaded: _dataLoaded,
+                          file: 'whatsappFilesImages',
+                        ),
+                        GridManager(
+                          tabs: _tabs,
+                          currentIndex: _currentIndex,
+                          dataLoaded: _dataLoaded,
+                          file: 'whatsappFilesVideo',
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            DefaultTabController(
+              length: 2,
+              child: Column(
+                children: [
+                  TabBar(
+                    dividerColor: theme.colorScheme.secondary,
+                    labelColor: theme.primaryColor,
+                    unselectedLabelColor: theme.primaryColor,
+                    indicatorColor: theme.primaryColor,
+                    tabs: [
+                      Center(
+                        child: Text(
+                            "${_tabs[_currentIndex]['whatsappFilesImages'].length} Images"),
+                      ),
+                      Center(
+                        child: Text(
+                            "${_tabs[_currentIndex]['whatsappFilesVideo'].length} Video"),
+                      ),
+                    ],
+                  ),
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        GridManager(
+                          tabs: _tabs,
+                          currentIndex: _currentIndex,
+                          dataLoaded: _dataLoaded,
+                          file: 'whatsappFilesImages',
+                        ),
+                        GridManager(
+                          tabs: _tabs,
+                          currentIndex: _currentIndex,
+                          dataLoaded: _dataLoaded,
+                          file: 'whatsappFilesVideo',
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            DefaultTabController(
+              length: 2,
+              child: Column(
+                children: [
+                  TabBar(
+                    dividerColor: theme.colorScheme.secondary,
+                    labelColor: theme.primaryColor,
+                    unselectedLabelColor: theme.primaryColor,
+                    indicatorColor: theme.primaryColor,
+                    tabs: const [
+                      Center(child: Text("Other Platform")),
+                      Center(child: Text("How It Works")),
+                    ],
+                  ),
+                  const Expanded(
+                    child: TabBarView(
+                      children: [
+                        WebMedias(),
+                        WebMedias(),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            DefaultTabController(
+              length: 2,
+              child: Column(
+                children: [
+                  TabBar(
+                    dividerColor: theme.colorScheme.secondary,
+                    labelColor: theme.primaryColor,
+                    unselectedLabelColor: theme.primaryColor,
+                    indicatorColor: theme.primaryColor,
+                    tabs: [
+                      Center(
+                        child: Text(
+                            "${_tabs[_currentIndex]['whatsappFilesImages'].length} Images"),
+                      ),
+                      Center(
+                        child: Text(
+                            "${_tabs[_currentIndex]['whatsappFilesVideo'].length} Video"),
+                      ),
+                    ],
+                  ),
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        GridManager(
+                          tabs: _tabs,
+                          currentIndex: _currentIndex,
+                          dataLoaded: _dataLoaded,
+                          file: 'whatsappFilesImages',
+                        ),
+                        GridManager(
+                          tabs: _tabs,
+                          currentIndex: _currentIndex,
+                          dataLoaded: _dataLoaded,
+                          file: 'whatsappFilesVideo',
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(
@@ -422,81 +528,6 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
     );
-  }
-
-  Widget _buildTabContent(String files, scaffold) {
-    if (_currentIndex == 2) {
-      return files == "howitwork"
-          ? const Center(
-              child: Text('wait'),
-            )
-          : const WebMedias();
-    }
-    final currentTab = _tabs[_currentIndex];
-    final currentFiles = currentTab[files];
-    final appType = currentTab['appType'];
-
-    return _dataLoaded
-        ? currentFiles.isNotEmpty
-            ? GridView.builder(
-                cacheExtent: 9999,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 6.0,
-                    mainAxisSpacing: 6.0),
-                itemCount: currentFiles.length,
-                itemBuilder: (context, index) {
-                  final statusFile = currentFiles[index];
-                  return InkWell(
-                    onLongPress: () {
-                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                      statusAction(statusFile.path, 'shareMedia')
-                          .then((value) => scaffold.showSnackBar(SnackBar(
-                                content: Text(value),
-                              )));
-                    },
-                    onDoubleTap: () {
-                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                      final action =
-                          appType != 'SAVED' ? 'saveStatus' : 'deleteStatus';
-                      statusAction(statusFile.path, action)
-                          .then((value) => scaffold.showSnackBar(SnackBar(
-                                content: Text(value),
-                              )));
-                    },
-                    onTap: () {
-                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => Preview(
-                                previewFile: currentFiles,
-                                index: index,
-                                type: files == 'whatsappFilesVideo'
-                                    ? 'Video'
-                                    : 'Image',
-                                theme: Theme.of(context),
-                                saved: appType == 'SAVED')),
-                      );
-                    },
-                    child: files == 'whatsappFilesImages'
-                        ? Image.file(File(statusFile.path),
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                Container(color: Colors.grey.withOpacity(0.5)))
-                        : Image.memory(statusFile.mediaByte,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                Container(color: Colors.grey.withOpacity(0.5))),
-                  );
-                },
-              )
-            : Center(
-                child: Text(
-                    '${currentFiles.length} ${appType.toLowerCase()} status available',
-                    style: TextStyle(color: Theme.of(context).primaryColor)),
-              )
-        : const Center(child: CircularProgressIndicator());
   }
 
   @override
