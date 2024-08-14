@@ -1,4 +1,4 @@
-import 'package:mediasaver/platforms/webmedia.dart';
+import 'package:mediasaver/models/webmedia.dart';
 import 'package:flutter/services.dart';
 
 const platform = MethodChannel('github.devfemibadmus.mediasaver');
