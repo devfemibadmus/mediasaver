@@ -458,18 +458,24 @@ class _MyHomePageState extends State<MyHomePage> {
                 itemBuilder: (context, index) {
                   final statusFile = currentFiles[index];
                   return InkWell(
-                    onLongPress: () =>
-                        statusAction(statusFile.path, 'shareMedia').then(
-                            (value) => scaffold
-                                .showSnackBar(SnackBar(content: Text(value)))),
+                    onLongPress: () {
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                      statusAction(statusFile.path, 'shareMedia')
+                          .then((value) => scaffold.showSnackBar(SnackBar(
+                                content: Text(value),
+                              )));
+                    },
                     onDoubleTap: () {
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
                       final action =
                           appType != 'SAVED' ? 'saveStatus' : 'deleteStatus';
-                      statusAction(statusFile.path, action).then((value) =>
-                          scaffold
-                              .showSnackBar(SnackBar(content: Text(value))));
+                      statusAction(statusFile.path, action)
+                          .then((value) => scaffold.showSnackBar(SnackBar(
+                                content: Text(value),
+                              )));
                     },
                     onTap: () {
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -672,6 +678,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                         TextButton(
                           onPressed: () async {
+                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
                             if (isDownloadingMap[index] == true) return;
                             setState(() {
                               isDownloadingMap[index] = true;
