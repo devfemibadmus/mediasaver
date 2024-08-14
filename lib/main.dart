@@ -3,9 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mediasaver/model.dart';
-import 'package:mediasaver/platforms/webmedia.dart';
-import 'package:mediasaver/pages/preview.dart';
-import 'package:mediasaver/platforms/whatsapp.dart';
+import 'package:mediasaver/platforms/whatsapp/pages/preview.dart';
+import 'package:mediasaver/platforms/whatsapp/models/whatsapp.dart';
+import 'package:mediasaver/platforms/webMedia/webmedias.dart';
 
 void main() {
   runApp(const MyApp());
@@ -70,17 +70,7 @@ class _MyHomePageState extends State<MyHomePage> {
   late List _tabs;
   bool _isProcessing = false;
 
-  final TextEditingController _textController = TextEditingController();
-  final FocusNode _focusNode = FocusNode();
-
-  double downloadPercentage = 0.0;
-  bool linkready = false;
   bool showedDialog = false;
-  Map<int, bool> isDownloadingMap = {};
-
-  WebMedia? mediaData;
-  Media? selectedQuality;
-  String? errorMessage;
 
   String pastebtn = "Paste";
   List<String> dialogContent = [
@@ -440,7 +430,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ? const Center(
               child: Text('wait'),
             )
-          : platformMediaDownloaderWidget(scaffold);
+          : const WebMedias();
     }
     final currentTab = _tabs[_currentIndex];
     final currentFiles = currentTab[files];
@@ -509,219 +499,9 @@ class _MyHomePageState extends State<MyHomePage> {
         : const Center(child: CircularProgressIndicator());
   }
 
-  Widget platformMediaDownloaderWidget(scaffold) {
-    return StatefulBuilder(
-      builder: (context, setState) {
-        return SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.all(10),
-          child: Column(
-            children: <Widget>[
-              Row(
-                children: <Widget>[
-                  Expanded(
-                    child: TextFormField(
-                      onChanged: ((value) {
-                        setState(() {
-                          linkready = false;
-                          if (isValidUrl(value)) {
-                            _textController.text = value;
-                            errorMessage = null;
-                            if (_focusNode.hasFocus) pastebtn = "Search";
-                          } else {
-                            errorMessage = 'Not a valid URL';
-                            pastebtn = "Paste";
-                          }
-                        });
-                      }),
-                      style: TextStyle(color: Theme.of(context).primaryColor),
-                      controller: _textController,
-                      focusNode: _focusNode,
-                      cursorColor: Theme.of(context).primaryColor,
-                      decoration: InputDecoration(
-                        border: const OutlineInputBorder(),
-                        errorText: errorMessage,
-                        labelText: 'Media url',
-                        labelStyle:
-                            TextStyle(color: Theme.of(context).primaryColor),
-                        contentPadding: const EdgeInsets.all(5.0),
-                        isDense: true,
-                        enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                                color: Theme.of(context).primaryColor)),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide:
-                              BorderSide(color: Theme.of(context).primaryColor),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 15),
-                  TextButton(
-                    // handle the button text to know wether search or paste
-                    onPressed: () {
-                      // print("clicked");
-                      _focusNode.unfocus();
-                      setState(() {
-                        downloadPercentage = 0.0;
-                        linkready = false;
-                        errorMessage = null;
-                      });
-                      fetchClipboardContent().then((value) {
-                        setState(() {
-                          if (pastebtn == "Paste") {
-                            _textController.text = value;
-                            _textController.value =
-                                TextEditingValue(text: value);
-                            // print("pasted");
-                          }
-                          if (isValidUrl(_textController.text)) {
-                            linkready = true;
-                            errorMessage = null;
-                            // print("linkready $linkready");
-                          } else {
-                            errorMessage = 'Not a valid URL';
-                            linkready = false;
-                          }
-                        });
-
-                        if (isValidUrl(value)) {
-                          fetchMediaFromServer(value).then(
-                            (value) {
-                              setState(() {
-                                linkready = false;
-                                if (value != null) {
-                                  if (value['success'] == true) {
-                                    mediaData = value['data'];
-                                    selectedQuality = mediaData!.medias?.first;
-                                  } else {
-                                    errorMessage = value['error'];
-                                    pastebtn = "Paste";
-                                  }
-                                } else {
-                                  errorMessage = 'Try again!';
-                                  pastebtn = "Paste";
-                                }
-                              });
-                            },
-                          );
-                        }
-                      });
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.secondary,
-                      padding: const EdgeInsets.all(6),
-                      minimumSize: Size.zero,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: pastebtn == "Paste"
-                        ? const Icon(Icons.paste)
-                        : const Icon(Icons.search),
-                  )
-                ],
-              ),
-              const SizedBox(height: 20),
-              if (linkready) const CircularProgressIndicator(),
-              if (linkready) const SizedBox(height: 50),
-              if (mediaData != null)
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8.0),
-                      child: Image.network(
-                        mediaData!.cover,
-                        fit: BoxFit.cover,
-                        height: MediaQuery.of(context).size.height / 3,
-                        width: MediaQuery.of(context).size.width / 2,
-                      ),
-                    ),
-                  ],
-                ),
-              if (mediaData != null)
-                mediaData!.desc == ""
-                    ? Text(mediaData!.id)
-                    : Text(mediaData!.desc),
-              if (mediaData != null) const SizedBox(height: 20),
-              if (mediaData != null && mediaData!.medias != null)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: mediaData!.medias!.asMap().entries.map((entry) {
-                    int index = entry.key;
-                    Media media = entry.value;
-                    String formattedSize = media.size != null
-                        ? '${(int.parse(media.size!) / (1024 * 1024)).toStringAsFixed(2)} MB'
-                        : 'Size not available';
-
-                    String displayText =
-                        'Quality: $index, Size: $formattedSize';
-
-                    Widget disc = media.cover != null
-                        ? Image.network(
-                            media.cover!,
-                            height: 150,
-                          )
-                        : Text(
-                            displayText,
-                            style: TextStyle(
-                                color: Theme.of(context).primaryColor),
-                          );
-                    bool isDownloading = isDownloadingMap[index] ?? false;
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: <Widget>[
-                        Padding(
-                          padding: const EdgeInsets.all(10),
-                          child: disc,
-                        ),
-                        TextButton(
-                          onPressed: () async {
-                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                            if (isDownloadingMap[index] == true) return;
-                            setState(() {
-                              isDownloadingMap[index] = true;
-                            });
-
-                            final result = await downloadFile(
-                                media.address, '${mediaData!.id}_$index');
-
-                            if (!mounted) return;
-                            setState(() {
-                              isDownloadingMap[index] = false;
-                            });
-
-                            scaffold.showSnackBar(
-                              SnackBar(
-                                content: Text(result),
-                              ),
-                            );
-                          },
-                          child: isDownloading
-                              ? const CircularProgressIndicator()
-                              : Icon(
-                                  Icons.download,
-                                  color: Theme.of(context).primaryColor,
-                                ),
-                        )
-                      ],
-                    );
-                  }).toList(),
-                ),
-              const SizedBox(height: 50),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   @override
   void dispose() {
     _timer.cancel();
-    _textController.dispose();
-    _focusNode.dispose();
     super.dispose();
   }
 }
