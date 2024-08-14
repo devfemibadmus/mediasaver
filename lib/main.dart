@@ -687,6 +687,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             final result = await downloadFile(
                                 media.address, '${mediaData!.id}_$index');
 
+                            if (!mounted) return;
                             setState(() {
                               isDownloadingMap[index] = false;
                             });

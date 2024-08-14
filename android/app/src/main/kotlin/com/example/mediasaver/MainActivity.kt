@@ -52,6 +52,7 @@ import android.content.ClipboardManager
 
 
 import kotlinx.coroutines.CoroutineScope
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -651,7 +652,7 @@ class MainActivity : FlutterActivity() {
             return withContext(Dispatchers.IO) {
                 val intent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
                 intent.data = Uri.fromFile(Common.SAVEDSTATUSES)
-                val client = OkHttpClient()
+                val client = OkHttpClient.Builder().readTimeout(60, TimeUnit.SECONDS).build()
                 val request = Request.Builder()
                     .url(fileUrl)
                     .build()
@@ -698,10 +699,10 @@ class MainActivity : FlutterActivity() {
                     }
                 } catch (e: SecurityException) {
                     e.printStackTrace()
-                    return@withContext "Security Exception: Not Saved"
+                    return@withContext "Restart app and give permission."
                 } catch (e: IOException) {
                     e.printStackTrace()
-                    return@withContext "IO Exception: Not Saved"
+                    return@withContext "IO Exception, Try again!"
                 }
             }
     }
