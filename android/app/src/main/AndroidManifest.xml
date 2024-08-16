@@ -38,7 +38,7 @@
             android:value="2" />
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="github.devfemibadmus.mediasaver.fileprovider"
+            android:authorities="com.blackstackhub.mediasaver.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data

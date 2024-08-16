@@ -1,4 +1,4 @@
-package github.devfemibadmus.mediasaver
+package com.blackstackhub.mediasaver
 
 import android.content.Intent
 import android.net.Uri
@@ -83,10 +83,10 @@ object Common {
 
 
 class MainActivity : FlutterActivity() {
-    private val FILE_PROVIDER_AUTHORITY = "github.devfemibadmus.mediasaver.fileprovider"
+    private val FILE_PROVIDER_AUTHORITY = "com.blackstackhub.mediasaver.fileprovider"
     private val TAG = "MainActivity"
     private val APP_STORAGE_ACCESS_REQUEST_CODE = 501
-    private val CHANNEL = "github.devfemibadmus.mediasaver"
+    private val CHANNEL = "com.blackstackhub.mediasaver"
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -204,14 +204,14 @@ class MainActivity : FlutterActivity() {
 
     private fun launchDemo(): Boolean{
         val webIntent = Intent(Intent.ACTION_VIEW)
-        webIntent.data = Uri.parse("https://devfemibadmus.blackstackub/mediasaver")
+        webIntent.data = Uri.parse("https://github.com/devfemibadmus/mediasaver")
         startActivity(webIntent)
         return true
     }
 
     private fun launchPrivacyPolicy(): Boolean{
         val webIntent = Intent(Intent.ACTION_VIEW)
-        webIntent.data = Uri.parse("https://devfemibadmus.blackstackub/mediasaver#storagepermission")
+        webIntent.data = Uri.parse("https://devfemibadmus.blackstackhub.com/webmedia#privacy")
         startActivity(webIntent)
         return true
     }
@@ -230,7 +230,7 @@ class MainActivity : FlutterActivity() {
     
     private fun launchUpdate(): Boolean{
         val webIntent = Intent(Intent.ACTION_VIEW)
-        webIntent.data = Uri.parse("https://play.google.com/store/apps/details?id=github.devfemibadmus.mediasaver")
+        webIntent.data = Uri.parse("https://play.google.com/store/apps/details?id=com.blackstackhub.mediasaver")
         startActivity(webIntent)
         return true
     }
@@ -241,8 +241,8 @@ class MainActivity : FlutterActivity() {
         shareIntent.type = "text/plain"
     
         // Set the subject and message
-        val shareSubject = "Check out this free Media Saver!"
-        val shareMessage = "$shareSubject\n\nDownload the app: https://play.google.com/store/apps/details?id=github.devfemibadmus.mediasaver"
+        val shareSubject = "Check out this free Media Saver"
+        val shareMessage = "$shareSubject\n\nNo Ads, No Cost—Download Videos and Photos From Instagram, Facebook, and TikTok for Free!\n\nGet the app: https://play.google.com/store/apps/details?id=com.blackstackhub.mediasaver"
     
         // shareIntent.putExtra(Intent.EXTRA_SUBJECT, shareSubject)
         shareIntent.putExtra(Intent.EXTRA_TEXT, shareMessage)
@@ -278,8 +278,8 @@ class MainActivity : FlutterActivity() {
 
             // Share intent
             val shareIntent = Intent(Intent.ACTION_SEND)
-            val shareSubject = "https://play.google.com/store/apps/details?id=github.devfemibadmus.mediasaver"
-            val shareMessage = "I save this from free Media Saver!\n\n$shareSubject"
+            val shareSubject = "Saved with Media Saver—no cost, no ads!"
+            val shareMessage = "$shareSubject\n\nDownload it: https://play.google.com/store/apps/details?id=com.blackstackhub.mediasaver"
             //shareIntent.type = mimeType
             shareIntent.type = mimeType
             // shareIntent.putExtra(Intent.EXTRA_SUBJECT, shareSubject)
@@ -646,7 +646,6 @@ class MainActivity : FlutterActivity() {
                 name.substring(lastDotIndex + 1).toLowerCase()
         }
     }
-
 
     private suspend fun downloadAndSaveFile(fileUrl: String, fileId: String): String {
             return withContext(Dispatchers.IO) {
