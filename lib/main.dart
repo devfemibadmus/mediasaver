@@ -73,8 +73,8 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _isProcessing = false;
 
   List<String> dialogContent = [
-    'Opensource free for all 100% secured and trusted. Click here to see.',
-    'Download any media(video/image) from any platform, website, TikTok, Instagram, Youtube, Facebook, X...\n\nDouble tap to save status or to delete existing ones.\n\nHold to share saved or not saved status.\n\nMany more functions, click on the bulb to request features.',
+    'Opensource free for all 99% uptime. Click here to see.',
+    'Download videos and photos from Instagram, Facebook, and TikTok.\n\nDouble tap to save status or to delete existing ones.\n\nHold to share saved or not saved status.\n\nMany more functions, click on the bulb to request features.',
     'This app requires access to storage permission. Click here for more information.',
   ];
   List<String> dialogTitle = [
@@ -312,6 +312,20 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
+    DateTime currentDate = DateTime.now();
+    if (currentDate.year >= 2024 &&
+        currentDate.month >= 8 &&
+        currentDate.day >= 30) {
+      return Center(
+        child: GestureDetector(
+            onTap: () async => await platform.invokeMethod('launchUpdate'),
+            child: const Center(
+                child: Text(
+              'Update your app',
+              style: TextStyle(fontSize: 24),
+            ))),
+      );
+    }
     return DefaultTabController(
       length: 2,
       child: Scaffold(
