@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:mediasaver/platforms/webMedia/models/webmedia.dart';
 
-const platform = MethodChannel('github.devfemibadmus.mediasaver');
+const platform = MethodChannel('com.blackstackhub.mediasaver');
 // BULLET TRAIN
 
 Future<String> fetchClipboardContent() async {
@@ -10,10 +10,21 @@ Future<String> fetchClipboardContent() async {
 }
 
 bool isValidUrl(String value) {
+  // TODO: url validator
   return value.startsWith('https://') || value.startsWith('http://');
 }
 
-Future<String> downloadFile(String fileUrl, String fileId) async {
+Future<String> downloadFile(
+    String? fileUrl, String? fileUrl2, String fileId) async {
+  if (fileUrl == null) {
+    return "something went wrong, try again!";
+  }
+  if (fileUrl2 != null) {
+    // TODO: API please do ffmpeg in server so app will be less size
+    const String result =
+        "Try another video"; // await platform.invokeMethod('downloadVideoAudio', {'videoUrl': fileUrl, 'audioUrl': fileUrl2, 'fileId': fileId});
+    return result;
+  }
   final String result = await platform
       .invokeMethod('downloadFile', {'fileUrl': fileUrl, 'fileId': fileId});
   return result;
@@ -23,19 +34,13 @@ Future<Map<String, dynamic>?> fetchMediaFromServer(String url) async {
   final api =
       Api(apiUrl: 'https://devfemibadmus.blackstackhub.com/webmedia/api/');
 
-  if (api.isValidUrl(url)) {
-    final video = await api.fetchMedia(url);
-    if (video != null && video['success']) {
-      return {
-        'success': true,
-        'type': 'image',
-        'data': WebMedia.fromJson(video['data'])
-      };
-    }
-  } else {
+  final data = await api.fetchMedia(url);
+  if (data != null && data['success']) {
     return {
-      'error': 'Unsupported URL format.',
+      'success': true,
+      'data': WebMedia.fromJson(data['data']),
     };
+  } else {
+    return data;
   }
-  return null;
 }

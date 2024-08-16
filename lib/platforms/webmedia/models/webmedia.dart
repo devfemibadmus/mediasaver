@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 
 class WebMedia {
@@ -6,6 +7,8 @@ class WebMedia {
   final String desc;
   final String cover;
   final String platform;
+  final String? audioUrl;
+  final String? videoUrl;
   final List<Media>? medias;
 
   WebMedia({
@@ -14,6 +17,8 @@ class WebMedia {
     required this.cover,
     required this.platform,
     this.medias,
+    this.audioUrl,
+    this.videoUrl,
   });
 
   factory WebMedia.fromJson(Map<String, dynamic> json) {
@@ -39,6 +44,8 @@ class WebMedia {
       cover: json['content']['cover'],
       platform: json['platform'],
       medias: mediaList,
+      audioUrl: json['deaf_media']?['audio_url'] as String?,
+      videoUrl: json['deaf_media']?['video_url'] as String?,
     );
   }
 }
@@ -76,24 +83,31 @@ class Api {
   Api({required this.apiUrl});
 
   Future<Map<String, dynamic>?> fetchMedia(String url) async {
-    final response = await http.post(
-      Uri.parse(apiUrl),
-      body: {'url': url, 'cut': 'True'},
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      //print(data);
-      return data;
-    } else {
-      // print(response.body);
-      // print("response.body");
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        body: {'url': url, 'cut': 'True'},
+      );
+      final isJson =
+          response.headers['content-type']?.contains('application/json') ??
+              false;
+      if (isJson) {
+        final data = jsonDecode(response.body);
+        return data;
+      }
       return null;
+    } on SocketException {
+      return {
+        'error': true,
+        'message': 'No Internet connection. Please check your network settings.'
+      };
+    } on HttpException {
+      return {
+        'error': true,
+        'message': 'Could not complete the request. Server error.'
+      };
+    } catch (e) {
+      return {'error': true, 'message': 'An unexpected error occurred'};
     }
-  }
-
-  bool isValidUrl(String url) {
-    // TODO: url validator
-    return true;
   }
 }

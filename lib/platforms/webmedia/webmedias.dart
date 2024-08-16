@@ -52,7 +52,7 @@ class WebMediasState extends State<WebMedias>
       final response = await fetchMediaFromServer(_textController.text);
 
       setState(() {
-        if (response != null && response['success'] == true) {
+        if (response != null && response.containsKey('success')) {
           mediaData = response['data'];
           if (mediaData?.medias?.isNotEmpty ?? false) {
             selectedQuality = mediaData!.medias!.first;
@@ -61,7 +61,7 @@ class WebMediasState extends State<WebMedias>
         } else {
           mediaData = null;
           CustomOverlay().removeOverlayLoader();
-          errorMessage = response?['error'] ?? 'Try again!';
+          errorMessage = response?['message'] ?? 'Try again!';
         }
       });
     } else {
@@ -77,9 +77,14 @@ class WebMediasState extends State<WebMedias>
     setState(() {
       isDownloadingMap[index] = true;
     });
-
-    final result = await downloadFile(
-        mediaData!.medias![index].address, '${mediaData!.id}_$index');
+    late String result;
+    if (mediaData!.videoUrl != null && mediaData!.audioUrl != null) {
+      result = await downloadFile(
+          mediaData!.videoUrl, mediaData!.audioUrl, '${mediaData!.id}_$index');
+    } else {
+      result = await downloadFile(
+          mediaData!.medias![index].address, null, '${mediaData!.id}_$index');
+    }
 
     if (!mounted) return;
 
