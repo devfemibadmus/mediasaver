@@ -1,9 +1,7 @@
-# Media Saver formerly(WhatsApp status saver)
+# Media Saver. Save Videos, Photos, Reels from Facebook, Instagram, TikTok and WhatsApp no watermark
 
-Media Saver offers a user-friendly experience for managing and saving medias. Check out the key features:
-
-feaure graphic from hotpot.io
-[![Whatsapp](media/HQiAdyTH18IB_1024_500.png?raw=true)](https://play.google.com/store/apps/details?id=github.devfemibadmus.mediasaver)
+feature graphic from [hotpot.io](https://hotpot.io)
+[![Feature Graphic](media/AuK4N66t0sMa_1024_500.png?raw=true)](https://play.google.com/store/apps/details?id=com.blackstackhub.mediasaver)
 
 
 | #  | To-Do                      | Description                                                                                        | Status |
@@ -20,10 +18,11 @@ feaure graphic from hotpot.io
 | 10 | Refresh Handling           | Improved refresh handling for both individual and all medias.                                      | ✅     |
 | 11 | Navigation Menu            | Introduces a navigation menu for more info.                                                        | ❌     |
 | 12 | Video Playing              | Error while playing viddeo, solve the slight error.                                                | ✅     |
-| 14 | Platform iOs               | null                                                                                               | ❌     |
-| 14 | Platform Web               | Checkout [webmedia](https://github.com/devfemibadmus/webmedia) and [easyfileshare](https://github.com/devfemibadmus/easyfileshare)| ✅     |
+| 13 | Platform iOs               | Media Saver - Platform(whatsapp)                                                                   | ⏳     |
+| 14 | Platform Web               | Checkout [Web Media](https://github.com/devfemibadmus/webmedia)                                    | ✅     |
 | 15 | Platform Android           | >=5.0                                                                                              | ✅     |
-| 16 | PlayStore                  | Production Full rollout In review                                                                  | ❌     |
+| 16 | PlayStore                  | Production Full rollout In review                                                                  | ⏳     |
+| 17 | Monetization               | 1 reward ads daily unlmited download in app purchase $1/monthly                                    | ❌     |
 
 Explore the streamlined features of Media Saver and enjoy an enriched experience! If you have any concerns or suggestions, please feel free to share them.
 
@@ -44,15 +43,20 @@ dependencies:
 
 ## Media
 
-| Screenshot | Screenshot |
+
+| WhatsApp (White Mode) | Instagram (White Mode) |
 |-------------------------------------------------------------|-------------------------------------------------------------|
-| ![Whatsapp](media/Screenshot_20240210_010554.jpg?raw=true) | ![Whatsapp](media/Screenshot_20240210_010616.jpg?raw=true) |
-| ![Whatsapp](media/Screenshot_20240210_010728.jpg?raw=true) | ![Whatsapp](media/Screenshot_20240210_010753.jpg?raw=true) |
-| ![Whatsapp](media/Screenshot_20240210_010816_Android%20System.jpg?raw=true) | ![Whatsapp](media/Screenshot_20240210_010836.jpg?raw=true) |
-| ![Whatsapp](media/Screenshot_20240210_010858.jpg?raw=true) | ![Whatsapp](media/Screenshot_20240210_010935_Android%20System.jpg?raw=true) |
+| ![Whatsapp](media/Screenshot_20240816-065748.png?raw=true) | ![Instagram white mode](media/Screenshot_20240816-065837.png?raw=true) |
 
+| Instagram (Dark Mode) | Preview (Dark Mode) |
+|-------------------------------------------------------------|-------------------------------------------------------------|
+| ![Instagram dark mode](media/Screenshot_20240816-070500.png?raw=true) | ![Preview](media/Screenshot_20240816-070602.png?raw=true) |
 
-## Watch here
+| TikTok (White Mode) | Facebook (White Mode) |
+|-------------------------------------------------------------|-------------------------------------------------------------|
+| ![TikTok white mode](media/Screenshot_20240816-072546.png?raw=true) | ![Facebook white mode](media/Screenshot_20240816-072658.png?raw=true) |
 
-[![Video Preview](https://img.youtube.com/vi/CnOCDhmjfNo/maxresdefault.jpg)](https://www.youtube.com/watch?v=CnOCDhmjfNo)
+| Facebook (Dark Mode) | Saved (Dark Mode) |
+|-------------------------------------------------------------|-------------------------------------------------------------|
+| ![Facebook dark mode](media/Screenshot_20240816-072735.png?raw=true) | ![Saved dark mode](media/Screenshot_20240816-074619.png?raw=true) |
 
