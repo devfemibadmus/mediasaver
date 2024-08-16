@@ -94,7 +94,7 @@ class WebMediaFormState extends State<WebMediaForm> {
             }
 
             setState(() {
-              if (isValidUrl(widget.textController.text)) {
+              if (isSupportUrl(widget.textController.text)) {
                 errorMessage = null;
               } else {
                 errorMessage = 'Not a valid URL';

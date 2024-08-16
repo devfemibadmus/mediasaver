@@ -9,9 +9,15 @@ Future<String> fetchClipboardContent() async {
   return clipboardContent;
 }
 
-bool isValidUrl(String value) {
-  // TODO: url validator
-  return value.startsWith('https://') || value.startsWith('http://');
+bool isSupportUrl(String url) {
+  final tiktokPattern =
+      RegExp(r'tiktok\.com/.*/video/(\d+)|tiktok\.com/.*/photo/(\d+)');
+  final facebookPattern = RegExp(r'facebook\.com/.+');
+  final instagramPattern = RegExp(r'instagram\.com/.+');
+
+  return tiktokPattern.hasMatch(url) ||
+      facebookPattern.hasMatch(url) ||
+      instagramPattern.hasMatch(url);
 }
 
 Future<String> downloadFile(

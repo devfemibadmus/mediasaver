@@ -34,7 +34,7 @@ class WebMediasState extends State<WebMedias>
     setState(() {
       mediaData = null;
       CustomOverlay().removeOverlayLoader();
-      if (isValidUrl(value)) {
+      if (isSupportUrl(value)) {
         errorMessage = null;
       } else {
         errorMessage = 'Not a valid URL';
@@ -48,7 +48,7 @@ class WebMediasState extends State<WebMedias>
       CustomOverlay().showOverlayLoader(context);
     });
 
-    if (isValidUrl(_textController.text)) {
+    if (isSupportUrl(_textController.text)) {
       final response = await fetchMediaFromServer(_textController.text);
 
       setState(() {
