@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:mediasaver/platforms/whatsapp/pages/video.dart';
-import 'package:mediasaver/platforms/whatsapp/models/whatsapp.dart';
 
 // EDIT: popup_menu.dart
 // const double _kMenuMinWidth = 0.0 * _kMenuWidthStep;
@@ -51,7 +50,7 @@ class Preview extends StatefulWidget {
     this.saved = false,
   });
 
-  final List<StatusFileInfo> previewFile;
+  final List<MediaFiles> previewFile;
   final int index;
   final String type;
   final ThemeData theme;
@@ -83,12 +82,12 @@ class _PreviewState extends State<Preview> {
               final fileInfo =
                   widget.previewFile[!move ? widget.index : currentIndex];
               final actionMap = {
-                "download": () => statusAction(fileInfo.path, 'saveStatus'),
+                "download": () => mediaFileAction(fileInfo.url, 'saveStatus'),
                 "delete": () {
                   Navigator.pop(context);
-                  return statusAction(fileInfo.path, 'deleteStatus');
+                  return mediaFileAction(fileInfo.url, 'deleteStatus');
                 },
-                "share": () => statusAction(fileInfo.path, 'shareMedia')
+                "share": () => mediaFileAction(fileInfo.url, 'shareMedia')
               };
 
               actionMap[value]!().then((result) => scaffold
@@ -126,11 +125,10 @@ class _PreviewState extends State<Preview> {
         itemBuilder: (context, index) {
           return Center(
             child: widget.type == "Image"
-                ? Image.file(File(widget.previewFile[index].path),
+                ? Image.network(widget.previewFile[index].url,
                     fit: BoxFit.contain)
                 : VideoWidget(
-                    videoPath: File(widget.previewFile[index].path),
-                    shouldPlay: true),
+                    videoPath: widget.previewFile[index].url, shouldPlay: true),
           );
         },
       ),
