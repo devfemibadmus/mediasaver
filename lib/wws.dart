@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:mediasaver/platforms/whatsapp/pages/preview.dart';
+import 'package:mediasaver/model.dart';
+import 'package:mediasaver/platforms/whatsapp/preview.dart';
 
 class GridManager extends StatefulWidget {
   final List<dynamic> tabs;

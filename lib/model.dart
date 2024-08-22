@@ -4,7 +4,6 @@ import 'package:mediasaver/platforms/webMedia/models/webmedia.dart';
 const platform = MethodChannel('com.blackstackhub.mediasaver');
 // BULLET TRAIN
 
-// BULLET TRAIN
 class MediaFiles {
   String url;
   String mimeType;
