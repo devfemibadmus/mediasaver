@@ -3,7 +3,6 @@ import 'package:mediasaver/wws.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mediasaver/model.dart';
-import 'package:mediasaver/platforms/whatsapp/models/whatsapp.dart';
 import 'package:mediasaver/platforms/webMedia/webmedias.dart';
 
 void main() {
@@ -63,17 +62,17 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   late Timer _timer;
-  bool showedDialog = false;
+  bool wpm = false;
+  bool haveStoragePermission = false;
+  bool havePublicStoragePermission = false;
   int currentDialogIndex = 0;
 
   late List _tabs;
-  bool _dataNew = false;
   int _currentIndex = 0;
   bool _dataLoaded = false;
   bool _isProcessing = false;
 
   List<String> dialogContent = [
-    'Opensource free for all 99% uptime. Click here to see.',
     'Download videos and photos from Instagram, Facebook, and TikTok.\n\nDouble tap to save status or to delete existing ones.\n\nHold to share saved or not saved status.\n\nMany more functions, click on the bulb to request features.',
     'This app requires access to storage permission. Click here for more information.',
   ];
@@ -91,42 +90,17 @@ class _MyHomePageState extends State<MyHomePage> {
       for (var appType in ['WHATSAPP', 'WHATSAPP4B', 'WEBMEDIA', 'SAVED'])
         {
           'appType': appType,
-          'whatsappFilesImages':
-              filterFilesByFormat(parseStatusFiles([]), images, appType),
-          'whatsappFilesVideo':
-              filterFilesByFormat(parseStatusFiles([]), videos, appType),
+          'whatsappFilesImages': filterByMimeType(parseMediaFiles([]), images),
+          'whatsappFilesVideo': filterByMimeType(parseMediaFiles([]), videos),
         }
     ];
-    platform.invokeMethod("checkStoragePermission").then((value) {
+    platform
+        .invokeMethod("hasFolderAccess", {'appType': 'Whatsapp'}).then((value) {
       if (value == false) {
-        _showDialog();
-        setState(() {
-          showedDialog = true;
-        });
+        haveStoragePermission = false;
+      } else {
+        haveStoragePermission = true;
       }
-    });
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      platform.invokeMethod("checkStoragePermission").then((value) async {
-        // print("checkStoragePermission $value");
-        if (value) {
-          _timer.cancel();
-          if (showedDialog) {
-            setState(() {
-              showedDialog = false;
-              Navigator.of(context).pop();
-            });
-          }
-        } else {
-          if (!showedDialog) {
-            // print("showing new Dialog");
-            _showDialog();
-            setState(() {
-              showedDialog = true;
-            });
-          }
-        }
-        // print("showedDialog $showedDialog");
-      });
     });
     Timer.periodic(const Duration(seconds: 2), (timer) {
       if (!_isProcessing) {
@@ -161,7 +135,110 @@ class _MyHomePageState extends State<MyHomePage> {
                   if (currentDialogIndex == dialogContent.length - 1) {
                     await platform.invokeMethod('launchPrivacyPolicy');
                   }
-                  if (currentDialogIndex == dialogContent.length - 3) {
+                  if (currentDialogIndex == dialogContent.length - 2) {
+                    await platform.invokeMethod('launchDemo');
+                  }
+                }),
+                child: Text(
+                  dialogContent[currentDialogIndex],
+                  style: TextStyle(color: Theme.of(context).primaryColor),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    SystemNavigator.pop();
+                  },
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
+                ),
+                if (currentDialogIndex != 0)
+                  TextButton(
+                    onPressed: currentDialogIndex > 0
+                        ? () {
+                            setState(() {
+                              currentDialogIndex--;
+                            });
+                          }
+                        : null,
+                    child: Text(
+                      'Back',
+                      style: TextStyle(
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ),
+                  ),
+                if (currentDialogIndex != dialogContent.length - 1)
+                  TextButton(
+                    onPressed: currentDialogIndex < dialogContent.length - 1
+                        ? () {
+                            setState(() {
+                              currentDialogIndex++;
+                            });
+                          }
+                        : null,
+                    child: Text(
+                      'Next',
+                      style: TextStyle(
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ),
+                  ),
+                if (currentDialogIndex == dialogContent.length - 1)
+                  TextButton(
+                    onPressed: () async {
+                      await platform.invokeMethod("requestAccessToFolder",
+                          {'appType': 'Whatsapp'}).then((value) {
+                        //
+                      });
+                    },
+                    child: Text(
+                      'Okay',
+                      style: TextStyle(
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showStorageDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius.circular(10), // Optional: Adjust corner radius
+                side:
+                    BorderSide(color: Theme.of(context).primaryColor, width: 2),
+              ),
+              backgroundColor: Theme.of(context).colorScheme.secondary,
+              title: Text(
+                dialogTitle[currentDialogIndex],
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).primaryColor),
+              ),
+              content: GestureDetector(
+                onTap: (() async {
+                  if (currentDialogIndex == dialogContent.length - 1) {
+                    await platform.invokeMethod('launchPrivacyPolicy');
+                  }
+                  if (currentDialogIndex == dialogContent.length - 2) {
                     await platform.invokeMethod('launchDemo');
                   }
                 }),
@@ -238,28 +315,21 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> fetchAndUpdateData() async {
     // print("fetchAndUpdateData");
     // print(_isProcessing);
-    setState(() {
-      _dataNew = false;
-    });
     List? newWhatsappData = await platform.invokeListMethod(
-        'getStatusFilesInfo', {'appType': _tabs[_currentIndex]['appType']});
-    var whatsappFilesImages = filterFilesByFormat(
-        parseStatusFiles(newWhatsappData!),
-        images,
-        _tabs[_currentIndex]['appType']);
-    var whatsappFilesVideo = filterFilesByFormat(
-        parseStatusFiles(newWhatsappData),
-        videos,
-        _tabs[_currentIndex]['appType']);
+        'getSavedMedias', {'appType': _tabs[_currentIndex]['appType']});
+    var whatsappFilesImages =
+        filterByMimeType(parseMediaFiles(newWhatsappData!), images);
+    var whatsappFilesVideo =
+        filterByMimeType(parseMediaFiles(newWhatsappData), videos);
+    print(_tabs[_currentIndex]['whatsappFilesImages']);
+    print(newWhatsappData);
     if (!listsAreEqual(
         _tabs[_currentIndex]['whatsappFilesImages'], whatsappFilesImages)) {
       setState(() {
         _tabs[_currentIndex]['whatsappFilesImages'] = whatsappFilesImages;
-        _dataNew = true;
         // print("whatsappFilesImages dataNew");
       });
     }
-
     if (!listsAreEqual(
         _tabs[_currentIndex]['whatsappFilesVideo'], whatsappFilesVideo)) {
       setState(() {
@@ -268,44 +338,19 @@ class _MyHomePageState extends State<MyHomePage> {
           _tabs[_currentIndex]['whatsappFilesVideo'],
           whatsappFilesVideo,
         );
-        _dataNew = true;
       });
       // print("whatsappFilesVideo dataNew");
-    }
-  }
-
-  Future<void> getVideoThumbnailAsync() async {
-    if (_dataNew) {
-      // print("_dataNew");
-      for (int i = 0;
-          i < _tabs[_currentIndex]['whatsappFilesVideo'].length;
-          i++) {
-        if (_tabs[_currentIndex]['whatsappFilesVideo'][i].mediaByte.isEmpty) {
-          Uint8List? mediaByte = await platform.invokeMethod(
-              'getVideoThumbnailAsync', {
-            'absolutePath': _tabs[_currentIndex]['whatsappFilesVideo'][i].path
-          });
-          setState(() {
-            _tabs[_currentIndex]['whatsappFilesVideo'][i].mediaByte = mediaByte;
-            if (_tabs[_currentIndex]['whatsappFilesVideo'].length - i == 1) {}
-          });
-        }
-      }
     }
     setState(() {
       _isProcessing = false;
       _dataLoaded = true;
     });
-    // print("getVideoThumbnailAsync");
-    // print(_isProcessing);
   }
 
   Future<void> _continuousMethods() async {
     if (_tabs[_currentIndex]['appType'] != 'WEBMEDIA') {
       _isProcessing = true;
-      await fetchAndUpdateData().then((_) async {
-        await getVideoThumbnailAsync();
-      });
+      await fetchAndUpdateData();
     }
   }
 
@@ -382,16 +427,24 @@ class _MyHomePageState extends State<MyHomePage> {
                     child: TabBarView(
                       children: [
                         GridManager(
+                          haveStoragePermission: haveStoragePermission,
                           tabs: _tabs,
                           currentIndex: _currentIndex,
                           dataLoaded: _dataLoaded,
                           file: 'whatsappFilesImages',
+                          onRequestPermission: () {
+                            _showStorageDialog();
+                          },
                         ),
                         GridManager(
+                          haveStoragePermission: haveStoragePermission,
                           tabs: _tabs,
                           currentIndex: _currentIndex,
                           dataLoaded: _dataLoaded,
                           file: 'whatsappFilesVideo',
+                          onRequestPermission: () {
+                            _showStorageDialog();
+                          },
                         ),
                       ],
                     ),
@@ -427,12 +480,20 @@ class _MyHomePageState extends State<MyHomePage> {
                           currentIndex: _currentIndex,
                           dataLoaded: _dataLoaded,
                           file: 'whatsappFilesImages',
+                          haveStoragePermission: haveStoragePermission,
+                          onRequestPermission: () {
+                            _showStorageDialog();
+                          },
                         ),
                         GridManager(
                           tabs: _tabs,
                           currentIndex: _currentIndex,
                           dataLoaded: _dataLoaded,
                           file: 'whatsappFilesVideo',
+                          haveStoragePermission: haveStoragePermission,
+                          onRequestPermission: () {
+                            _showStorageDialog();
+                          },
                         ),
                       ],
                     ),
@@ -489,16 +550,24 @@ class _MyHomePageState extends State<MyHomePage> {
                     child: TabBarView(
                       children: [
                         GridManager(
+                          haveStoragePermission: haveStoragePermission,
                           tabs: _tabs,
                           currentIndex: _currentIndex,
                           dataLoaded: _dataLoaded,
                           file: 'whatsappFilesImages',
+                          onRequestPermission: () {
+                            _showStorageDialog();
+                          },
                         ),
                         GridManager(
+                          haveStoragePermission: haveStoragePermission,
                           tabs: _tabs,
                           currentIndex: _currentIndex,
                           dataLoaded: _dataLoaded,
                           file: 'whatsappFilesVideo',
+                          onRequestPermission: () {
+                            _showStorageDialog();
+                          },
                         ),
                       ],
                     ),
