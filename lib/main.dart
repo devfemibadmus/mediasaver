@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'package:mediasaver/widgets/wws.dart';
+import 'package:mediasaver/pages/wws.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mediasaver/model.dart';
-import 'package:mediasaver/platforms/webMedia/webmedias.dart';
+import 'package:mediasaver/pages/webMedia/webmedias.dart';
 
 void main() {
   runApp(const MyApp());

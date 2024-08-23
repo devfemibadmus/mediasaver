@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:mediasaver/model.dart';
 import 'package:mediasaver/widgets/overlay.dart';
-import 'package:mediasaver/platforms/webMedia/models/webmedia.dart';
-import 'package:mediasaver/platforms/webMedia/widgets/medias.dart';
-import 'package:mediasaver/platforms/webMedia/widgets/form.dart';
+import 'package:mediasaver/pages/webMedia/models/webmedia.dart';
+import 'package:mediasaver/pages/webMedia/widgets/medias.dart';
+import 'package:mediasaver/pages/webMedia/widgets/form.dart';
 
 class WebMedias extends StatefulWidget {
   const WebMedias({super.key});

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mediasaver/widgets/image_loader.dart';
-import 'package:mediasaver/platforms/webMedia/models/webmedia.dart';
+import 'package:mediasaver/pages/webMedia/models/webmedia.dart';
 
 class MediaDisplay extends StatelessWidget {
   final WebMedia? mediaData;

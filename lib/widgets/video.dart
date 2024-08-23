@@ -21,7 +21,7 @@ class _VideoWidgetState extends State<VideoWidget> {
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.networkUrl(Uri.http(widget.videoPath));
+    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoPath));
     _initializeVideoPlayerFuture = _controller.initialize();
     _controller.setLooping(widget.shouldPlay);
     _controller.addListener(() {
@@ -108,5 +108,44 @@ class _VideoWidgetState extends State<VideoWidget> {
         ],
       ),
     );
+  }
+}
+
+class PausedVideoPlayer extends StatefulWidget {
+  final String videoUrl;
+
+  const PausedVideoPlayer({super.key, required this.videoUrl});
+
+  @override
+  PausedVideoPlayerState createState() => PausedVideoPlayerState();
+}
+
+class PausedVideoPlayerState extends State<PausedVideoPlayer> {
+  late VideoPlayerController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
+      ..initialize().then((_) {
+        setState(() {});
+        _controller.pause(); // Automatically pause the video
+      });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _controller.value.isInitialized
+        ? AspectRatio(
+            aspectRatio: _controller.value.aspectRatio,
+            child: VideoPlayer(_controller),
+          )
+        : const Center(child: CircularProgressIndicator());
   }
 }
