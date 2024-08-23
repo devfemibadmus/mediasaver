@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mediasaver/model.dart';
-import 'package:mediasaver/widgets/preview.dart';
+import 'package:mediasaver/pages/widgets/preview.dart';
 
 class GridManager extends StatefulWidget {
   final List<dynamic> tabs;

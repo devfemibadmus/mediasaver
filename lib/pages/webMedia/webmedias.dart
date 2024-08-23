@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mediasaver/model.dart';
-import 'package:mediasaver/widgets/overlay.dart';
+import 'package:mediasaver/pages/widgets/overlay.dart';
 import 'package:mediasaver/pages/webMedia/models/webmedia.dart';
 import 'package:mediasaver/pages/webMedia/widgets/medias.dart';
 import 'package:mediasaver/pages/webMedia/widgets/form.dart';
