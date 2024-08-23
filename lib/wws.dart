@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:mediasaver/model.dart';
 import 'package:mediasaver/platforms/whatsapp/preview.dart';
@@ -8,7 +7,7 @@ class GridManager extends StatefulWidget {
   final int currentIndex;
   final bool dataLoaded;
   final String file;
-  final bool haveStoragePermission;
+  final bool folderPermit;
   final Function() onRequestPermission;
 
   const GridManager({
@@ -17,7 +16,7 @@ class GridManager extends StatefulWidget {
     required this.currentIndex,
     required this.dataLoaded,
     required this.file,
-    required this.haveStoragePermission,
+    required this.folderPermit,
     required this.onRequestPermission,
   });
 
@@ -47,11 +46,11 @@ class WhatsappState extends State<GridManager> {
                     ),
                     itemCount: currentFiles.length,
                     itemBuilder: (context, index) {
-                      final statusFile = currentFiles[index];
+                      final mediaFile = currentFiles[index];
                       return InkWell(
                         onLongPress: () {
                           scaffold.hideCurrentSnackBar();
-                          mediaFileAction(statusFile.url, 'shareMedia').then(
+                          mediaFileAction(mediaFile.url, 'shareMedia').then(
                             (value) => scaffold.showSnackBar(
                               SnackBar(
                                 content: Text(value),
@@ -62,7 +61,7 @@ class WhatsappState extends State<GridManager> {
                         onDoubleTap: () {
                           scaffold.hideCurrentSnackBar();
                           const action = 'saveStatus';
-                          mediaFileAction(statusFile.url, action).then(
+                          mediaFileAction(mediaFile.url, action).then(
                             (value) => scaffold.showSnackBar(
                               SnackBar(
                                 content: Text(value),
@@ -89,20 +88,12 @@ class WhatsappState extends State<GridManager> {
                         },
                         child: fileName == 'whatsappFilesImages'
                             ? Image.network(
-                                statusFile.url,
+                                mediaFile.url,
                                 fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Container(
-                                  color: Colors.grey.withOpacity(0.5),
-                                ),
                               )
                             : Image.network(
-                                statusFile.url,
+                                mediaFile.url,
                                 fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Container(
-                                  color: Colors.grey.withOpacity(0.5),
-                                ),
                               ),
                       );
                     },
@@ -114,7 +105,7 @@ class WhatsappState extends State<GridManager> {
                             TextStyle(color: Theme.of(context).primaryColor)),
                   )
             : const Center(child: CircularProgressIndicator())
-        : widget.haveStoragePermission
+        : widget.folderPermit
             ? widget.dataLoaded
                 ? currentFiles.isNotEmpty
                     ? GridView.builder(
@@ -127,12 +118,11 @@ class WhatsappState extends State<GridManager> {
                         ),
                         itemCount: currentFiles.length,
                         itemBuilder: (context, index) {
-                          final statusFile = currentFiles[index];
+                          final mediaFile = currentFiles[index];
                           return InkWell(
                             onLongPress: () {
                               scaffold.hideCurrentSnackBar();
-                              mediaFileAction(statusFile.url, 'shareMedia')
-                                  .then(
+                              mediaFileAction(mediaFile.url, 'shareMedia').then(
                                 (value) => scaffold.showSnackBar(
                                   SnackBar(
                                     content: Text(value),
@@ -142,10 +132,8 @@ class WhatsappState extends State<GridManager> {
                             },
                             onDoubleTap: () {
                               scaffold.hideCurrentSnackBar();
-                              final action = appType != 'SAVED'
-                                  ? 'saveStatus'
-                                  : 'deleteStatus';
-                              mediaFileAction(statusFile.url, action).then(
+                              const action = 'saveStatus';
+                              mediaFileAction(mediaFile.url, action).then(
                                 (value) => scaffold.showSnackBar(
                                   SnackBar(
                                     content: Text(value),
@@ -171,23 +159,13 @@ class WhatsappState extends State<GridManager> {
                               );
                             },
                             child: fileName == 'whatsappFilesImages'
-                                ? Image.file(
-                                    File(statusFile.url),
+                                ? Image.network(
+                                    mediaFile.url,
                                     fit: BoxFit.cover,
-                                    errorBuilder:
-                                        (context, error, stackTrace) =>
-                                            Container(
-                                      color: Colors.grey.withOpacity(0.5),
-                                    ),
                                   )
-                                : Image.memory(
-                                    statusFile.mediaByte,
+                                : Image.network(
+                                    mediaFile.url,
                                     fit: BoxFit.cover,
-                                    errorBuilder:
-                                        (context, error, stackTrace) =>
-                                            Container(
-                                      color: Colors.grey.withOpacity(0.5),
-                                    ),
                                   ),
                           );
                         },
