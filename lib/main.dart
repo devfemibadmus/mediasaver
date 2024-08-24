@@ -151,7 +151,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 TextButton(
                   onPressed: () {
                     Navigator.of(context).pop();
-                    SystemNavigator.pop();
                   },
                   child: Text(
                     'Cancel',
@@ -196,7 +195,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   TextButton(
                     onPressed: () {
                       platform.invokeMethod("requestAccessToFolder");
-                      print(permissions);
+                      Navigator.of(context).pop();
                     },
                     child: Text(
                       'Okay',

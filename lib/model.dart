@@ -30,9 +30,9 @@ List<MediaFiles> filterByMimeType(List<MediaFiles> list, List<String> formats) {
   }).toList();
 }
 
-Future<String> mediaFileAction(String filePath, String action) async =>
-    await platform.invokeMethod(action, {'filePath': filePath}).catchError(
-        (e) => "Error: ${e.message}");
+Future<bool> mediaFileAction(String filePath, String action) async =>
+    await platform.invokeMethod(
+        action, {'url': filePath}).catchError((e) => "Error: ${e.message}");
 
 bool listsAreEqual(List<MediaFiles> list1, List<MediaFiles> list2) {
   if (list1.length != list2.length) return false;

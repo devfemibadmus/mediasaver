@@ -83,7 +83,7 @@ class _PreviewState extends State<Preview> {
               final fileInfo =
                   widget.previewFile[!move ? widget.index : currentIndex];
               final actionMap = {
-                "download": () => mediaFileAction(fileInfo.url, 'saveStatus'),
+                "download": () => mediaFileAction(fileInfo.url, 'saveMedia'),
                 "delete": () {
                   Navigator.pop(context);
                   return mediaFileAction(fileInfo.url, 'deleteStatus');

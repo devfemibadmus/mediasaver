@@ -54,20 +54,19 @@ class GridManagerState extends State<GridManager> {
                           mediaFileAction(mediaFile.url, 'shareMedia').then(
                             (value) => scaffold.showSnackBar(
                               SnackBar(
-                                content: Text(value),
+                                content: Text("$value"),
                               ),
                             ),
                           );
                         },
                         onDoubleTap: () {
                           scaffold.hideCurrentSnackBar();
-                          final action = appType != 'SAVED'
-                              ? 'saveStatus'
-                              : 'deleteStatus';
+                          final action =
+                              appType != 'SAVED' ? 'saveMedia' : 'deleteStatus';
                           mediaFileAction(mediaFile.url, action).then(
                             (value) => scaffold.showSnackBar(
                               SnackBar(
-                                content: Text(value),
+                                content: Text("$value"),
                               ),
                             ),
                           );
