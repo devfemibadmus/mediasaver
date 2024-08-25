@@ -30,6 +30,75 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.android.FlutterActivity
 
 
+class MediaViewFactory : PlatformViewFactory(StandardMessageCodec.INSTANCE) {
+    override fun create(context: Context, viewId: Int, args: Any?): PlatformView {
+        val params = args as Map<*, *>
+        val mimeType = params["mimeType"] as String
+        val fileUri = Uri.parse(params["fileUri"] as String)
+        return MediaView(context, mimeType, fileUri)
+    }
+}
+
+class MediaView(private val context: Context, mimeType: String, fileUri: Uri) : PlatformView {
+    private val layout: FrameLayout = FrameLayout(context)
+    private val contentResolver: ContentResolver = context.contentResolver
+
+    init {
+        showMedia(mimeType, fileUri)
+    }
+
+    private fun showMedia(mimeType: String, fileUri: Uri) {
+        val params = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.MATCH_PARENT
+        )
+
+        when (mimeType) {
+            "image" -> {
+                val imageView = ImageView(context)
+                imageView.setImageURI(fileUri)
+                imageView.scaleType = ImageView.ScaleType.CENTER_CROP // BoxFit.cover equivalent
+                layout.addView(imageView, params)
+            }
+            "video" -> {
+                val videoView = VideoView(context)
+                videoView.setVideoURI(fileUri)
+                videoView.start()
+                layout.addView(videoView, params)
+            }
+            "thumbnail" -> {
+                val thumbnail = getVideoThumbnail(fileUri)
+                if (thumbnail != null) {
+                    val imageView = ImageView(context)
+                    imageView.setImageBitmap(thumbnail)
+                    imageView.scaleType = ImageView.ScaleType.CENTER_CROP // Ensure thumbnail scales to cover the view
+                    layout.addView(imageView, params)
+                } else {
+                    Log.d("MediaViewer", "Failed to get video thumbnail")
+                }
+            }
+            else -> Log.d("MediaViewer", "Unsupported MIME type: $mimeType")
+        }
+    }
+
+    private fun getVideoThumbnail(videoUri: Uri): Bitmap? {
+        return try {
+            BitmapFactory.decodeStream(contentResolver.openInputStream(videoUri))
+        } catch (e: Exception) {
+            Log.e("MediaViewer", "Error getting video thumbnail: ${e.message}")
+            null
+        }
+    }
+
+    override fun getView(): View {
+        return layout
+    }
+
+    override fun dispose() {
+        // Cleanup any resources
+        layout.removeAllViews()
+    }
+}
 
 
 class MainActivity : FlutterActivity() {
@@ -104,6 +173,10 @@ class MainActivity : FlutterActivity() {
                 else -> result.notImplemented()
             }
         }
+        flutterEngine.platformViewsController.registry.registerViewFactory(
+            "media_view",
+            MediaViewFactory()
+        )
     }
 
 
@@ -191,7 +264,7 @@ class MainActivity : FlutterActivity() {
                         val displayName = cursorInstance.getString(cursorInstance.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME))
                         val mimeType = cursorInstance.getString(cursorInstance.getColumnIndexOrThrow(MediaStore.Images.Media.MIME_TYPE)) ?: "application/octet-stream"
                         val contentUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
-                        fileInfoList.add(mapOf("filePath" to contentUri.toString(), "mimeType" to mimeType))
+                        fileInfoList.add(mapOf("fileUri" to contentUri.toString(), "mimeType" to mimeType))
                     }
                 }
             }
@@ -215,7 +288,7 @@ class MainActivity : FlutterActivity() {
                         val displayName = cursorInstance.getString(cursorInstance.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DISPLAY_NAME))
                         val mimeType = cursorInstance.getString(cursorInstance.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_MIME_TYPE)) ?: "application/octet-stream"
                         val documentUri = DocumentsContract.buildDocumentUriUsingTree(validDocUri, documentId)
-                        fileInfoList.add(mapOf("filePath" to documentUri.toString(), "mimeType" to mimeType))
+                        fileInfoList.add(mapOf("fileUri" to documentUri.toString(), "mimeType" to mimeType))
                     }
                 }
             }
