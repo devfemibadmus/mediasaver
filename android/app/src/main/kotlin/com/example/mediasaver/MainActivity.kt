@@ -44,7 +44,7 @@ import android.view.View
 import android.widget.ImageView
 import io.flutter.plugin.platform.PlatformView
 import io.flutter.plugin.platform.PlatformViewFactory
-import io.flutter.plugin.platform.StandardMessageCodec
+import io.flutter.plugin.common.StandardMessageCodec
 
 
 

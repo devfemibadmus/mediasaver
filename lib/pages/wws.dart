@@ -1,4 +1,4 @@
-mport; 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mediasaver/model.dart';
 import 'package:mediasaver/pages/widgets/preview.dart';
@@ -38,7 +38,7 @@ class GridManagerState extends State<GridManager> {
         ? widget.dataLoaded
             ? currentFiles.isNotEmpty
                 ? GridView.builder(
-                    cacheExtent: 9999,
+                    cacheExtent: 99999,
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 3,
@@ -99,13 +99,14 @@ class GridManagerState extends State<GridManager> {
                                 creationParamsCodec:
                                     const StandardMessageCodec(),
                               )
-                            : Image.network(
-                                "${mediaFile.fileUri}/getThumbnail",
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Container(
-                                  color: Colors.grey.withOpacity(0.5),
-                                ),
+                            : AndroidView(
+                                viewType: 'media_view',
+                                creationParams: {
+                                  'mimeType': 'thumbnail',
+                                  'fileUri': mediaFile.fileUri,
+                                },
+                                creationParamsCodec:
+                                    const StandardMessageCodec(),
                               ),
                       );
                     },

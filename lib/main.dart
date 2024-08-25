@@ -478,8 +478,8 @@ class _MyHomePageState extends State<MyHomePage> {
           onTap: (index) {
             setState(() {
               _currentIndex = index;
+              //fetchAndUpdateData(false);
             });
-            fetchAndUpdateData(false);
           },
           items: [
             BottomNavigationBarItem(
