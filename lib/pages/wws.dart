@@ -49,12 +49,11 @@ class GridManagerState extends State<GridManager> {
                     itemCount: currentFiles.length,
                     itemBuilder: (context, index) {
                       final mediaFile = currentFiles[index];
-                      // print("${mediaFile.filePath}?getThumbnail");
+                      // print("${mediaFile.fileUri}?getThumbnail");
                       return InkWell(
                         onLongPress: () {
                           scaffold.hideCurrentSnackBar();
-                          mediaFileAction(mediaFile.filePath, 'shareMedia')
-                              .then(
+                          mediaFileAction(mediaFile.fileUri, 'shareMedia').then(
                             (value) => scaffold.showSnackBar(
                               SnackBar(
                                 content: Text("$value"),
@@ -66,7 +65,7 @@ class GridManagerState extends State<GridManager> {
                           scaffold.hideCurrentSnackBar();
                           final action =
                               appType != 'SAVED' ? 'saveMedia' : 'deleteStatus';
-                          mediaFileAction(mediaFile.filePath, action).then(
+                          mediaFileAction(mediaFile.fileUri, action).then(
                             (value) => scaffold.showSnackBar(
                               SnackBar(
                                 content: Text("$value"),
@@ -93,7 +92,7 @@ class GridManagerState extends State<GridManager> {
                         },
                         child: fileName == 'whatsappFilesImages'
                             ? Image.file(
-                                File(mediaFile.filePath),
+                                File(mediaFile.fileUri),
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) =>
                                     Container(
@@ -101,7 +100,7 @@ class GridManagerState extends State<GridManager> {
                                 ),
                               )
                             : Image.network(
-                                "${mediaFile.filePath}/getThumbnail",
+                                "${mediaFile.fileUri}/getThumbnail",
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) =>
                                     Container(

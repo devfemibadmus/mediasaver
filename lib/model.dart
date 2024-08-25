@@ -5,16 +5,16 @@ const platform = MethodChannel('com.blackstackhub.mediasaver');
 // BULLET TRAIN
 
 class MediaFiles {
-  String filePath;
+  String fileUri;
   String mimeType;
 
   MediaFiles({
-    required this.filePath,
+    required this.fileUri,
     required this.mimeType,
   });
 
   factory MediaFiles.fromJson(Map<String, dynamic> json) => MediaFiles(
-        filePath: json['filePath'],
+        fileUri: json['fileUri'],
         mimeType: json['mimeType'],
       );
 }
@@ -30,9 +30,9 @@ List<MediaFiles> filterByMimeType(List<MediaFiles> list, List<String> formats) {
   }).toList();
 }
 
-Future<String> mediaFileAction(String filePath, String action) async =>
-    await platform.invokeMethod(action, {'filePath': filePath}).catchError(
-        (e) => "Error: ${e.message}");
+Future<String> mediaFileAction(String fileUri, String action) async =>
+    await platform.invokeMethod(
+        action, {'fileUri': fileUri}).catchError((e) => "Error: ${e.message}");
 
 bool listsAreEqual(List<MediaFiles> list1, List<MediaFiles> list2) {
   if (list1.length != list2.length) return false;
@@ -46,7 +46,7 @@ bool listsAreEqual(List<MediaFiles> list1, List<MediaFiles> list2) {
 }
 
 bool mediaFilesEquals(MediaFiles info1, MediaFiles info2) =>
-    info1.filePath == info2.filePath && info1.mimeType == info2.mimeType;
+    info1.fileUri == info2.fileUri && info1.mimeType == info2.mimeType;
 
 List<String> images = ['jpg', 'jpeg', 'gif'];
 List<String> videos = ['mp4', 'mov', 'mp4'];
