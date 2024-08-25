@@ -1,8 +1,7 @@
 import 'dart:async';
-import 'package:mediasaver/pages/wws.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:mediasaver/model.dart';
+import 'package:mediasaver/pages/wws.dart';
 import 'package:mediasaver/pages/webMedia/webmedias.dart';
 
 void main() {
@@ -65,7 +64,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   int _currentIndex = 0;
   bool _dataLoaded = false;
-  bool _isProcessing = false;
   int currentDialogIndex = 0;
 
   final List<String> dialogContent = [
@@ -96,20 +94,20 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    Timer.periodic(const Duration(seconds: 2), (timer) {
-      if (!_isProcessing && permissions == true) {
-        fetchAndUpdateData();
+    checkPermissions().then((value) {
+      if (value == true) {
+        fetchAndUpdateData(true);
       }
-      checkPermissions();
     });
   }
 
-  void checkPermissions() async {
-    await platform.invokeMethod("hasFolderAccess").then((value) {
-      setState(() {
-        permissions = value;
-      });
+  Future<bool> checkPermissions() async {
+    bool a = await platform.invokeMethod("hasPermission");
+    setState(() {
+      permissions = a;
     });
+    print("Permission: $a");
+    return a;
   }
 
   void _showFolderDialog() {
@@ -194,7 +192,15 @@ class _MyHomePageState extends State<MyHomePage> {
                 if (currentDialogIndex == dialogContent.length - 1)
                   TextButton(
                     onPressed: () {
-                      platform.invokeMethod("requestAccessToFolder");
+                      platform
+                          .invokeMethod("requestAccessToMedia")
+                          .then((value) async {
+                        await checkPermissions().then((permission) {
+                          if (permission == true) {
+                            fetchAndUpdateData(true);
+                          }
+                        });
+                      });
                       Navigator.of(context).pop();
                     },
                     child: Text(
@@ -212,11 +218,10 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Future<void> fetchAndUpdateData() async {
-    if (tabs[_currentIndex]['appType'] != 'WEBMEDIA') {
-      _isProcessing = true;
-      List? newWhatsappData = await platform.invokeListMethod(
-          'getMedias', {'appType': tabs[_currentIndex]['appType']});
+  Future<void> fetchAndUpdateData(bool refresh) async {
+    if (tabs[_currentIndex]['appType'] != 'WEBMEDIA' && permissions == true) {
+      List? newWhatsappData = await platform.invokeListMethod('getMedias',
+          {'appType': tabs[_currentIndex]['appType'], 'refresh': refresh});
       var whatsappFilesImages =
           filterByMimeType(parseMediaFiles(newWhatsappData!), images);
       var whatsappFilesVideo =
@@ -234,10 +239,8 @@ class _MyHomePageState extends State<MyHomePage> {
         });
       }
       setState(() {
-        _isProcessing = false;
         _dataLoaded = true;
       });
-      checkPermissions();
     }
   }
 
@@ -476,6 +479,7 @@ class _MyHomePageState extends State<MyHomePage> {
             setState(() {
               _currentIndex = index;
             });
+            fetchAndUpdateData(false);
           },
           items: [
             BottomNavigationBarItem(

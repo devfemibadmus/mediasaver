@@ -83,12 +83,13 @@ class _PreviewState extends State<Preview> {
               final fileInfo =
                   widget.previewFile[!move ? widget.index : currentIndex];
               final actionMap = {
-                "download": () => mediaFileAction(fileInfo.url, 'saveMedia'),
+                "download": () =>
+                    mediaFileAction(fileInfo.filePath, 'saveMedia'),
                 "delete": () {
                   Navigator.pop(context);
-                  return mediaFileAction(fileInfo.url, 'deleteStatus');
+                  return mediaFileAction(fileInfo.filePath, 'deleteStatus');
                 },
-                "share": () => mediaFileAction(fileInfo.url, 'shareMedia')
+                "share": () => mediaFileAction(fileInfo.filePath, 'shareMedia')
               };
 
               actionMap[value]!().then((result) => scaffold
@@ -126,10 +127,11 @@ class _PreviewState extends State<Preview> {
         itemBuilder: (context, index) {
           return Center(
             child: widget.type == "Image"
-                ? Image.network(widget.previewFile[index].url,
+                ? Image.file(File(widget.previewFile[index].filePath),
                     fit: BoxFit.contain)
                 : VideoWidget(
-                    videoPath: widget.previewFile[index].url, shouldPlay: true),
+                    videoPath: widget.previewFile[index].filePath,
+                    shouldPlay: true),
           );
         },
       ),

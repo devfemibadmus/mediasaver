@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
@@ -126,7 +128,7 @@ class PausedVideoPlayerState extends State<PausedVideoPlayer> {
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
+    _controller = VideoPlayerController.file(File(widget.videoUrl))
       ..initialize().then((_) {
         setState(() {});
         _controller.pause(); // Automatically pause the video

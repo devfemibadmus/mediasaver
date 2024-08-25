@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:mediasaver/model.dart';
 import 'package:mediasaver/pages/widgets/preview.dart';
@@ -47,11 +49,12 @@ class GridManagerState extends State<GridManager> {
                     itemCount: currentFiles.length,
                     itemBuilder: (context, index) {
                       final mediaFile = currentFiles[index];
-                      // print("${mediaFile.url}?getThumbnail");
+                      // print("${mediaFile.filePath}?getThumbnail");
                       return InkWell(
                         onLongPress: () {
                           scaffold.hideCurrentSnackBar();
-                          mediaFileAction(mediaFile.url, 'shareMedia').then(
+                          mediaFileAction(mediaFile.filePath, 'shareMedia')
+                              .then(
                             (value) => scaffold.showSnackBar(
                               SnackBar(
                                 content: Text("$value"),
@@ -63,7 +66,7 @@ class GridManagerState extends State<GridManager> {
                           scaffold.hideCurrentSnackBar();
                           final action =
                               appType != 'SAVED' ? 'saveMedia' : 'deleteStatus';
-                          mediaFileAction(mediaFile.url, action).then(
+                          mediaFileAction(mediaFile.filePath, action).then(
                             (value) => scaffold.showSnackBar(
                               SnackBar(
                                 content: Text("$value"),
@@ -89,8 +92,8 @@ class GridManagerState extends State<GridManager> {
                           );
                         },
                         child: fileName == 'whatsappFilesImages'
-                            ? Image.network(
-                                mediaFile.url,
+                            ? Image.file(
+                                File(mediaFile.filePath),
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) =>
                                     Container(
@@ -98,7 +101,7 @@ class GridManagerState extends State<GridManager> {
                                 ),
                               )
                             : Image.network(
-                                "${mediaFile.url}/getThumbnail",
+                                "${mediaFile.filePath}/getThumbnail",
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) =>
                                     Container(
