@@ -9,6 +9,7 @@ import android.os.Bundle
 import java.io.IOException
 import android.widget.Toast
 import android.app.Activity
+import android.os.Environment
 import android.content.Intent
 import android.content.Context
 import android.content.ClipData
@@ -26,6 +27,7 @@ import android.content.ClipboardManager
 import kotlinx.coroutines.CoroutineScope
 import androidx.core.content.FileProvider
 import android.provider.DocumentsContract
+import android.media.MediaScannerConnection
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.embedding.engine.FlutterEngine
 import androidx.documentfile.provider.DocumentFile
@@ -100,8 +102,8 @@ class MainActivity : FlutterActivity() {
                         result.error("INVALID_PARAMETERS", "Invalid parameters", null)
                     }
                 }
-                "requestAccessToFolder" -> {
-                    requestAccessToFolder()
+                "requestAccessToMedia" -> {
+                    requestAccessToMedia()
                     result.success(null)
                 }
 
@@ -115,40 +117,37 @@ class MainActivity : FlutterActivity() {
     }
 
     // SAVE, GET, SHARE, DELETE, DOWNLOAD MEDIA
-    private fun saveMedia(filePath: String): String {
-        // Define the destination directory in app's internal storage
-        val appDir = File(context.filesDir, "Media Saver")
-        if (!appDir.exists()) {
-            appDir.mkdirs()
-        }
+private fun saveMedia(filePath: String): String {
+    // Define the destination directory in app's external storage (Pictures directory)
+    val appDir = File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "Media Saver")
+    if (!appDir.exists()) {
+        appDir.mkdirs()
+    }
 
-        // Determine the display name from the file path
-        val sourceFile = File(filePath)
-        val displayName = sourceFile.name
-        val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(sourceFile.extension) ?: "application/octet-stream"
+    // Determine the display name from the file path
+    val sourceFile = File(filePath)
+    val displayName = sourceFile.name
+    val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(sourceFile.extension) ?: "application/octet-stream"
 
-        // Create a destination file
-        val destFile = File(appDir, displayName)
+    // Create a destination file in external storage
+    val destFile = File(appDir, displayName)
 
-        // Copy the file to the app directory
+    // Check if the file already exists
+    return if (destFile.exists()) {
+        "File already exists"
+    } else {
+        // Copy the file to the app's external directory
         sourceFile.copyTo(destFile, overwrite = true)
 
-        // Add the file to the MediaStore to make it visible in the gallery
-        val values = ContentValues().apply {
-            put(MediaStore.Images.Media.DISPLAY_NAME, displayName)
-            put(MediaStore.Images.Media.MIME_TYPE, mimeType)
-            put(MediaStore.Images.Media.DATA, destFile.absolutePath) // Path to the file
-            put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Media Saver") // Custom directory in gallery
+        // Notify the media scanner so the file appears in the gallery
+        MediaScannerConnection.scanFile(context, arrayOf(destFile.absolutePath), arrayOf(mimeType)) { path, uri ->
+            Log.d("Gallery", "File added to gallery: $uri")
         }
 
-        val uri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
-        if (uri != null) {
-            Log.d("Gallery", "File added to gallery: $uri")
-        } else {
-            Log.d("Gallery", "Failed to add file to gallery")
-        }
-        return "Saved to Gallery successfully"
+        "Saved to Gallery successfully"
     }
+}
+
 
     private fun shareMedia(filePath: String): String {
         val file = File(filePath)
@@ -194,15 +193,66 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    private fun getMedias(appType: String, refresh: Boolean): List<Map<String, String>> {
-        Log.d("appType", appType)
+private fun getMedias(appType: String, refresh: Boolean): List<Map<String, String>> {
+    Log.d("appType", appType)
 
-        val fileInfoList = mutableListOf<Map<String, String>>()
+    val fileInfoList = mutableListOf<Map<String, String>>()
 
-        when (appType) {
-            "SAVED" -> {
-                // List and render files from the app's internal directory
-                val internalDir = File(context.filesDir, "Media Saver")
+    when (appType) {
+        "SAVED" -> {
+            // List and render files from the app's external directory
+            val externalDir = File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "Media Saver")
+            if (externalDir.exists()) {
+                externalDir.listFiles()?.forEach { file ->
+                    val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension) ?: "application/octet-stream"
+                    fileInfoList.add(mapOf("filePath" to file.absolutePath, "mimeType" to mimeType))
+                }
+            }
+        }
+        "WHATSAPP", "WHATSAPP4B" -> {
+            val internalDir = File(context.filesDir, if (appType == "WHATSAPP") "whatsapp" else "whatsapp4b")
+
+            if (refresh) {
+                // Clear the existing directory if refresh is true
+                if (internalDir.exists()) {
+                    internalDir.listFiles()?.forEach { it.delete() }
+                } else {
+                    internalDir.mkdirs()
+                }
+
+                val docUri = if (appType == "WHATSAPP") {
+                    Uri.parse("content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fmedia/document/primary%3AAndroid%2Fmedia%2Fcom.whatsapp%2FWhatsApp%2FMedia%2F.Statuses/children")
+                } else {
+                    Uri.parse("content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fmedia/document/primary%3AAndroid%2Fmedia%2Fcom.whatsapp.w4b%2FWhatsApp%20Business%2FMedia%2F.Statuses/children")
+                }
+
+                val projection = arrayOf(
+                    DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                    DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+                    DocumentsContract.Document.COLUMN_MIME_TYPE
+                )
+                val validDocUri = docUri ?: return fileInfoList
+                val cursor = contentResolver.query(validDocUri, projection, null, null, null)
+                cursor?.use { cursorInstance ->
+                    while (cursorInstance.moveToNext()) {
+                        val documentId = cursorInstance.getString(cursorInstance.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DOCUMENT_ID))
+                        val displayName = cursorInstance.getString(cursorInstance.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DISPLAY_NAME))
+                        val mimeType = cursorInstance.getString(cursorInstance.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_MIME_TYPE)) ?: "application/octet-stream"
+                        val documentUri = DocumentsContract.buildDocumentUriUsingTree(validDocUri, documentId)
+
+                        val inputStream = contentResolver.openInputStream(documentUri)
+                        val destFile = File(internalDir, displayName)
+                        inputStream?.use { input ->
+                            destFile.outputStream().use { output ->
+                                input.copyTo(output)
+                            }
+                        }
+
+                        fileInfoList.add(mapOf("filePath" to destFile.absolutePath, "mimeType" to mimeType))
+                    }
+                }
+            } else {
+                // Just list existing files in the app directory
                 if (internalDir.exists()) {
                     internalDir.listFiles()?.forEach { file ->
                         val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension) ?: "application/octet-stream"
@@ -210,63 +260,13 @@ class MainActivity : FlutterActivity() {
                     }
                 }
             }
-            "WHATSAPP", "WHATSAPP4B" -> {
-                val internalDir = File(context.filesDir, if (appType == "WHATSAPP") "whatsapp" else "whatsapp4b")
-
-                if (refresh) {
-                    // Clear the existing directory if refresh is true
-                    if (internalDir.exists()) {
-                        internalDir.listFiles()?.forEach { it.delete() }
-                    } else {
-                        internalDir.mkdirs()
-                    }
-
-                    val docUri = if (appType == "WHATSAPP") {
-                        Uri.parse("content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fmedia/document/primary%3AAndroid%2Fmedia%2Fcom.whatsapp%2FWhatsApp%2FMedia%2F.Statuses/children")
-                    } else {
-                        Uri.parse("content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fmedia/document/primary%3AAndroid%2Fmedia%2Fcom.whatsapp.w4b%2FWhatsApp%20Business%2FMedia%2F.Statuses/children")
-                    }
-
-                    val projection = arrayOf(
-                        DocumentsContract.Document.COLUMN_DOCUMENT_ID,
-                        DocumentsContract.Document.COLUMN_DISPLAY_NAME,
-                        DocumentsContract.Document.COLUMN_MIME_TYPE
-                    )
-                    val validDocUri = docUri ?: return fileInfoList
-                    val cursor = contentResolver.query(validDocUri, projection, null, null, null)
-                    cursor?.use { cursorInstance ->
-                        while (cursorInstance.moveToNext()) {
-                            val documentId = cursorInstance.getString(cursorInstance.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DOCUMENT_ID))
-                            val displayName = cursorInstance.getString(cursorInstance.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DISPLAY_NAME))
-                            val mimeType = cursorInstance.getString(cursorInstance.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_MIME_TYPE)) ?: "application/octet-stream"
-                            val documentUri = DocumentsContract.buildDocumentUriUsingTree(validDocUri, documentId)
-
-                            val inputStream = contentResolver.openInputStream(documentUri)
-                            val destFile = File(internalDir, displayName)
-                            inputStream?.use { input ->
-                                destFile.outputStream().use { output ->
-                                    input.copyTo(output)
-                                }
-                            }
-
-                            fileInfoList.add(mapOf("filePath" to destFile.absolutePath, "mimeType" to mimeType))
-                        }
-                    }
-                } else {
-                    // Just list existing files in the app directory
-                    if (internalDir.exists()) {
-                        internalDir.listFiles()?.forEach { file ->
-                            val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension) ?: "application/octet-stream"
-                            fileInfoList.add(mapOf("filePath" to file.absolutePath, "mimeType" to mimeType))
-                        }
-                    }
-                }
-            }
-            else -> Log.d("FileQuery", "Invalid app type.")
         }
-
-        return fileInfoList
+        else -> Log.d("FileQuery", "Invalid app type.")
     }
+
+    return fileInfoList
+}
+
 
     private fun downloadAndSaveFile(fileUrl: String, fileId: String): String {
         val appDir = File(context.filesDir, "Media Saver")
@@ -334,7 +334,7 @@ class MainActivity : FlutterActivity() {
         return documentFile?.exists() == true
     }
 
-    private fun requestAccessToFolder() {
+    private fun requestAccessToMedia() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
         startActivityForResult(intent, REQUEST_CODE_MEDIA)
     }
@@ -347,7 +347,7 @@ class MainActivity : FlutterActivity() {
             if(requestCode == REQUEST_CODE_MEDIA){
                 if(uri.toString() != "content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fmedia"){
                     Toast.makeText(applicationContext, "Please select the Media folder", Toast.LENGTH_SHORT).show()
-                    requestAccessToFolder()
+                    requestAccessToMedia()
                 }
             }
         }
