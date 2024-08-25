@@ -9,7 +9,6 @@ import android.os.Bundle
 import java.io.IOException
 import android.widget.Toast
 import android.app.Activity
-import android.os.Environment
 import android.content.Intent
 import android.content.Context
 import android.content.ClipData
@@ -25,18 +24,10 @@ import kotlinx.coroutines.Dispatchers
 import android.content.ContentResolver
 import android.content.ClipboardManager
 import kotlinx.coroutines.CoroutineScope
-import androidx.core.content.FileProvider
 import android.provider.DocumentsContract
-import android.media.MediaScannerConnection
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.embedding.engine.FlutterEngine
-import androidx.documentfile.provider.DocumentFile
-import android.provider.DocumentsContract.Document
 import io.flutter.embedding.android.FlutterActivity
-
-
-
-
 
 
 
@@ -51,17 +42,16 @@ class MainActivity : FlutterActivity() {
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "saveMedia" -> {
-                    val filePath = call.argument<String>("filePath")
-                    if (filePath != null) {
-                        result.success(saveMedia(filePath))
+                    val fileUri = call.argument<String>("fileUri")
+                    if (fileUri != null) {
+                        result.success(saveMedia(fileUri))
                     } else {
                         result.error("INVALID_PARAMETERS", "Invalid parameters", null)
                     }
                 }
                 "getMedias" -> {
                     val appType = call.argument<String>("appType")
-                    val refresh = call.argument<Boolean>("refresh")
-                    if (appType != null && refresh != null) {
+                    if (appType != null) {
                         result.success(getMedias(appType, refresh))
                     } else {
                         result.error("INVALID_PARAMETERS", "Invalid parameters", null)
@@ -78,17 +68,17 @@ class MainActivity : FlutterActivity() {
                     }
                 }
                 "shareMedia" -> {
-                    val filePath = call.argument<String>("filePath")
-                    if (filePath != null) {
-                        result.success(shareMedia(filePath))
+                    val fileUri = call.argument<String>("fileUri")
+                    if (fileUri != null) {
+                        result.success(shareMedia(fileUri))
                     } else {
                         result.error("INVALID_PARAMETERS", "Invalid parameters", null)
                     }
                 }
                 "deleteMedia" -> {
-                    val filePath = call.argument<String>("filePath")
-                    if (filePath != null) {
-                        result.success(deleteMedia(filePath))
+                    val fileUri = call.argument<String>("fileUri")
+                    if (fileUri != null) {
+                        result.success(deleteMedia(fileUri))
                     } else {
                         result.error("INVALID_PARAMETERS", "Invalid parameters", null)
                     }
@@ -116,46 +106,44 @@ class MainActivity : FlutterActivity() {
         }
     }
 
+
     // SAVE, GET, SHARE, DELETE, DOWNLOAD MEDIA
-private fun saveMedia(filePath: String): String {
-    // Define the destination directory in app's external storage (Pictures directory)
-    val appDir = File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "Media Saver")
-    if (!appDir.exists()) {
-        appDir.mkdirs()
-    }
+    private fun saveMedia(fileUri: String): String {
+        val resolver = context.contentResolver
 
-    // Determine the display name from the file path
-    val sourceFile = File(filePath)
-    val displayName = sourceFile.name
-    val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(sourceFile.extension) ?: "application/octet-stream"
+        val fileName = Uri.parse(fileUri).lastPathSegment ?: "unknown_file"
+        val mimeType = resolver.getType(Uri.parse(fileUri)) ?: "application/octet-stream"
 
-    // Create a destination file in external storage
-    val destFile = File(appDir, displayName)
-
-    // Check if the file already exists
-    return if (destFile.exists()) {
-        "File already exists"
-    } else {
-        // Copy the file to the app's external directory
-        sourceFile.copyTo(destFile, overwrite = true)
-
-        // Notify the media scanner so the file appears in the gallery
-        MediaScannerConnection.scanFile(context, arrayOf(destFile.absolutePath), arrayOf(mimeType)) { path, uri ->
-            Log.d("Gallery", "File added to gallery: $uri")
+        val contentValues = ContentValues().apply {
+            put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
+            put(MediaStore.Images.Media.MIME_TYPE, mimeType)
+            put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Media Saver")
         }
 
-        "Saved to Gallery successfully"
+        val newUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+        if (newUri == null) return "Failed to save file"
+
+        val inputStream = resolver.openInputStream(Uri.parse(fileUri)) ?: return "Unable to open input stream"
+        val outputStream = resolver.openOutputStream(newUri) ?: return "Unable to open output stream"
+
+        try {
+            inputStream.copyTo(outputStream)
+        } catch (e: Exception) {
+            return "Error copying file: ${e.message}"
+        } finally {
+            inputStream.close()
+            outputStream.close()
+        }
+
+        return "Saved to Gallery successfully"
     }
-}
 
-
-    private fun shareMedia(filePath: String): String {
-        val file = File(filePath)
-        if (file.exists()) {
-            val uri = FileProvider.getUriForFile(context, "${BuildConfig.APPLICATION_ID}.fileprovider", file)
+    private fun shareMedia(fileUri: String): String {
+        try {
+            val mimeType = context.contentResolver.getType(Uri.parse(fileUri)) ?: "application/octet-stream"
             val intent = Intent(Intent.ACTION_SEND).apply {
-                type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension) ?: "application/octet-stream"
-                putExtra(Intent.EXTRA_STREAM, uri)
+                type = mimeType
+                putExtra(Intent.EXTRA_STREAM, Uri.parse(fileUri))
                 putExtra(Intent.EXTRA_SUBJECT, "Shared via Media Saver")
                 putExtra(Intent.EXTRA_TEXT, "Shared with Media Saver—no cost, no ads!")
             }
@@ -163,63 +151,51 @@ private fun saveMedia(filePath: String): String {
             shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             context.startActivity(shareIntent)
             return "Sharing..."
-        } else {
-            Log.d("ShareMedia", "File does not exist.")
-            return "File does not exist."
+        } catch (e: Exception) {
+            Log.e("ShareMedia", "Error sharing media: ${e.message}")
+            return "Error sharing media."
         }
     }
     
-    private fun deleteMedia(filePath: String): String {
-        val file = File(filePath)
-        if (file.exists()) {
-            val deleted = file.delete()
-            if (deleted) {
-                // Remove the file from MediaStore
-                val uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-                val selection = "${MediaStore.Images.Media.DATA} = ?"
-                val selectionArgs = arrayOf(filePath)
-                val rowsDeleted = contentResolver.delete(uri, selection, selectionArgs)
-                
-                return if (rowsDeleted > 0) {
-                    "File deleted successfully."
-                } else {
-                    "File not found in MediaStore."
-                }
-            } else {
-                return "Failed to delete file."
-            }
+    private fun deleteMedia(fileUri: String): String {
+        val rowsDeleted = context.contentResolver.delete(Uri.parse(fileUri), null, null)
+        
+        return if (rowsDeleted > 0) {
+            "File deleted successfully."
         } else {
-            return "File does not exist."
+            "File not found in MediaStore or failed to delete."
         }
     }
 
-private fun getMedias(appType: String, refresh: Boolean): List<Map<String, String>> {
-    Log.d("appType", appType)
+    private fun getMedias(appType: String): List<Map<String, String>> {
+        Log.d("appType", appType)
 
-    val fileInfoList = mutableListOf<Map<String, String>>()
+        val fileInfoList = mutableListOf<Map<String, String>>()
 
-    when (appType) {
-        "SAVED" -> {
-            // List and render files from the app's external directory
-            val externalDir = File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "Media Saver")
-            if (externalDir.exists()) {
-                externalDir.listFiles()?.forEach { file ->
-                    val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension) ?: "application/octet-stream"
-                    fileInfoList.add(mapOf("filePath" to file.absolutePath, "mimeType" to mimeType))
+        when (appType) {
+            "SAVED" -> {
+                val uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                val projection = arrayOf(
+                    MediaStore.Images.Media._ID,
+                    MediaStore.Images.Media.DISPLAY_NAME,
+                    MediaStore.Images.Media.MIME_TYPE,
+                    MediaStore.Images.Media.DATA
+                )
+                val selection = "${MediaStore.Images.Media.DATA} LIKE ?"
+                val selectionArgs = arrayOf("Pictures/Media Saver/%")
+
+                val cursor = contentResolver.query(uri, projection, selection, selectionArgs, null)
+                cursor?.use { cursorInstance ->
+                    while (cursorInstance.moveToNext()) {
+                        val id = cursorInstance.getLong(cursorInstance.getColumnIndexOrThrow(MediaStore.Images.Media._ID))
+                        val displayName = cursorInstance.getString(cursorInstance.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME))
+                        val mimeType = cursorInstance.getString(cursorInstance.getColumnIndexOrThrow(MediaStore.Images.Media.MIME_TYPE)) ?: "application/octet-stream"
+                        val contentUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
+                        fileInfoList.add(mapOf("filePath" to contentUri.toString(), "mimeType" to mimeType))
+                    }
                 }
             }
-        }
-        "WHATSAPP", "WHATSAPP4B" -> {
-            val internalDir = File(context.filesDir, if (appType == "WHATSAPP") "whatsapp" else "whatsapp4b")
-
-            if (refresh) {
-                // Clear the existing directory if refresh is true
-                if (internalDir.exists()) {
-                    internalDir.listFiles()?.forEach { it.delete() }
-                } else {
-                    internalDir.mkdirs()
-                }
-
+            "WHATSAPP", "WHATSAPP4B" -> {
                 val docUri = if (appType == "WHATSAPP") {
                     Uri.parse("content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fmedia/document/primary%3AAndroid%2Fmedia%2Fcom.whatsapp%2FWhatsApp%2FMedia%2F.Statuses/children")
                 } else {
@@ -239,93 +215,78 @@ private fun getMedias(appType: String, refresh: Boolean): List<Map<String, Strin
                         val displayName = cursorInstance.getString(cursorInstance.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DISPLAY_NAME))
                         val mimeType = cursorInstance.getString(cursorInstance.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_MIME_TYPE)) ?: "application/octet-stream"
                         val documentUri = DocumentsContract.buildDocumentUriUsingTree(validDocUri, documentId)
-
-                        val inputStream = contentResolver.openInputStream(documentUri)
-                        val destFile = File(internalDir, displayName)
-                        inputStream?.use { input ->
-                            destFile.outputStream().use { output ->
-                                input.copyTo(output)
-                            }
-                        }
-
-                        fileInfoList.add(mapOf("filePath" to destFile.absolutePath, "mimeType" to mimeType))
-                    }
-                }
-            } else {
-                // Just list existing files in the app directory
-                if (internalDir.exists()) {
-                    internalDir.listFiles()?.forEach { file ->
-                        val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension) ?: "application/octet-stream"
-                        fileInfoList.add(mapOf("filePath" to file.absolutePath, "mimeType" to mimeType))
+                        fileInfoList.add(mapOf("filePath" to documentUri.toString(), "mimeType" to mimeType))
                     }
                 }
             }
+            else -> Log.d("FileQuery", "Invalid app type.")
         }
-        else -> Log.d("FileQuery", "Invalid app type.")
+
+        return fileInfoList
     }
 
-    return fileInfoList
-}
-
-
     private fun downloadAndSaveFile(fileUrl: String, fileId: String): String {
-        val appDir = File(context.filesDir, "Media Saver")
-        if (!appDir.exists()) {
-            appDir.mkdirs()
+        val fileName = fileUrl.substring(fileUrl.lastIndexOf('/') + 1)
+        
+        val projection = arrayOf(MediaStore.Images.Media._ID)
+        val selection = "${MediaStore.Images.Media.DISPLAY_NAME} = ?"
+        val selectionArgs = arrayOf(fileName)
+        val cursor = contentResolver.query(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            projection,
+            selection,
+            selectionArgs,
+            null
+        )
+        
+        cursor?.use {
+            if (it.moveToFirst()) {
+                return "File already exists in MediaStore"
+            }
         }
 
-        // Extract file name from URL and check if a file with the same name exists
-        val fileName = fileUrl.substring(fileUrl.lastIndexOf('/') + 1)
-        val fileNameWithoutExt = fileName.substringBeforeLast('.')
-        val existingFiles = appDir.listFiles { _, name -> name.substringBeforeLast('.').equals(fileId, ignoreCase = true) }
+        val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileName.substringAfterLast('.')) ?: "application/octet-stream"
+        val values = ContentValues().apply {
+            put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
+            put(MediaStore.Images.Media.MIME_TYPE, mimeType)
+            put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Media Saver")
+        }
 
-        if (existingFiles.isNullOrEmpty()) {
-            // Download the file
-            val urlConnection: HttpURLConnection
+        val uri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values) ?: return "Failed to add file to MediaStore"
+
+        try {
+            val outputStream = contentResolver.openOutputStream(uri) ?: return "Failed to open output stream"
+            val urlConnection: HttpURLConnection = URL(fileUrl).openConnection() as HttpURLConnection
+            
             try {
-                val url = URL(fileUrl)
-                urlConnection = url.openConnection() as HttpURLConnection
                 urlConnection.connect()
-
                 val inputStream = BufferedInputStream(urlConnection.inputStream)
-                val destFile = File(appDir, fileName)
-
-                FileOutputStream(destFile).use { outputStream ->
+                outputStream.use { output ->
                     val buffer = ByteArray(1024)
                     var count: Int
                     while (inputStream.read(buffer).also { count = it } != -1) {
-                        outputStream.write(buffer, 0, count)
+                        output.write(buffer, 0, count)
                     }
                 }
-
+                
                 inputStream.close()
-                urlConnection.disconnect()
-
-                // Add the file to MediaStore
-                val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(destFile.extension) ?: "application/octet-stream"
-                val values = ContentValues().apply {
-                    put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
-                    put(MediaStore.Images.Media.MIME_TYPE, mimeType)
-                    put(MediaStore.Images.Media.DATA, destFile.absolutePath)
-                    put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Media Saver")
-                }
-
-                val uri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
-                if (uri != null) {
-                    Log.d("Gallery", "File added to gallery: $uri")
-                } else {
-                    Log.d("Gallery", "Failed to add file to gallery")
-                }
-
-                return destFile.absolutePath
             } catch (e: IOException) {
-                Log.e("Download", "Error downloading file: ${e.message}")
-                return "Error downloading file"
+                Log.e("Download", "IO error during download: ${e.message}")
+                return "Error downloading file: ${e.message}"
+            } finally {
+                urlConnection.disconnect()
             }
-        } else {
-            return "File already exists"
+
+            return "File downloaded and saved successfully."
+        } catch (e: IOException) {
+            Log.e("Download", "Error opening output stream: ${e.message}")
+            return "Error opening output stream: ${e.message}"
+        } catch (e: Exception) {
+            Log.e("Download", "Unexpected error: ${e.message}")
+            return "Unexpected error: ${e.message}"
         }
     }
+
 
     // PERMISSION HANDLING
 
