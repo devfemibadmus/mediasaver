@@ -4,12 +4,14 @@ import java.net.URL
 import java.io.File
 import android.net.Uri
 import android.util.Log
+import java.util.Locale
 import android.os.Bundle
 import java.io.IOException
 import android.widget.Toast
 import android.app.Activity
 import android.content.Intent
 import android.content.Context
+import android.content.ClipData
 import java.io.FileOutputStream
 import kotlinx.coroutines.launch
 import java.net.HttpURLConnection
@@ -20,12 +22,19 @@ import androidx.annotation.NonNull
 import android.content.ContentValues
 import kotlinx.coroutines.Dispatchers
 import android.content.ContentResolver
+import android.content.ClipboardManager
 import kotlinx.coroutines.CoroutineScope
-import android.provider.DocumentsContract
 import androidx.core.content.FileProvider
+import android.provider.DocumentsContract
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.embedding.engine.FlutterEngine
+import androidx.documentfile.provider.DocumentFile
+import android.provider.DocumentsContract.Document
 import io.flutter.embedding.android.FlutterActivity
+
+
+
+
 
 
 
@@ -49,8 +58,9 @@ class MainActivity : FlutterActivity() {
                 }
                 "getMedias" -> {
                     val appType = call.argument<String>("appType")
-                    if (appType != null) {
-                        result.success(getMedias(appType))
+                    val refresh = call.argument<Boolean>("refresh")
+                    if (appType != null && refresh != null) {
+                        result.success(getMedias(appType, refresh))
                     } else {
                         result.error("INVALID_PARAMETERS", "Invalid parameters", null)
                     }
@@ -98,7 +108,7 @@ class MainActivity : FlutterActivity() {
                 "copyText" -> result.success(copyText())
                 "shareApp" -> result.success(shareApp())
                 "sendEmail" -> result.success(sendEmail())
-                "hasFolderAccess" -> result.success(hasFolderAccess())
+                "hasPermission" -> result.success(hasPermission())
                 else -> result.notImplemented()
             }
         }
@@ -196,8 +206,7 @@ class MainActivity : FlutterActivity() {
                 if (internalDir.exists()) {
                     internalDir.listFiles()?.forEach { file ->
                         val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension) ?: "application/octet-stream"
-                        val url = "file://${file.absolutePath}"
-                        fileInfoList.add(mapOf("url" to url, "mimeType" to mimeType))
+                        fileInfoList.add(mapOf("filePath" to file.absolutePath, "mimeType" to mimeType))
                     }
                 }
             }
@@ -240,8 +249,7 @@ class MainActivity : FlutterActivity() {
                                 }
                             }
 
-                            val url = "file://${destFile.absolutePath}"
-                            fileInfoList.add(mapOf("url" to url, "mimeType" to mimeType))
+                            fileInfoList.add(mapOf("filePath" to destFile.absolutePath, "mimeType" to mimeType))
                         }
                     }
                 } else {
@@ -249,8 +257,7 @@ class MainActivity : FlutterActivity() {
                     if (internalDir.exists()) {
                         internalDir.listFiles()?.forEach { file ->
                             val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension) ?: "application/octet-stream"
-                            val url = "file://${file.absolutePath}"
-                            fileInfoList.add(mapOf("url" to url, "mimeType" to mimeType))
+                            fileInfoList.add(mapOf("filePath" to file.absolutePath, "mimeType" to mimeType))
                         }
                     }
                 }
@@ -322,15 +329,9 @@ class MainActivity : FlutterActivity() {
 
     // PERMISSION HANDLING
 
-    public fun hasPermission(): Boolean {
-        Uri uri = Uri.parse("content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fmedia");
-        try {
-            ContentResolver resolver = context.getContentResolver();
-            resolver.query(uri, null, null, null, null);
-            return true; // Access is granted
-        } catch (SecurityException e) {
-            return false; // Permission is not granted
-        }
+    private fun hasPermission(): Boolean {
+        val documentFile = DocumentFile.fromTreeUri(context, Uri.parse("content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fmedia"))
+        return documentFile?.exists() == true
     }
 
     private fun requestAccessToFolder() {
