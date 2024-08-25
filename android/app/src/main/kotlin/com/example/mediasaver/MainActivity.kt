@@ -30,6 +30,24 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.android.FlutterActivity
 
 
+
+
+import android.widget.FrameLayout
+import android.widget.VideoView
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.content.ContentUris
+import androidx.documentfile.provider.DocumentFile
+
+
+import android.view.View
+import android.widget.ImageView
+import io.flutter.plugin.platform.PlatformView
+import io.flutter.plugin.platform.PlatformViewFactory
+import io.flutter.plugin.platform.StandardMessageCodec
+
+
+
 class MediaViewFactory : PlatformViewFactory(StandardMessageCodec.INSTANCE) {
     override fun create(context: Context, viewId: Int, args: Any?): PlatformView {
         val params = args as Map<*, *>
@@ -101,6 +119,8 @@ class MediaView(private val context: Context, mimeType: String, fileUri: Uri) : 
 }
 
 
+
+
 class MainActivity : FlutterActivity() {
     private val TAG = "MainActivity"
     private val REQUEST_CODE_MEDIA = 1001
@@ -121,7 +141,7 @@ class MainActivity : FlutterActivity() {
                 "getMedias" -> {
                     val appType = call.argument<String>("appType")
                     if (appType != null) {
-                        result.success(getMedias(appType, refresh))
+                        result.success(getMedias(appType))
                     } else {
                         result.error("INVALID_PARAMETERS", "Invalid parameters", null)
                     }

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mediasaver/model.dart';
 import 'package:mediasaver/pages/widgets/preview.dart';
 
@@ -91,13 +92,14 @@ class GridManagerState extends State<GridManager> {
                           );
                         },
                         child: fileName == 'whatsappFilesImages'
-                            ? Image.file(
-                                File(mediaFile.fileUri),
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Container(
-                                  color: Colors.grey.withOpacity(0.5),
-                                ),
+                            ? AndroidView(
+                                viewType: 'media_view',
+                                creationParams: {
+                                  'mimeType': 'image',
+                                  'fileUri': mediaFile.fileUri,
+                                },
+                                creationParamsCodec:
+                                    const StandardMessageCodec(),
                               )
                             : Image.network(
                                 "${mediaFile.fileUri}/getThumbnail",
