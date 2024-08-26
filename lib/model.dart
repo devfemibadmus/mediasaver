@@ -1,5 +1,5 @@
 import 'package:flutter/services.dart';
-import 'package:mediasaver/platforms/webMedia/models/webmedia.dart';
+import 'package:mediasaver/pages/webmedia/models/webmedia.dart';
 
 const platform = MethodChannel('com.blackstackhub.mediasaver');
 
