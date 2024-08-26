@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:mediasaver/model.dart';
 import 'package:video_player/video_player.dart';
-import 'package:mediasaver/pages/widgets/video.dart';
+import 'package:mediasaver/pages/video.dart';
 
 // EDIT: popup_menu.dart
 // const double _kMenuMinWidth = 0.0 * _kMenuWidthStep;
@@ -51,7 +51,7 @@ class Preview extends StatefulWidget {
     this.saved = false,
   });
 
-  final List<MediaFiles> previewFile;
+  final List<StatusFileInfo> previewFile;
   final int index;
   final String type;
   final ThemeData theme;
@@ -83,13 +83,12 @@ class _PreviewState extends State<Preview> {
               final fileInfo =
                   widget.previewFile[!move ? widget.index : currentIndex];
               final actionMap = {
-                "download": () =>
-                    mediaFileAction(fileInfo.fileUri, 'saveMedia'),
+                "download": () => statusAction(fileInfo.path, 'saveStatus'),
                 "delete": () {
                   Navigator.pop(context);
-                  return mediaFileAction(fileInfo.fileUri, 'deleteStatus');
+                  return statusAction(fileInfo.path, 'deleteStatus');
                 },
-                "share": () => mediaFileAction(fileInfo.fileUri, 'shareMedia')
+                "share": () => statusAction(fileInfo.path, 'shareMedia')
               };
 
               actionMap[value]!().then((result) => scaffold
@@ -127,10 +126,10 @@ class _PreviewState extends State<Preview> {
         itemBuilder: (context, index) {
           return Center(
             child: widget.type == "Image"
-                ? Image.file(File(widget.previewFile[index].fileUri),
+                ? Image.file(File(widget.previewFile[index].path),
                     fit: BoxFit.contain)
                 : VideoWidget(
-                    videoPath: widget.previewFile[index].fileUri,
+                    videoPath: File(widget.previewFile[index].path),
                     shouldPlay: true),
           );
         },
