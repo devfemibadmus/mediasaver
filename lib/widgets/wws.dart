@@ -41,93 +41,96 @@ class WhatsappState extends State<GridManager> {
             widget.onRequestPermission();
           },
           child: const Text("Give Permission"));
+    } else if (widget.dataLoaded == false || currentFiles.isNotEmpty == false) {
+      return const Center(child: CircularProgressIndicator());
+    } else if (currentFiles.isNotEmpty == false) {
+      late String message;
+      if (appType != "SAVED") {
+        message = "status available";
+      } else {
+        message = "saved available";
+      }
+      return RefreshIndicator(
+        onRefresh: () async {
+          await widget.onrefresh();
+        },
+        child: Center(
+          child: Text(
+              '${currentFiles.length} ${appType.toLowerCase()} $message available',
+              style: TextStyle(color: Theme.of(context).primaryColor)),
+        ),
+      );
     }
 
-    return widget.dataLoaded
-        ? RefreshIndicator(
-            onRefresh: () async {
-              await widget.onrefresh();
-            },
-            child: currentFiles.isNotEmpty
-                ? GridView.builder(
-                    cacheExtent: 9999,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      crossAxisSpacing: 6.0,
-                      mainAxisSpacing: 6.0,
-                    ),
-                    itemCount: currentFiles.length,
-                    itemBuilder: (context, index) {
-                      final statusFile = currentFiles[index];
-                      return InkWell(
-                        onLongPress: () {
-                          scaffold.hideCurrentSnackBar();
-                          statusAction(statusFile.path, 'shareMedia').then(
-                            (value) => scaffold.showSnackBar(
-                              SnackBar(
-                                content: Text(value),
-                              ),
-                            ),
-                          );
-                        },
-                        onDoubleTap: () {
-                          scaffold.hideCurrentSnackBar();
-                          final action = appType != 'SAVED'
-                              ? 'saveStatus'
-                              : 'deleteStatus';
-                          statusAction(statusFile.path, action).then(
-                            (value) => scaffold.showSnackBar(
-                              SnackBar(
-                                content: Text(value),
-                              ),
-                            ),
-                          );
-                        },
-                        onTap: () {
-                          scaffold.hideCurrentSnackBar();
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => Preview(
-                                previewFile: currentFiles,
-                                index: index,
-                                type: fileName == 'whatsappFilesVideo'
-                                    ? 'Video'
-                                    : 'Image',
-                                theme: Theme.of(context),
-                                saved: appType == 'SAVED',
-                              ),
-                            ),
-                          );
-                        },
-                        child: fileName == 'whatsappFilesImages'
-                            ? Image.file(
-                                File(statusFile.path),
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Container(
-                                  color: Colors.grey.withOpacity(0.5),
-                                ),
-                              )
-                            : Image.memory(
-                                statusFile.mediaByte,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Container(
-                                  color: Colors.grey.withOpacity(0.5),
-                                ),
-                              ),
-                      );
-                    },
-                  )
-                : Center(
-                    child: Text(
-                        '${currentFiles.length} ${appType.toLowerCase()} status available',
-                        style:
-                            TextStyle(color: Theme.of(context).primaryColor)),
+    return RefreshIndicator(
+      onRefresh: () async {
+        await widget.onrefresh();
+      },
+      child: GridView.builder(
+        cacheExtent: 9999,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          crossAxisSpacing: 6.0,
+          mainAxisSpacing: 6.0,
+        ),
+        itemCount: currentFiles.length,
+        itemBuilder: (context, index) {
+          final mediaFile = currentFiles[index];
+          return InkWell(
+            onLongPress: () {
+              scaffold.hideCurrentSnackBar();
+              mediaAction(mediaFile.path, 'shareMedia').then(
+                (value) => scaffold.showSnackBar(
+                  SnackBar(
+                    content: Text(value),
                   ),
-          )
-        : const Center(child: CircularProgressIndicator());
+                ),
+              );
+            },
+            onDoubleTap: () {
+              scaffold.hideCurrentSnackBar();
+              final action = appType != 'SAVED' ? 'saveMedia' : 'deleteMedia';
+              mediaAction(mediaFile.path, action).then(
+                (value) => scaffold.showSnackBar(
+                  SnackBar(
+                    content: Text(value),
+                  ),
+                ),
+              );
+            },
+            onTap: () {
+              scaffold.hideCurrentSnackBar();
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => Preview(
+                    previewFile: currentFiles,
+                    index: index,
+                    type: fileName == 'whatsappFilesVideo' ? 'Video' : 'Image',
+                    theme: Theme.of(context),
+                    saved: appType == 'SAVED',
+                  ),
+                ),
+              );
+            },
+            child: fileName == 'whatsappFilesImages'
+                ? Image.file(
+                    File(mediaFile.path),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: Colors.grey.withOpacity(0.5),
+                    ),
+                  )
+                : Image.memory(
+                    mediaFile.mediaByte,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: Colors.grey.withOpacity(0.5),
+                    ),
+                  ),
+          );
+        },
+      ),
+    );
   }
 }

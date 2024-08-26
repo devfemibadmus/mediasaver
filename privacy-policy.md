@@ -13,13 +13,13 @@ We do not collect any device information. Our app operates entirely offline and 
 ### Media Files
 Media Saver allows you to download media from social platforms such as Instagram, TikTok, etc., and manage media files from WhatsApp and WhatsApp Business. The app will access and store media files on your device to perform these actions. We do not access or store these files on our servers.
 
-## Storage Permission
+## Media Permission
 
-To ensure our app operates smoothly, we require full access to your device's storage. This permission is necessary for:
+To ensure our app operates smoothly, we require access to Android/media folder. This permission is necessary for:
 
-- Managing WhatsApp statuses and WhatsApp Business statuses on your device.
-- Downloading media from the internet to your device.
-- Deleting saved statuses or media downloaded from the internet on your device.
+- Saving WhatsApp statuses and WhatsApp Business statuses on your device.
+- Sharing WhatsApp statuses and WhatsApp Business statuses on your device.
+- Fetching WhatsApp statuses and WhatsApp Business statuses on your device.
 
 ## Google Ads
 

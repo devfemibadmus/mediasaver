@@ -4,12 +4,12 @@ import 'package:mediasaver/platforms/webMedia/models/webmedia.dart';
 const platform = MethodChannel('com.blackstackhub.mediasaver');
 
 // BULLET TRAIN
-class StatusFileInfo {
+class MediaFileInfo {
   String name, path, format, source;
   int size;
   Uint8List mediaByte;
 
-  StatusFileInfo({
+  MediaFileInfo({
     required this.name,
     required this.path,
     required this.size,
@@ -18,7 +18,7 @@ class StatusFileInfo {
     required this.mediaByte,
   });
 
-  factory StatusFileInfo.fromJson(Map<String, dynamic> json) => StatusFileInfo(
+  factory MediaFileInfo.fromJson(Map<String, dynamic> json) => MediaFileInfo(
         name: json['name'],
         path: json['path'],
         size: json['size'],
@@ -28,28 +28,28 @@ class StatusFileInfo {
       );
 }
 
-List<StatusFileInfo> parseMediaFiles(List<dynamic> files) => files
-    .map((file) => StatusFileInfo.fromJson(Map<String, dynamic>.from(file)))
+List<MediaFileInfo> parseMediaFiles(List<dynamic> files) => files
+    .map((file) => MediaFileInfo.fromJson(Map<String, dynamic>.from(file)))
     .toList();
 
-List<StatusFileInfo> filterByMimeType(
-        List<StatusFileInfo> files, List<String> formats, String source) =>
+List<MediaFileInfo> filterByMimeType(
+        List<MediaFileInfo> files, List<String> formats, String source) =>
     files
         .where((file) => formats.contains(file.format) && file.source == source)
         .toList()
         .reversed
         .toList();
 
-Future<String> statusAction(String filePath, String action) async =>
+Future<String> mediaAction(String filePath, String action) async =>
     await platform.invokeMethod(action, {'filePath': filePath}).catchError(
         (e) => "Error: ${e.message}");
 
-bool listsAreEqual(List<StatusFileInfo> list1, List<StatusFileInfo> list2) =>
+bool listsAreEqual(List<MediaFileInfo> list1, List<MediaFileInfo> list2) =>
     list1.length == list2.length &&
     list1.every((fileInfo) =>
-        statusFileInfoEquals(fileInfo, list2[list1.indexOf(fileInfo)]));
+        mediaFileInfoEquals(fileInfo, list2[list1.indexOf(fileInfo)]));
 
-bool statusFileInfoEquals(StatusFileInfo info1, StatusFileInfo info2) =>
+bool mediaFileInfoEquals(MediaFileInfo info1, MediaFileInfo info2) =>
     info1.name == info2.name &&
     info1.path == info2.path &&
     info1.size == info2.size &&
@@ -59,8 +59,8 @@ bool statusFileInfoEquals(StatusFileInfo info1, StatusFileInfo info2) =>
 List<String> images = ['jpg', 'jpeg', 'gif'];
 List<String> videos = ['mp4', 'mov', 'mp4'];
 
-List<StatusFileInfo> mergeVideoLists(
-    List<StatusFileInfo> currentList, List<StatusFileInfo> newList) {
+List<MediaFileInfo> mergeVideoLists(
+    List<MediaFileInfo> currentList, List<MediaFileInfo> newList) {
   Set<String> currentSet = {
     for (var fileInfo in currentList) '${fileInfo.path}_${fileInfo.size}'
   };

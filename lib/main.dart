@@ -217,7 +217,7 @@ class _MyHomePageState extends State<MyHomePage> {
       _dataNew = false;
     });
     List? newWhatsappData = await platform.invokeListMethod(
-        'getStatusFilesInfo', {'appType': tabs[_currentIndex]['appType']});
+        'getMediaFilesInfo', {'appType': tabs[_currentIndex]['appType']});
     var whatsappFilesImages = filterByMimeType(
         parseMediaFiles(newWhatsappData!),
         images,

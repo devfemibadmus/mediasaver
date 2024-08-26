@@ -51,7 +51,7 @@ class Preview extends StatefulWidget {
     this.saved = false,
   });
 
-  final List<StatusFileInfo> previewFile;
+  final List<MediaFileInfo> previewFile;
   final int index;
   final String type;
   final ThemeData theme;
@@ -83,12 +83,12 @@ class _PreviewState extends State<Preview> {
               final fileInfo =
                   widget.previewFile[!move ? widget.index : currentIndex];
               final actionMap = {
-                "download": () => statusAction(fileInfo.path, 'saveStatus'),
+                "download": () => mediaAction(fileInfo.path, 'saveMedia'),
                 "delete": () {
                   Navigator.pop(context);
-                  return statusAction(fileInfo.path, 'deleteStatus');
+                  return mediaAction(fileInfo.path, 'deleteMedia');
                 },
-                "share": () => statusAction(fileInfo.path, 'shareMedia')
+                "share": () => mediaAction(fileInfo.path, 'shareMedia')
               };
 
               actionMap[value]!().then((result) => scaffold

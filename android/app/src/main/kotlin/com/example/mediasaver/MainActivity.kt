@@ -103,10 +103,10 @@ class MainActivity : FlutterActivity() {
                         result.error("INVALID_PARAMETERS", "Invalid parameters", null)
                     }
                 }
-                "getStatusFilesInfo" -> {
+                "getMediaFilesInfo" -> {
                     val appType = call.argument<String>("appType")
                     if (appType != null) {
-                        result.success(getStatusFilesInfo(appType))
+                        result.success(getMediaFilesInfo(appType))
                     } else {
                         result.error("INVALID_PARAMETERS", "Invalid parameters", null)
                     }
@@ -126,19 +126,19 @@ class MainActivity : FlutterActivity() {
                         result.error("INVALID_PARAMETERS", "Invalid parameters", null)
                     }
                 }
-                "saveStatus" -> {
+                "saveMedia" -> {
                     val filePath = call.argument<String>("filePath")
                     // val folder = call.argument<String>("folder")
                     if (filePath != null) {
-                        result.success(saveStatus(filePath))
+                        result.success(saveMedia(filePath))
                     } else {
                         result.error("INVALID_PARAMETERS", "Invalid parameters", null)
                     }
                 }
-                "deleteStatus" -> {
+                "deleteMedia" -> {
                     val filePath = call.argument<String>("filePath")
                     if (filePath != null) {
-                        result.success(deleteStatus(filePath))
+                        result.success(deleteMedia(filePath))
                     } else {
                         result.error("INVALID_PARAMETERS", "Invalid parameters", null)
                     }
@@ -586,8 +586,8 @@ private fun getLastModified(uri: Uri): Long {
         }
     }
 
-    private fun getStatusFilesInfo(appType: String): List<Map<String, Any>> {
-        val statusFilesInfo = mutableListOf<Map<String, Any>>()
+    private fun getMediaFilesInfo(appType: String): List<Map<String, Any>> {
+        val mediaFilesInfo = mutableListOf<Map<String, Any>>()
 
         fun createVideoThumbnail(videoPath: String): Bitmap? {
             val retriever = MediaMetadataRetriever()
@@ -632,7 +632,7 @@ private fun getLastModified(uri: Uri): Long {
                 fileInfo["source"] = source
                 fileInfo["mediaByte"] = ByteArray(0)
 
-                statusFilesInfo.add(fileInfo)
+                mediaFilesInfo.add(fileInfo)
             }
         }
 
@@ -649,7 +649,7 @@ private fun getLastModified(uri: Uri): Long {
             File(applicationContext.getExternalFilesDir(null), "whatsapp")?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "WHATSAPP") }
             File(applicationContext.getExternalFilesDir(null), "whatsapp4b")?.let { processFiles(it.listFiles(FileFilter { file -> file.isFile && file.canRead() }), "WHATSAPP4B") }
         }
-        return statusFilesInfo
+        return mediaFilesInfo
     }
     
     /*
@@ -713,7 +713,7 @@ private fun getLastModified(uri: Uri): Long {
     }
 
 
-    private fun saveStatus(sourceFilePath: String): String {
+    private fun saveMedia(sourceFilePath: String): String {
         val sourceFile = File(sourceFilePath)
         val intent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
         intent.data = Uri.fromFile(File(applicationContext.getExternalFilesDir(null), "saved"))
@@ -749,7 +749,12 @@ private fun getLastModified(uri: Uri): Long {
 
 
                 // File saved successfully
-                "Status Saved"
+                val mimeType = URLConnection.guessContentTypeFromName(sourceFilePath)
+                return when {
+                    mimeType.startsWith("video") -> "Video saved"
+                    mimeType.startsWith("image") -> "Image saved"
+                    else -> "File saved"
+                }
                 } catch (e: IOException) {
                     // e.printStackTrace()
                     // Error saving file
@@ -761,7 +766,7 @@ private fun getLastModified(uri: Uri): Long {
         }
     }
 
-    private fun deleteStatus(filePath: String): String {
+    private fun deleteMedia(filePath: String): String {
         val folder = File(applicationContext.getExternalFilesDir(null), "saved")
         val file = File(filePath)
 
