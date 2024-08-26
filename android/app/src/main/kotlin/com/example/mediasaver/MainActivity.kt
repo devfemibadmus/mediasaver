@@ -226,23 +226,26 @@ class MyBackgroundService : Service() {
         return null
     }
 
-private fun getLastModified(uri: Uri): Long {
-    var lastModified = 0L
-    val projection = arrayOf(DocumentsContract.Document.COLUMN_LAST_MODIFIED)
+    private fun getLastModified(directoryUri: Uri): Long {
+        var lastModified = 0L
+        val projection = arrayOf(
+            DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+            DocumentsContract.Document.COLUMN_LAST_MODIFIED
+        )
 
-    val cursor = contentResolver.query(uri, projection, null, null, null)
-    cursor?.use { cursorInstance ->
-        val lastModifiedIndex = cursorInstance.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_LAST_MODIFIED)
-        while (cursorInstance.moveToNext()) {
-            val currentLastModified = cursorInstance.getLong(lastModifiedIndex)
-            if (currentLastModified > lastModified) {
-                lastModified = currentLastModified
+        val cursor = contentResolver.query(directoryUri, projection, null, null, null)
+        cursor?.use { cursorInstance ->
+            val lastModifiedIndex = cursorInstance.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_LAST_MODIFIED)
+            while (cursorInstance.moveToNext()) {
+                val currentLastModified = cursorInstance.getLong(lastModifiedIndex)
+                if (currentLastModified > lastModified) {
+                    lastModified = currentLastModified
+                }
             }
         }
-    }
 
-    return lastModified
-}
+        return lastModified
+    }
 
     private fun syncAllDirectories() {
         val sharedPreferences = getSharedPreferences("MyPreferences", Context.MODE_PRIVATE)
@@ -749,10 +752,10 @@ private fun getLastModified(uri: Uri): Long {
 
 
                 // File saved successfully
-                val mimeType = URLConnection.guessContentTypeFromName(sourceFilePath)
+                val mimeType = contentResolver.getType(Uri.fromFile(File(sourceFilePath)))
                 return when {
-                    mimeType.startsWith("video") -> "Video saved"
-                    mimeType.startsWith("image") -> "Image saved"
+                    mimeType != null && mimeType.startsWith("video") -> "Video saved"
+                    mimeType != null && mimeType.startsWith("image") -> "Image saved"
                     else -> "File saved"
                 }
                 } catch (e: IOException) {
