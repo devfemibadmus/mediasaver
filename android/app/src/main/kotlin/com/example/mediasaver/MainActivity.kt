@@ -752,11 +752,10 @@ class MyBackgroundService : Service() {
 
 
                 // File saved successfully
-                val mimeType = contentResolver.getType(Uri.fromFile(File(sourceFilePath)))
+                val fileName = sourceFilePath.toLowerCase()
                 return when {
-                    mimeType != null && mimeType.startsWith("video") -> "Video saved"
-                    mimeType != null && mimeType.startsWith("image") -> "Image saved"
-                    else -> "File saved"
+                    fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".png") -> "Image saved"
+                    else -> "Video saved"
                 }
                 } catch (e: IOException) {
                     // e.printStackTrace()
