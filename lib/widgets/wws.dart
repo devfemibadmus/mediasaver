@@ -41,7 +41,7 @@ class WhatsappState extends State<GridManager> {
             widget.onRequestPermission();
           },
           child: const Text("Give Permission"));
-    } else if (widget.dataLoaded == false || currentFiles.isNotEmpty == false) {
+    } else if (widget.dataLoaded == false) {
       return const Center(child: CircularProgressIndicator());
     } else if (currentFiles.isNotEmpty == false) {
       late String message;
@@ -50,15 +50,10 @@ class WhatsappState extends State<GridManager> {
       } else {
         message = "saved available";
       }
-      return RefreshIndicator(
-        onRefresh: () async {
-          await widget.onrefresh();
-        },
-        child: Center(
-          child: Text(
-              '${currentFiles.length} ${appType.toLowerCase()} $message available',
-              style: TextStyle(color: Theme.of(context).primaryColor)),
-        ),
+      return Center(
+        child: Text(
+            '${currentFiles.length} ${appType.toLowerCase()} $message available',
+            style: TextStyle(color: Theme.of(context).primaryColor)),
       );
     }
 
