@@ -1,55 +1,81 @@
 import 'package:flutter/services.dart';
-import 'package:mediasaver/pages/webMedia/models/webmedia.dart';
+import 'package:mediasaver/platforms/webMedia/models/webmedia.dart';
 
 const platform = MethodChannel('com.blackstackhub.mediasaver');
+
 // BULLET TRAIN
+class StatusFileInfo {
+  String name, path, format, source;
+  int size;
+  Uint8List mediaByte;
 
-class MediaFiles {
-  String fileUri;
-  String mimeType;
-
-  MediaFiles({
-    required this.fileUri,
-    required this.mimeType,
+  StatusFileInfo({
+    required this.name,
+    required this.path,
+    required this.size,
+    required this.format,
+    required this.source,
+    required this.mediaByte,
   });
 
-  factory MediaFiles.fromJson(Map<String, dynamic> json) => MediaFiles(
-        fileUri: json['fileUri'],
-        mimeType: json['mimeType'],
+  factory StatusFileInfo.fromJson(Map<String, dynamic> json) => StatusFileInfo(
+        name: json['name'],
+        path: json['path'],
+        size: json['size'],
+        format: json['format'],
+        source: json['source'],
+        mediaByte: json['mediaByte'],
       );
 }
 
-List<MediaFiles> parseMediaFiles(List<dynamic> files) => files
-    .map((file) => MediaFiles.fromJson(Map<String, dynamic>.from(file)))
+List<StatusFileInfo> parseMediaFiles(List<dynamic> files) => files
+    .map((file) => StatusFileInfo.fromJson(Map<String, dynamic>.from(file)))
     .toList();
 
-List<MediaFiles> filterByMimeType(List<MediaFiles> list, List<String> formats) {
-  return list.where((fileInfo) {
-    String format = fileInfo.mimeType.split('/').last.toLowerCase();
-    return formats.contains(format);
-  }).toList();
-}
+List<StatusFileInfo> filterByMimeType(
+        List<StatusFileInfo> files, List<String> formats, String source) =>
+    files
+        .where((file) => formats.contains(file.format) && file.source == source)
+        .toList()
+        .reversed
+        .toList();
 
-Future<String> mediaFileAction(String fileUri, String action) async =>
-    await platform.invokeMethod(
-        action, {'fileUri': fileUri}).catchError((e) => "Error: ${e.message}");
+Future<String> statusAction(String filePath, String action) async =>
+    await platform.invokeMethod(action, {'filePath': filePath}).catchError(
+        (e) => "Error: ${e.message}");
 
-bool listsAreEqual(List<MediaFiles> list1, List<MediaFiles> list2) {
-  if (list1.length != list2.length) return false;
-  for (int i = 0; i < list1.length; i++) {
-    if (!mediaFilesEquals(list1[i], list2[i])) {
-      return false;
-    }
-  }
+bool listsAreEqual(List<StatusFileInfo> list1, List<StatusFileInfo> list2) =>
+    list1.length == list2.length &&
+    list1.every((fileInfo) =>
+        statusFileInfoEquals(fileInfo, list2[list1.indexOf(fileInfo)]));
 
-  return true;
-}
-
-bool mediaFilesEquals(MediaFiles info1, MediaFiles info2) =>
-    info1.fileUri == info2.fileUri && info1.mimeType == info2.mimeType;
+bool statusFileInfoEquals(StatusFileInfo info1, StatusFileInfo info2) =>
+    info1.name == info2.name &&
+    info1.path == info2.path &&
+    info1.size == info2.size &&
+    info1.format == info2.format &&
+    info1.source == info2.source;
 
 List<String> images = ['jpg', 'jpeg', 'gif'];
 List<String> videos = ['mp4', 'mov', 'mp4'];
+
+List<StatusFileInfo> mergeVideoLists(
+    List<StatusFileInfo> currentList, List<StatusFileInfo> newList) {
+  Set<String> currentSet = {
+    for (var fileInfo in currentList) '${fileInfo.path}_${fileInfo.size}'
+  };
+  return newList.map((fileInfo) {
+    if (currentSet.contains('${fileInfo.path}_${fileInfo.size}')) {
+      var currentIndex = currentList.indexWhere((currentFile) =>
+          currentFile.path == fileInfo.path &&
+          currentFile.size == fileInfo.size);
+      if (currentIndex != -1) {
+        fileInfo.mediaByte = currentList[currentIndex].mediaByte;
+      }
+    }
+    return fileInfo;
+  }).toList();
+}
 
 Future<String> fetchClipboardContent() async {
   String clipboardContent = await platform.invokeMethod('getClipboardContent');
