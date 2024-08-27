@@ -181,14 +181,14 @@ class MyBackgroundService : Service() {
 
     private val syncRunnable = object : Runnable {
         override fun run() {
-            Log.d("MyBackgroundService", "Sync task running...")
+            // Log.d("MyBackgroundService", "Sync task running...")
             syncAllDirectories()
             handler.postDelayed(this, 5000)
         }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d("MyBackgroundService", "Service started")
+        // Log.d("MyBackgroundService", "Service started")
 
         // Immediately call startForeground
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -219,7 +219,7 @@ class MyBackgroundService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         handler.removeCallbacks(syncRunnable)
-        Log.d("MyBackgroundService", "Service stopped")
+        // Log.d("MyBackgroundService", "Service stopped")
     }
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -260,7 +260,7 @@ class MyBackgroundService : Service() {
             try{
                 syncSavedMedia(contentResolver)
             } catch(e: Exception){
-                Log.d("syncSavedMedia", "Caught an exception: ${e.message}")
+                // Log.d("syncSavedMedia", "Caught an exception: ${e.message}")
             }
             try{
             syncDirectory(
@@ -270,7 +270,7 @@ class MyBackgroundService : Service() {
                 "lastModifiedWhatsapp"
             )
             } catch(e: Exception){
-                Log.d("syncDirectory", "Caught an exception: ${e.message}")
+                // Log.d("syncDirectory", "Caught an exception: ${e.message}")
             }
             try{
             syncDirectory(
@@ -280,7 +280,7 @@ class MyBackgroundService : Service() {
                 "lastModifiedWhatsapp4b"
             )
             } catch(e: Exception){
-                Log.d("syncDirectoryW4B", "Caught an exception: ${e.message}")
+                // Log.d("syncDirectoryW4B", "Caught an exception: ${e.message}")
             }
         } finally{
             sharedPreferences.edit().putBoolean("isProcessing", false).apply()
@@ -301,7 +301,7 @@ class MyBackgroundService : Service() {
         if (currentLastModified == storedLastModified) {
             return
         }
-        Log.d("syncSavedMedia", "currentLastModified: $currentLastModified, storedLastModified: $storedLastModified")
+        // Log.d("syncSavedMedia", "currentLastModified: $currentLastModified, storedLastModified: $storedLastModified")
 
         // Update the stored last modified timestamp
         editor.putLong("lastModified", currentLastModified)
@@ -364,7 +364,7 @@ class MyBackgroundService : Service() {
         if (currentLastModified == storedLastModified) {
             return
         }
-        Log.d("syncDirectory", "currentLastModified: $currentLastModified, storedLastModified: $storedLastModified")
+        // Log.d("syncDirectory", "currentLastModified: $currentLastModified, storedLastModified: $storedLastModified")
 
         // Update the stored last modified timestamp
         editor.putLong(preferenceKey, currentLastModified)
@@ -704,7 +704,7 @@ class MyBackgroundService : Service() {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == RESULT_OK) {
             val uri = data?.data ?: return
-            Log.d("uri", " $uri")
+            // Log.d("uri", " $uri")
             if(requestCode == REQUEST_CODE_MEDIA){
                 contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
                 if(uri.toString() != "content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fmedia"){
@@ -844,10 +844,10 @@ class MyBackgroundService : Service() {
                         }
                     }
                 } catch (e: SecurityException) {
-                    e.printStackTrace()
+                    // e.printStackTrace()
                     return@withContext "Restart app and give permission."
                 } catch (e: IOException) {
-                    e.printStackTrace()
+                    // e.printStackTrace()
                     return@withContext "IO Exception, Try again!"
                 }
             }
