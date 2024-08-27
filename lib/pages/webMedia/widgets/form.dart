@@ -7,11 +7,13 @@ class WebMediaForm extends StatefulWidget {
     required this.onUrlChanged,
     required this.onPasteButtonPressed,
     required this.textController,
+    required this.errorMessage,
   });
 
   final Function(String) onUrlChanged;
   final Function() onPasteButtonPressed;
   final TextEditingController textController;
+  final String? errorMessage;
 
   @override
   WebMediaFormState createState() => WebMediaFormState();
@@ -20,7 +22,6 @@ class WebMediaForm extends StatefulWidget {
 class WebMediaFormState extends State<WebMediaForm> {
   late FocusNode _focusNode;
   String pastebtn = "Paste";
-  String? errorMessage;
 
   @override
   void initState() {
@@ -64,7 +65,7 @@ class WebMediaFormState extends State<WebMediaForm> {
             cursorColor: Theme.of(context).primaryColor,
             decoration: InputDecoration(
               border: const OutlineInputBorder(),
-              errorText: errorMessage,
+              errorText: widget.errorMessage,
               labelText: 'Media URL',
               labelStyle: TextStyle(color: Theme.of(context).primaryColor),
               contentPadding: const EdgeInsets.all(5.0),
@@ -81,25 +82,13 @@ class WebMediaFormState extends State<WebMediaForm> {
         const SizedBox(width: 15),
         TextButton(
           onPressed: () async {
-            _focusNode
-                .unfocus(); // Unfocus the text field to trigger the focus change
-            setState(() {
-              errorMessage = null;
-            });
+            _focusNode.unfocus();
 
             final value = await fetchClipboardContent();
 
             if (pastebtn == "Paste") {
               widget.textController.text = value;
             }
-
-            setState(() {
-              if (isSupportUrl(widget.textController.text)) {
-                errorMessage = null;
-              } else {
-                errorMessage = 'Not a valid URL';
-              }
-            });
 
             widget.onPasteButtonPressed();
           },

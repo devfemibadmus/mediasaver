@@ -14,12 +14,12 @@ class WebMedias extends StatefulWidget {
 
 class WebMediasState extends State<WebMedias>
     with AutomaticKeepAliveClientMixin<WebMedias> {
-  String? errorMessage;
   WebMedia? mediaData;
   Map<int, bool> isDownloadingMap = {};
   double downloadPercentage = 0.0;
   late TextEditingController _textController;
   late FocusNode _focusNode;
+  String? errorMessage;
   Media? selectedQuality;
   @override
   bool get wantKeepAlive => true;
@@ -47,30 +47,25 @@ class WebMediasState extends State<WebMedias>
       mediaData = null;
       CustomOverlay().showOverlayLoader(context);
     });
-
     if (isSupportUrl(_textController.text)) {
       final response = await fetchMediaFromServer(_textController.text);
-
       setState(() {
-        if (response != null && response.containsKey('success')) {
+        if (response != null && response['success'] != null) {
           mediaData = response['data'];
           if (mediaData?.medias?.isNotEmpty ?? false) {
             selectedQuality = mediaData!.medias!.first;
           }
-          CustomOverlay().removeOverlayLoader();
         } else {
-          mediaData = null;
-          CustomOverlay().removeOverlayLoader();
           errorMessage = response?['message'] ?? 'Try again!';
         }
       });
     } else {
       setState(() {
         mediaData = null;
-        CustomOverlay().removeOverlayLoader();
         errorMessage = 'Not a valid URL';
       });
     }
+    CustomOverlay().removeOverlayLoader();
   }
 
   void onDownloadPressed(int index) async {
@@ -108,6 +103,7 @@ class WebMediasState extends State<WebMedias>
       child: Column(
         children: <Widget>[
           WebMediaForm(
+            errorMessage: errorMessage,
             onUrlChanged: onUrlChanged,
             onPasteButtonPressed: onPasteButtonPressed,
             textController: _textController,

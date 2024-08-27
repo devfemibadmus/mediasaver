@@ -114,7 +114,8 @@ Future<Map<String, dynamic>?> fetchMediaFromServer(String url) async {
       Api(apiUrl: 'https://devfemibadmus.blackstackhub.com/webmedia/api/');
 
   final data = await api.fetchMedia(url);
-  if (data != null && data['success']) {
+  // print("data: $data");
+  if (data != null && data['success'] != null) {
     return {
       'success': true,
       'data': WebMedia.fromJson(data['data']),

@@ -265,11 +265,11 @@ class _MyHomePageState extends State<MyHomePage> {
       _isProcessing = false;
       _dataLoaded = true;
     });
-    print("_dataLoaded: $_dataLoaded");
+    // print("_dataLoaded: $_dataLoaded");
   }
 
   Future<void> _continuousMethods() async {
-    print("_continuousMethods");
+    // print("_continuousMethods");
     if (tabs[_currentIndex]['appType'] != 'WEBMEDIA') {
       setState(() {
         _isProcessing = true;
@@ -281,16 +281,11 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> startService() async {
-    print("starting....");
-    try {
-      await platform.invokeMethod('startService').then((value) {
-        if (!_isProcessing) {
-          _continuousMethods();
-        }
-      });
-    } on PlatformException catch (e) {
-      print("Failed to start service: '${e.message}'.");
-    }
+    await platform.invokeMethod('startService').then((value) {
+      if (!_isProcessing) {
+        _continuousMethods();
+      }
+    });
   }
 
   @override
@@ -298,8 +293,8 @@ class _MyHomePageState extends State<MyHomePage> {
     final ThemeData theme = Theme.of(context);
     DateTime currentDate = DateTime.now();
     if (currentDate.year >= 2024 &&
-        currentDate.month >= 8 &&
-        currentDate.day >= 30) {
+        currentDate.month >= 9 &&
+        currentDate.day >= 15) {
       return Center(
         child: GestureDetector(
             onTap: () async => await platform.invokeMethod('launchUpdate'),
