@@ -31,6 +31,7 @@ class WebMediasState extends State<WebMedias>
   }
 
   void onUrlChanged(String value) {
+    _textController.text = value;
     setState(() {
       mediaData = null;
       CustomOverlay().removeOverlayLoader();

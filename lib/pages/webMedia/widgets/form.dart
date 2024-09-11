@@ -82,15 +82,12 @@ class WebMediaFormState extends State<WebMediaForm> {
         const SizedBox(width: 15),
         TextButton(
           onPressed: () async {
-            _focusNode.unfocus();
-
             final value = await fetchClipboardContent();
-
             if (pastebtn == "Paste") {
               widget.textController.text = value;
             }
-
             widget.onPasteButtonPressed();
+            _focusNode.unfocus();
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Theme.of(context).colorScheme.secondary,
