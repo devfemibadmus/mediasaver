@@ -52,12 +52,9 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 
-
-
 import android.content.ContentValues
 import android.provider.MediaStore
 import java.io.OutputStream
-
 
 import androidx.documentfile.provider.DocumentFile
 import android.provider.DocumentsContract
@@ -444,7 +441,7 @@ class MyBackgroundService : Service() {
         } catch (e: Exception) {
             // If no email app is available, open a web browser
             val webIntent = Intent(Intent.ACTION_VIEW)
-            webIntent.data = Uri.parse("https://github.com/devfemibadmus/Media-Saver")
+            webIntent.data = Uri.parse("https://github.com/devfemibadmus/mediasaver")
             startActivity(webIntent)
         }
         return true
@@ -654,40 +651,6 @@ class MyBackgroundService : Service() {
         }
         return mediaFilesInfo
     }
-    
-    /*
-    private fun checkStoragePermission(): Boolean {
-        val hasPermission =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                Environment.isExternalStorageManager()
-            } else {
-                ContextCompat.checkSelfPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-            }
-        return hasPermission
-    }
-
-    private fun requestStoragePermission(): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, Uri.parse("package:" + packageName))
-            activity.startActivityForResult(intent, APP_STORAGE_ACCESS_REQUEST_CODE)
-            return true
-        } else {
-            ActivityCompat.requestPermissions(this.activity,arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),APP_STORAGE_ACCESS_REQUEST_CODE)
-            return true
-        }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == APP_STORAGE_ACCESS_REQUEST_CODE) {
-            if (resultCode == RESULT_OK && Environment.isExternalStorageManager()) {
-                // Log.d(TAG, "Storage permission granted")
-            } else {
-                // Log.d(TAG, "Storage permission denied")
-            }
-        }
-    }
-    */
 
     private fun checkStoragePermission(): Boolean {
         val documentFile = DocumentFile.fromTreeUri(context, Uri.parse("content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fmedia"))
