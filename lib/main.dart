@@ -33,8 +33,9 @@ class MyApp extends StatelessWidget {
         ).copyWith(
           primary: Colors.black,
           secondary: Colors.white,
-          surface: Colors.black,
+          surface: Colors.white,
           onPrimary: Colors.white,
+          onSurface: Colors.black,
         ),
         Colors.black,
       ),
@@ -45,9 +46,10 @@ class MyApp extends StatelessWidget {
         ).copyWith(
           primary: Colors.white,
           secondary: Colors.black,
-          surface: Colors.white,
+          surface: Colors.grey[900],
           onPrimary: Colors.black,
           onSecondary: Colors.white,
+          onSurface: Colors.white,
         ),
         Colors.white,
       ),
