@@ -37,6 +37,9 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3805485538389573~6207196990"/>
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="com.blackstackhub.mediasaver.fileprovider"

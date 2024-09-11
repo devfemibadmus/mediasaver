@@ -21,7 +21,7 @@ feature graphic from [hotpot.io](https://hotpot.io)
 | 13 | Platform iOs               | Media Saver - Platform(whatsapp)                                                                   | ⏳     |
 | 14 | Platform Web               | Checkout [Web Media](https://github.com/devfemibadmus/webmedia)                                    | ✅     |
 | 15 | Platform Android           | >=5.0                                                                                              | ✅     |
-| 16 | PlayStore                  | Production Full rollout In review                                                                  | ⏳     |
+| 16 | PlayStore                  | Production Full rollout In review                                                                  | ✅     |
 | 17 | Monetization               | 1 reward ads daily unlmited download in app purchase $1/monthly                                    | ❌     |
 
 Explore the streamlined features of Media Saver and enjoy an enriched experience! If you have any concerns or suggestions, please feel free to share them.
@@ -60,3 +60,11 @@ dependencies:
 |-------------------------------------------------------------|-------------------------------------------------------------|
 | ![Facebook dark mode](media/Screenshot_20240816-072735.png?raw=true) | ![Saved dark mode](media/Screenshot_20240816-074619.png?raw=true) |
 
+
+
+
+<div align="center">
+
+[![Get it on Google Play](https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png)](https://play.google.com/store/apps/details?id=com.blackstackhub.mediasaver)
+
+</div>

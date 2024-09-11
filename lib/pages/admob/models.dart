@@ -53,12 +53,11 @@ class AdManager {
       size: AdSize.largeBanner,
       listener: BannerAdListener(
         onAdLoaded: (ad) {
-          print("Banner Ad loaded.");
+          //
         },
         onAdFailedToLoad: (ad, error) {
           ad.dispose();
           _bannerAd = null;
-          print('Failed to load banner ad: $error');
         },
       ),
     );
@@ -91,11 +90,9 @@ class AdManager {
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (InterstitialAd ad) {
           _interstitialAd = ad;
-          print("Interstitial Ad loaded.");
         },
         onAdFailedToLoad: (LoadAdError error) {
           _interstitialAd = null;
-          print('Failed to load interstitial ad: $error');
         },
       ),
     );
@@ -117,7 +114,6 @@ class AdManager {
         if (onUserEarnedReward != null) {
           onUserEarnedReward();
         }
-        print('User earned reward: $reward');
       });
     } else {
       loadRewardedAd();
@@ -132,11 +128,9 @@ class AdManager {
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (RewardedAd ad) {
           _rewardedAd = ad;
-          print("Rewarded Ad loaded.");
         },
         onAdFailedToLoad: (LoadAdError error) {
           _rewardedAd = null;
-          print('Failed to load rewarded ad: $error');
         },
       ),
     );

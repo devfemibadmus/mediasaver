@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mediasaver/model.dart';
 import 'package:mediasaver/widgets/wws.dart';
-import 'package:mediasaver/pages/admob/ads.dart';
+import 'package:mediasaver/pages/admob/models.dart';
 import 'package:mediasaver/pages/webmedia/webmedias.dart';
 
 void main() {
@@ -62,6 +62,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final adManager = AdManager();
   late Timer _timer;
   bool showedDialog = false;
   int currentDialogIndex = 0;
@@ -113,6 +114,30 @@ class _MyHomePageState extends State<MyHomePage> {
         _continuousMethods();
       }
     });
+    _preloadAds();
+  }
+
+  void _preloadAds() {
+    // adManager.loadRewardedAd();
+    adManager
+        .loadInterstitialAd(); // friendly match let show only Interstitial Ads
+  }
+
+  void _showAds() {
+    if (adManager.isRewardedAdReady()) {
+      adManager.showRewardedAd(
+        onAdDismissed: () {
+          if (adManager.isInterstitialAdReady()) {
+            adManager.showInterstitialAd();
+          }
+        },
+        onUserEarnedReward: () {
+          //
+        },
+      );
+    } else if (adManager.isInterstitialAdReady()) {
+      adManager.showInterstitialAd();
+    }
   }
 
   void showPermissionDialog() {
@@ -419,7 +444,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
             DefaultTabController(
-              length: 2,
+              length: 1,
               child: Column(
                 children: [
                   TabBar(
@@ -429,14 +454,12 @@ class _MyHomePageState extends State<MyHomePage> {
                     indicatorColor: theme.primaryColor,
                     tabs: const [
                       Center(child: Text("Other Platforms")),
-                      Center(child: Text("Don't Swipe")),
                     ],
                   ),
                   const Expanded(
                     child: TabBarView(
                       children: [
                         WebMedias(),
-                        AdsPage(),
                       ],
                     ),
                   ),
@@ -504,6 +527,9 @@ class _MyHomePageState extends State<MyHomePage> {
             setState(() {
               _currentIndex = index;
             });
+            if (index == 2) {
+              _showAds();
+            }
             if (!_isProcessing && haspermission == true) {
               _continuousMethods();
             }
