@@ -22,7 +22,7 @@ feature graphic from [hotpot.io](https://hotpot.io)
 | 14 | Platform Web               | Checkout [Web Media](https://github.com/devfemibadmus/webmedia)                                    | ✅     |
 | 15 | Platform Android           | >=5.0                                                                                              | ✅     |
 | 16 | PlayStore                  | Production Full rollout In review                                                                  | ✅     |
-| 17 | Monetization               | 1 reward ads daily unlmited download in app purchase $1/monthly                                    | ❌     |
+| 17 | Monetization               | 1 reward ads daily unlmited download in app purchase $1/monthly                                    | ✅     |
 
 Explore the streamlined features of Media Saver and enjoy an enriched experience! If you have any concerns or suggestions, please feel free to share them.
 
@@ -39,6 +39,8 @@ dependencies:
   cupertino_icons: ^1.0.6
   video_player: ^2.8.2
   http: ^1.2.0
+  google_mobile_ads: ^5.1.0
+  in_app_review: ^2.0.9
 ```
 
 ## Media

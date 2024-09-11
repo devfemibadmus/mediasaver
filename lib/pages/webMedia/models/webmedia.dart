@@ -86,7 +86,11 @@ class Api {
     try {
       final response = await http.post(
         Uri.parse(apiUrl),
-        body: {'url': url, 'cut': 'True'},
+        body: {
+          'url': url,
+          'cut': 'True',
+          'token': 'sk_token', // token to reduce spam
+        },
       );
       final isJson =
           response.headers['content-type']?.contains('application/json') ??

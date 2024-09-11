@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -119,25 +120,38 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _preloadAds() {
-    // adManager.loadRewardedAd();
-    adManager
-        .loadInterstitialAd(); // friendly match let show only Interstitial Ads
+    adManager.loadRewardedAd();
+    adManager.loadInterstitialAd();
   }
 
   void _showAds() {
-    if (adManager.isRewardedAdReady()) {
-      adManager.showRewardedAd(
-        onAdDismissed: () {
-          if (adManager.isInterstitialAdReady()) {
-            adManager.showInterstitialAd();
-          }
-        },
-        onUserEarnedReward: () {
-          //
-        },
-      );
-    } else if (adManager.isInterstitialAdReady()) {
-      adManager.showInterstitialAd();
+    final Random random = Random();
+    if (random.nextBool()) {
+      if (adManager.isRewardedAdReady()) {
+        adManager.showRewardedAd(
+          onAdDismissed: () {
+            //
+          },
+          onUserEarnedReward: () {
+            //
+          },
+        );
+      } else if (adManager.isInterstitialAdReady()) {
+        adManager.showInterstitialAd();
+      }
+    } else {
+      if (adManager.isInterstitialAdReady()) {
+        adManager.showInterstitialAd();
+      } else if (adManager.isRewardedAdReady()) {
+        adManager.showRewardedAd(
+          onAdDismissed: () {
+            //
+          },
+          onUserEarnedReward: () {
+            //
+          },
+        );
+      }
     }
   }
 
