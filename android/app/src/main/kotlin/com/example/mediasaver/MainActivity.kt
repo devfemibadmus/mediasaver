@@ -63,6 +63,8 @@ import android.provider.DocumentsContract.Document
 
 import android.widget.Toast
 
+import android.content.SharedPreferences
+import android.preference.PreferenceManager
 
 
 class MainActivity : FlutterActivity() {
@@ -79,6 +81,7 @@ class MainActivity : FlutterActivity() {
                 "shareApp" -> result.success(shareApp())
                 "sendEmail" -> result.success(sendEmail())
                 "launchDemo" -> result.success(launchDemo())
+                "getTimeUsed" -> result.success(getTimeUsed())
                 "launchUpdate" -> result.success(launchUpdate())
                 "launchPrivacyPolicy" -> result.success(launchPrivacyPolicy())
                 "getClipboardContent" -> result.success(getClipboardContent())
@@ -419,6 +422,13 @@ class MyBackgroundService : Service() {
         }
     }
 }
+
+    private fun getTimeUsed(): Int {
+        val prefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
+        val timeUsed = prefs.getInt("time_used", 0)
+        prefs.edit().putInt("time_used", timeUsed + 1).apply()
+        return prefs.getInt("time_used", 0)
+    }
 
     private fun sendEmail(): Boolean{
         val emailIntent = Intent(Intent.ACTION_SENDTO)

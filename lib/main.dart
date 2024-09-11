@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mediasaver/model.dart';
 import 'package:mediasaver/widgets/wws.dart';
+import 'package:in_app_review/in_app_review.dart';
 import 'package:mediasaver/pages/admob/models.dart';
 import 'package:mediasaver/pages/webmedia/webmedias.dart';
 
@@ -137,6 +138,16 @@ class _MyHomePageState extends State<MyHomePage> {
       );
     } else if (adManager.isInterstitialAdReady()) {
       adManager.showInterstitialAd();
+    }
+  }
+
+  void _requestReview() async {
+    final int result = await platform.invokeMethod('getTimeUsed');
+    if (result % 5 == 0) {
+      final InAppReview inAppReview = InAppReview.instance;
+      if (await inAppReview.isAvailable()) {
+        inAppReview.requestReview();
+      }
     }
   }
 
@@ -529,6 +540,8 @@ class _MyHomePageState extends State<MyHomePage> {
             });
             if (index == 2) {
               _showAds();
+            } else {
+              _requestReview();
             }
             if (!_isProcessing && haspermission == true) {
               _continuousMethods();
