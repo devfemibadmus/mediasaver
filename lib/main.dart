@@ -1,8 +1,9 @@
 import 'dart:async';
-import 'package:mediasaver/widgets/wws.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mediasaver/model.dart';
+import 'package:mediasaver/widgets/wws.dart';
+import 'package:mediasaver/pages/admob/ads.dart';
 import 'package:mediasaver/pages/webmedia/webmedias.dart';
 
 void main() {
@@ -64,7 +65,7 @@ class _MyHomePageState extends State<MyHomePage> {
   late Timer _timer;
   bool showedDialog = false;
   int currentDialogIndex = 0;
-  bool haspermission = false;
+  bool haspermission = true;
   bool _dataNew = false;
   int _currentIndex = 0;
   bool _dataLoaded = false;
@@ -88,7 +89,7 @@ class _MyHomePageState extends State<MyHomePage> {
             filterByMimeType(parseMediaFiles([]), videos, appType),
       }
   ];
-  List<String> labels = ['Whatsapp', 'W4Business', 'Web Download', 'Saved'];
+  List<String> labels = ['Whatsapp', 'W4Business', 'Others', 'Saved'];
 
   @override
   void initState() {
@@ -291,20 +292,6 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    DateTime currentDate = DateTime.now();
-    if (currentDate.year >= 2024 &&
-        currentDate.month >= 9 &&
-        currentDate.day >= 15) {
-      return Center(
-        child: GestureDetector(
-            onTap: () async => await platform.invokeMethod('launchUpdate'),
-            child: const Center(
-                child: Text(
-              'Update your app',
-              style: TextStyle(fontSize: 24),
-            ))),
-      );
-    }
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -441,15 +428,15 @@ class _MyHomePageState extends State<MyHomePage> {
                     unselectedLabelColor: theme.primaryColor,
                     indicatorColor: theme.primaryColor,
                     tabs: const [
-                      Center(child: Text("Other Platform")),
-                      Center(child: Text("How It Works")),
+                      Center(child: Text("Other Platforms")),
+                      Center(child: Text("Don't Swipe")),
                     ],
                   ),
                   const Expanded(
                     child: TabBarView(
                       children: [
                         WebMedias(),
-                        WebMedias(),
+                        AdsPage(),
                       ],
                     ),
                   ),
