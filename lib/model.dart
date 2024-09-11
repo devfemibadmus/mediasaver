@@ -120,6 +120,9 @@ Future<Map<String, dynamic>?> fetchMediaFromServer(String url) async {
       'success': true,
       'data': WebMedia.fromJson(data['data']),
     };
+  } else if (data != null && data['token_error'] != null) {
+    await platform.invokeMethod('launchUpdate');
+    return data;
   } else {
     return data;
   }
