@@ -109,12 +109,14 @@ class _MyHomePageState extends State<MyHomePage> {
           if (!_isProcessing) {
             _continuousMethods();
           }
-          startService();
         }
       });
     });
     Timer.periodic(const Duration(seconds: 15), (timer) {
+      startService();
       if (!_isProcessing && haspermission == true) {
+        _continuousMethods();
+      } else if (tabs[_currentIndex]['appType'] == 'SAVED') {
         _continuousMethods();
       }
     });
@@ -271,6 +273,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
     List? newWhatsappData = await platform.invokeListMethod(
         'getMediaFilesInfo', {'appType': tabs[_currentIndex]['appType']});
+
     var whatsappFilesImages = filterByMimeType(
         parseMediaFiles(newWhatsappData!),
         images,
@@ -470,20 +473,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 ],
               ),
             ),
-            DefaultTabController(
+            const DefaultTabController(
               length: 1,
               child: Column(
                 children: [
-                  TabBar(
-                    dividerColor: theme.colorScheme.secondary,
-                    labelColor: theme.primaryColor,
-                    unselectedLabelColor: theme.primaryColor,
-                    indicatorColor: theme.primaryColor,
-                    tabs: const [
-                      Center(child: Text("Other Platforms")),
-                    ],
-                  ),
-                  const Expanded(
+                  Expanded(
                     child: TabBarView(
                       children: [
                         WebMedias(),

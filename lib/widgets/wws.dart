@@ -45,14 +45,13 @@ class WhatsappState extends State<GridManager> {
       return const Center(child: CircularProgressIndicator());
     } else if (currentFiles.isNotEmpty == false) {
       late String message;
-      if (appType != "SAVED") {
-        message = "status available";
+      if (fileName.toLowerCase().contains('image')) {
+        message = "images available";
       } else {
-        message = "saved available";
+        message = "videos available";
       }
       return Center(
-        child: Text(
-            '${currentFiles.length} ${appType.toLowerCase()} $message available',
+        child: Text('${currentFiles.length} ${appType.toLowerCase()} $message',
             style: TextStyle(color: Theme.of(context).primaryColor)),
       );
     }
