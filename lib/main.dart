@@ -94,7 +94,7 @@ class _MyHomePageState extends State<MyHomePage> {
             filterByMimeType(parseMediaFiles([]), videos, appType),
       }
   ];
-  List<String> labels = ['Whatsapp', 'W4Business', 'Others', 'Saved'];
+  List<String> labels = ['Whatsapp', 'W4Business', 'Web Download', 'Saved'];
 
   @override
   void initState() {
@@ -473,11 +473,25 @@ class _MyHomePageState extends State<MyHomePage> {
                 ],
               ),
             ),
-            const DefaultTabController(
+            DefaultTabController(
               length: 1,
               child: Column(
                 children: [
-                  Expanded(
+                  TabBar(
+                    dividerColor: theme.colorScheme.secondary,
+                    labelColor: theme.primaryColor,
+                    unselectedLabelColor: theme.primaryColor,
+                    indicatorColor: theme.primaryColor,
+                    tabs: const [
+                      Center(
+                        child: Text("Other Platform"),
+                      ),
+                      Center(
+                        child: Text("How It Works"),
+                      ),
+                    ],
+                  ),
+                  const Expanded(
                     child: TabBarView(
                       children: [
                         WebMedias(),
