@@ -677,12 +677,12 @@ class MyBackgroundService : Service() {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == RESULT_OK) {
             val uri = data?.data ?: return
-            // Log.d("uri", " $uri")
+            // Log.d("uri", " $uri")  
             if(requestCode == REQUEST_CODE_MEDIA){
                 contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
                 if(uri.toString() != "content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fmedia"){
-                    Toast.makeText(applicationContext, "Please select the Media folder", Toast.LENGTH_SHORT).show()
-                    requestStoragePermission()
+                    /*Toast.makeText(applicationContext, "Please select the Media folder", Toast.LENGTH_SHORT).show()
+                    requestStoragePermission()*/
                 }
             }
         }

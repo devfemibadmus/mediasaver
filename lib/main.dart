@@ -68,7 +68,6 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final adManager = AdManager();
-  late Timer _timer;
   bool showedDialog = false;
   int currentDialogIndex = 0;
   bool haspermission = true;
@@ -100,18 +99,15 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      platform.invokeMethod("checkStoragePermission").then((value) async {
-        setState(() {
-          haspermission = value;
-        });
-        if (value) {
-          _timer.cancel();
-          if (!_isProcessing) {
-            _continuousMethods();
-          }
-        }
+    platform.invokeMethod("checkStoragePermission").then((value) async {
+      setState(() {
+        haspermission = value;
       });
+      if (value) {
+        if (!_isProcessing) {
+          _continuousMethods();
+        }
+      }
     });
     Timer.periodic(const Duration(seconds: 15), (timer) {
       startService();
@@ -250,6 +246,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 if (currentDialogIndex == dialogContent.length - 1)
                   TextButton(
                     onPressed: () {
+                      setState(() {
+                        haspermission = true;
+                      });
                       platform.invokeMethod("requestStoragePermission");
                       Navigator.of(context).pop();
                     },
@@ -598,7 +597,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void dispose() {
-    _timer.cancel();
     super.dispose();
   }
 }
