@@ -108,16 +108,17 @@ class _MyHomePageState extends State<MyHomePage> {
           _continuousMethods();
         }
       }
+      startService().then((value) {
+        _preloadAds();
+      });
     });
     Timer.periodic(const Duration(seconds: 15), (timer) {
-      startService();
       if (!_isProcessing && haspermission == true) {
         _continuousMethods();
       } else if (tabs[_currentIndex]['appType'] == 'SAVED') {
         _continuousMethods();
       }
     });
-    _preloadAds();
   }
 
   void _preloadAds() {
@@ -474,7 +475,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
             DefaultTabController(
-              length: 1,
+              length: 2,
               child: Column(
                 children: [
                   TabBar(
