@@ -89,7 +89,7 @@ class Api {
         body: {
           'url': url,
           'cut': 'True',
-          'token': 'sk_token', // token to reduce spam
+          'token': 'sk_reduce_spam_', // token to reduce spam
         },
       );
       final isJson =

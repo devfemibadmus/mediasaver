@@ -78,7 +78,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   List<String> dialogContent = [
     'Download videos and photos from Instagram, Facebook, and TikTok.\n\nDouble tap to save status or to delete existing ones.\n\nHold to share saved or not saved status.\n\nMany more functions, click on the bulb to request features.',
-    'This app requires access to Android\\media folder. so it can fetch your whatsapp and whatsapp business statuses.\n\nClick here for more information.',
+    'This app requires access to Android/media/ folder. so it can fetch your whatsapp and whatsapp business statuses.\n\nClick here for more information.',
   ];
   List<String> dialogTitle = [
     'Features',

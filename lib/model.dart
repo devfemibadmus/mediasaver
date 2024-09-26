@@ -83,14 +83,8 @@ Future<String> fetchClipboardContent() async {
 }
 
 bool isSupportUrl(String url) {
-  final tiktokPattern =
-      RegExp(r'tiktok\.com/.*/video/(\d+)|tiktok\.com/.*/photo/(\d+)');
-  final facebookPattern = RegExp(r'facebook\.com/.+');
-  final instagramPattern = RegExp(r'instagram\.com/.+');
-
-  return tiktokPattern.hasMatch(url) ||
-      facebookPattern.hasMatch(url) ||
-      instagramPattern.hasMatch(url);
+  final pattern = RegExp(r'https:\/\/\w+\.\w+');
+  return pattern.hasMatch(url);
 }
 
 Future<String> downloadFile(
