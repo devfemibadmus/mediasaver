@@ -11,7 +11,7 @@
         android:enableOnBackInvokedCallback="true"
         android:icon="@mipmap/ic_launcher"
         android:requestLegacyExternalStorage="true">
-        <service android:name=".MainActivity$MyBackgroundService" android:enabled="true" android:exported="false" />
+        <service android:name=".MainActivity$MyBackgroundService" android:enabled="true" android:exported="false" android:foregroundServiceType="mediaPlayback"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"
