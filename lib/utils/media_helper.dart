@@ -2,9 +2,35 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:ffmpeg_kit_flutter_new_min_gpl/ffmpeg_kit.dart';
+import 'package:saver_gallery/saver_gallery.dart';
+import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class MediaHelper {
+  static Future<void> initStore() async {
+    Directory dir;
+
+    try {
+      dir = await getApplicationSupportDirectory();
+    } catch (e) {
+      dir = await getApplicationDocumentsDirectory();
+    }
+
+    Hive.init(dir.path);
+    await Hive.openBox('mediaBox');
+
+    if (Platform.isAndroid) {
+      if (!await Permission.photos.isGranted) {
+        await Permission.photos.request();
+      }
+    } else if (Platform.isIOS) {
+      if (!await Permission.photosAddOnly.isGranted) {
+        await Permission.photosAddOnly.request();
+      }
+    }
+  }
+
   static String cleanUrl(String url) {
     return url.replaceAll('&amp;', '&');
   }
@@ -16,6 +42,7 @@ class MediaHelper {
         cleanedUrl.contains('/play/') ||
         cleanedUrl.contains('/video/') ||
         cleanedUrl.contains('video_id=') ||
+        cleanedUrl.contains('.27.IRZXSOY') ||
         cleanedUrl.contains('.1034.IRZXSOY') ||
         cleanedUrl.contains('aweme/v1/play');
   }
@@ -58,17 +85,15 @@ class MediaHelper {
     required String outputFileName,
   }) async {
     try {
+      final dir = await getTemporaryDirectory();
       final cleanedAudioUrl = cleanUrl(audioUrl);
       final audioResponse = await http.get(Uri.parse(cleanedAudioUrl));
       final audioBytes = audioResponse.bodyBytes;
-      final appDir = await getApplicationDocumentsDirectory();
-
-      final audioFileName =
-          'audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
-      final audioFile = File('${appDir.path}/$audioFileName');
+      final audioFile =
+          File('${dir.path}/a${DateTime.now().millisecondsSinceEpoch}.m4a');
       await audioFile.writeAsBytes(audioBytes);
 
-      final mergedFile = File('${appDir.path}/$outputFileName');
+      final mergedFile = File('${dir.path}/$outputFileName');
 
       await FFmpegKit.execute(
           '-i "${videoFile.path}" -i "${audioFile.path}" -c:v copy -c:a aac -map 0:v:0 -map 1:a:0 -shortest "${mergedFile.path}"');
@@ -83,16 +108,67 @@ class MediaHelper {
     }
   }
 
-  static Future<File> downloadMedia({
+  static Future<File> saveToGalleryAndStore({
     required String url,
     required String fileName,
   }) async {
     final cleanedUrl = cleanUrl(url);
     final response = await http.get(Uri.parse(cleanedUrl));
     final bytes = response.bodyBytes;
-    final appDir = await getApplicationDocumentsDirectory();
-    final file = File('${appDir.path}/$fileName');
-    await file.writeAsBytes(bytes);
-    return file;
+    Directory dir;
+    try {
+      dir = await getTemporaryDirectory();
+    } catch (e) {
+      dir = await getTemporaryDirectory();
+    }
+    final tempFile = File('${dir.path}/$fileName');
+    await tempFile.writeAsBytes(bytes);
+
+    final box = Hive.box('mediaBox');
+    await SaverGallery.saveFile(
+      filePath: tempFile.path,
+      fileName: fileName,
+      skipIfExists: false,
+    );
+
+    box.add(tempFile.path);
+    return tempFile;
+  }
+
+  static Future<bool> saveToGallery({
+    required String path,
+    required String fileName,
+  }) async {
+    final result = await SaverGallery.saveFile(
+      filePath: path,
+      fileName: fileName,
+      skipIfExists: false,
+    );
+    if (result.isSuccess) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  static Future<List<FileSystemEntity>> getSavedPaths(String extension) async {
+    final box = Hive.box('mediaBox');
+    final paths = box.values.where((p) => p.toString().endsWith(extension));
+    return paths
+        .map((p) => File(p.toString()))
+        .where((f) => f.existsSync())
+        .toList();
+  }
+
+  static Future<void> cleanDeleted() async {
+    final box = Hive.box('mediaBox');
+    final toRemove = <int>[];
+    for (var i = 0; i < box.length; i++) {
+      final p = box.getAt(i);
+      if (!File(p).existsSync()) toRemove.add(i);
+    }
+    for (final i in toRemove.reversed) {
+      box.deleteAt(i);
+    }
   }
 }

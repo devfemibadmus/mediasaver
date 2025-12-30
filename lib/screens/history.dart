@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:mediasaver/screens/preview.dart';
 import 'dart:io';
 
 import 'package:video_player/video_player.dart';
+
+import '../utils/media_helper.dart' show MediaHelper;
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -24,8 +25,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   void _loadFiles() {
     setState(() {
-      _videosFuture = _getFiles('.mp4');
-      _imagesFuture = _getFiles('.jpg');
+      _videosFuture = MediaHelper.getSavedPaths('.mp4');
+      _imagesFuture = MediaHelper.getSavedPaths('.jpg');
+
+      _imagesFuture.then((files) {
+        print('FOUND ${files.length} FILES:');
+        files.forEach((file) => print(file.path));
+      });
     });
   }
 
@@ -38,19 +44,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
     _videoControllers[path] = controller;
     await controller.initialize();
     return controller;
-  }
-
-  Future<List<FileSystemEntity>> _getFiles(String extension) async {
-    try {
-      final appDir = await getApplicationDocumentsDirectory();
-      final dir = Directory(appDir.path);
-      final allFiles = await dir.list().toList();
-      return allFiles
-          .where((file) => file.path.toLowerCase().endsWith(extension))
-          .toList();
-    } catch (e) {
-      return [];
-    }
   }
 
   Future<void> _deleteFile(FileSystemEntity file) async {

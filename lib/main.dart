@@ -1,8 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:mediasaver/utils/media_helper.dart';
 import 'screens/onboarding.dart';
 import 'package:upgrader/upgrader.dart';
 
-void main() {
+// void main() async {
+//   WidgetsFlutterBinding.ensureInitialized();
+//   await MediaHelper.initStore();
+//   final tempDir = await getTemporaryDirectory();
+//   final appDocumentsDir = await getApplicationDocumentsDirectory();
+//   final downloadsDir = await getDownloadsDirectory();
+//   await MediaHelper.initStore();
+//   await MediaHelper.cleanDeleted();
+//   runApp(const MediaSaverApp());
+// }
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await MediaHelper.initStore();
+  await MediaHelper.cleanDeleted();
   runApp(const MediaSaverApp());
 }
 

@@ -4,7 +4,6 @@ import 'package:mediasaver/screens/history.dart';
 import 'package:mediasaver/screens/preview.dart';
 import 'package:mediasaver/utils/media_helper.dart';
 import 'dart:convert';
-// import 'dart:io';
 import '../widgets/media_item_tile.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -19,11 +18,6 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _downloadingAll = false;
   int _completedDownloads = 0;
   List<String> _results = [];
-
-  // String get _baseUrl {
-  //   if (Platform.isAndroid) return 'http://10.0.2.2:8080';
-  //   return 'http://localhost:8080';
-  // }
 
   String get _baseUrl {
     return 'https://mediasaver.link';
@@ -95,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
         final fileName =
             '${DateTime.now().millisecondsSinceEpoch}_$i$extension';
 
-        final file = await MediaHelper.downloadMedia(
+        final file = await MediaHelper.saveToGalleryAndStore(
           url: url,
           fileName: fileName,
         );

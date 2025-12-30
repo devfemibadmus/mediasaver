@@ -3,25 +3,25 @@
 # Media Saver. Save Videos, Photos, Reels from Facebook, Instagram, TikTok, Twitter and Snapchat no watermark
 
 feature graphic from [hotpot.io](https://hotpot.io)
-[![Feature Graphic](media/featured.png?raw=true)](https://play.google.com/store/apps/details?id=com.blackstackhub.mediasaver)
+[![Feature Graphic](media/2JPllw1y05gY_1024_500.png?raw=true)](https://play.google.com/store/apps/details?id=com.blackstackhub.mediasaver)
 
 ## Screenshots
 
-| Facebook                           | Instagram                                      |
-| ---------------------------------- | ---------------------------------------------- |
-| ![Whatsapp](media/fb.png?raw=true) | ![Instagram white mode](media/ig.png?raw=true) |
+| Start                                                   | Policy                                                   |
+| ------------------------------------------------------- | -------------------------------------------------------- |
+| ![Start](media/Screenshot_20251230-195116.png?raw=true) | ![Policy](media/Screenshot_20251230-195120.png?raw=true) |
 
-| Twitter                                      | Tiktok                            |
-| -------------------------------------------- | --------------------------------- |
-| ![Instagram dark mode](media/x.png?raw=true) | ![Preview](media/tk.png?raw=true) |
+| Home                                                   | Preview                                                   |
+| ------------------------------------------------------ | --------------------------------------------------------- |
+| ![Home](media/Screenshot_20251230-195136.png?raw=true) | ![Preview](media/Screenshot_20251230-194425.png?raw=true) |
 
-| Snapchat                                    | History                                       |
-| ------------------------------------------- | --------------------------------------------- |
-| ![TikTok white mode](media/sc.png?raw=true) | ![Facebook white mode](media/hs.png?raw=true) |
+| Preview                                                   | Preview                                                   |
+| --------------------------------------------------------- | --------------------------------------------------------- |
+| ![Preview](media/Screenshot_20251230-194838.png?raw=true) | ![Preview](media/Screenshot_20251230-195036.png?raw=true) |
 
-| Preview                                      | Feedback                                  |
-| -------------------------------------------- | ----------------------------------------- |
-| ![Facebook dark mode](media/pr.png?raw=true) | ![Saved dark mode](media/fd.png?raw=true) |
+| History                                                   | Feedback                                                   |
+| --------------------------------------------------------- | ---------------------------------------------------------- |
+| ![History](media/Screenshot_20251230-195008.png?raw=true) | ![Feedback](media/Screenshot_20251230-195047.png?raw=true) |
 
 <div align="center">
 

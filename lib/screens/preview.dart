@@ -18,15 +18,32 @@ class PreviewScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(mediaUrl.split('/').last),
+        actions: [
+          if (isLocalFile)
+            IconButton(
+              onPressed: () => _downloadToGallery(context),
+              icon: const Icon(Icons.download),
+            ),
+        ],
       ),
-      body: _isVideo()
+      body: MediaHelper.isVideoUrl(mediaUrl)
           ? _VideoPreview(videoUrl: mediaUrl, isLocalFile: isLocalFile)
           : _ImagePreview(imageUrl: mediaUrl, isLocalFile: isLocalFile),
     );
   }
 
-  bool _isVideo() {
-    return MediaHelper.isVideoUrl(mediaUrl);
+  void _downloadToGallery(BuildContext context) async {
+    final fileName = mediaUrl.split('/').last;
+    final success = await MediaHelper.saveToGallery(
+      path: mediaUrl,
+      fileName: fileName,
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(success ? 'Saved to gallery' : 'Failed to save'),
+      ),
+    );
   }
 }
 
@@ -146,10 +163,6 @@ class _ImagePreview extends StatelessWidget {
 
   const _ImagePreview({required this.imageUrl, required this.isLocalFile});
 
-  String _cleanUrl(String url) {
-    return url.replaceAll('&amp;', '&');
-  }
-
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -160,7 +173,7 @@ class _ImagePreview extends StatelessWidget {
               errorBuilder: (_, __, ___) => const Icon(Icons.error, size: 80),
             )
           : Image.network(
-              _cleanUrl(imageUrl),
+              MediaHelper.cleanUrl(imageUrl),
               fit: BoxFit.contain,
               errorBuilder: (_, __, ___) => const Icon(Icons.error, size: 80),
             ),

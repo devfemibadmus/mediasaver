@@ -35,7 +35,7 @@ class _MediaItemTileState extends State<MediaItemTile> {
       final extension = MediaHelper.getFileExtension(widget.mediaUrl);
       final fileName = '${DateTime.now().millisecondsSinceEpoch}$extension';
 
-      final file = await MediaHelper.downloadMedia(
+      final file = await MediaHelper.saveToGalleryAndStore(
         url: widget.mediaUrl,
         fileName: fileName,
       );

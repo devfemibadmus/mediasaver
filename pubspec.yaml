@@ -3,7 +3,7 @@
 name: mediasaver
 description: "Media Saver. Save Videos, Photos, Reels from Facebook, Instagram, TikTok, Twitter and Snapchat no watermark"
 publish_to: "none"
-version: 1.4.0+19
+version: 1.4.0+24
 
 environment:
     sdk: ^3.6.0
@@ -14,10 +14,13 @@ dependencies:
     cupertino_icons: ^1.0.8
     video_player: ^2.9.2
     http: ^1.2.2
-    path_provider: ^2.1.5
     flutter_email_sender: ^8.0.0
     ffmpeg_kit_flutter_new_min_gpl: ^2.1.1
     upgrader: ^12.3.0
+    saver_gallery: ^4.1.0
+    hive: ^2.2.3
+    permission_handler: ^12.0.1
+    path_provider: ^2.1.5
 
 dev_dependencies:
     flutter_test:

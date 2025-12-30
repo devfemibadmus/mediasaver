@@ -4,6 +4,36 @@ import '../navigation.dart';
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
 
+  void _showComplianceDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text("Policy Compliance",
+            style: TextStyle(fontWeight: FontWeight.bold)),
+        content: const Text(
+          "This app is strictly for non-copyrighted media only. Downloading copyrighted or protected material is not supported and is blocked to comply with platform policies.",
+          style: TextStyle(fontSize: 15),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const MainNavigation()),
+              );
+            },
+            child: const Text("I UNDERSTAND",
+                style: TextStyle(
+                    fontWeight: FontWeight.bold, color: Color(0xFF3F61D7))),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,19 +58,19 @@ class OnboardingScreen extends StatelessWidget {
             ),
             const SizedBox(height: 50),
             Image.asset(
-              'assets/group.png',
+              'assets/icon-512.png',
               width: MediaQuery.of(context).size.width,
               fit: BoxFit.cover,
             ),
             const SizedBox(height: 35),
             const Text(
-              "Download your fav contents with a tap!",
+              "Organize your favorite links and media!",
               textAlign: TextAlign.center,
               style: TextStyle(
                   fontSize: 35, fontWeight: FontWeight.w800, height: 1.2),
             ),
             const Text(
-              "Simply paste your url and download\nyour favourite contents",
+              "Manage and view your personal media collections easily",
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey, fontSize: 16),
             ),
@@ -51,10 +81,7 @@ class OnboardingScreen extends StatelessWidget {
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
-                  onPressed: () => Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const MainNavigation())),
+                  onPressed: () => _showComplianceDialog(context),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF3F61D7),
                     elevation: 0,
