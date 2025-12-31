@@ -21,8 +21,8 @@ class MediaHelper {
     await Hive.openBox('mediaBox');
 
     if (Platform.isAndroid) {
-      if (!await Permission.photos.isGranted) {
-        await Permission.photos.request();
+      if (!await Permission.storage.isGranted) {
+        await Permission.storage.request();
       }
     } else if (Platform.isIOS) {
       if (!await Permission.photosAddOnly.isGranted) {

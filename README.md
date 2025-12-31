@@ -3,25 +3,25 @@
 # Media Saver. Save Videos, Photos, Reels from Facebook, Instagram, TikTok, Twitter and Snapchat no watermark
 
 feature graphic from [hotpot.io](https://hotpot.io)
-[![Feature Graphic](media/2JPllw1y05gY_1024_500.png?raw=true)](https://play.google.com/store/apps/details?id=com.blackstackhub.mediasaver)
+[![Feature Graphic](media/JN5MqT0rsNOi_1024_500.png?raw=true)](https://play.google.com/store/apps/details?id=com.blackstackhub.mediasaver)
 
 ## Screenshots
 
-| Start                                                   | Policy                                                   |
-| ------------------------------------------------------- | -------------------------------------------------------- |
-| ![Start](media/Screenshot_20251230-195116.png?raw=true) | ![Policy](media/Screenshot_20251230-195120.png?raw=true) |
+| Start                                              | Policy                                              |
+| -------------------------------------------------- | --------------------------------------------------- |
+| ![Start](media/Screenshot_1767164144.png?raw=true) | ![Policy](media/Screenshot_1767164157.png?raw=true) |
 
-| Home                                                   | Preview                                                   |
-| ------------------------------------------------------ | --------------------------------------------------------- |
-| ![Home](media/Screenshot_20251230-195136.png?raw=true) | ![Preview](media/Screenshot_20251230-194425.png?raw=true) |
+| Home                                              | Preview                                              |
+| ------------------------------------------------- | ---------------------------------------------------- |
+| ![Home](media/Screenshot_1767164244.png?raw=true) | ![Preview](media/Screenshot_1767164256.png?raw=true) |
 
-| Preview                                                   | Preview                                                   |
-| --------------------------------------------------------- | --------------------------------------------------------- |
-| ![Preview](media/Screenshot_20251230-194838.png?raw=true) | ![Preview](media/Screenshot_20251230-195036.png?raw=true) |
+| Preview                                              | Preview                                              |
+| ---------------------------------------------------- | ---------------------------------------------------- |
+| ![Preview](media/Screenshot_1767164382.png?raw=true) | ![Preview](media/Screenshot_1767164492.png?raw=true) |
 
-| History                                                   | Feedback                                                   |
-| --------------------------------------------------------- | ---------------------------------------------------------- |
-| ![History](media/Screenshot_20251230-195008.png?raw=true) | ![Feedback](media/Screenshot_20251230-195047.png?raw=true) |
+| History                                              | Feedback                                              |
+| ---------------------------------------------------- | ----------------------------------------------------- |
+| ![History](media/Screenshot_1767164269.png?raw=true) | ![Feedback](media/Screenshot_1767164501.png?raw=true) |
 
 <div align="center">
 
