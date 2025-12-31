@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mediasaver/screens/preview.dart';
 import 'dart:io';
-
 import 'package:video_player/video_player.dart';
-
 import '../utils/media_helper.dart' show MediaHelper;
 
 class HistoryScreen extends StatefulWidget {
@@ -30,7 +28,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
       _imagesFuture.then((files) {
         print('FOUND ${files.length} FILES:');
-        files.forEach((file) => print(file.path));
+        for (var file in files) {
+          print(file.path);
+        }
       });
     });
   }

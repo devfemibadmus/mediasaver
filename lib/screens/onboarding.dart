@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mediasaver/utils/media_helper.dart';
 import '../navigation.dart';
 
 class OnboardingScreen extends StatelessWidget {
@@ -18,7 +19,9 @@ class OnboardingScreen extends StatelessWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () {
+            onPressed: () async {
+              await MediaHelper.initStore();
+              await MediaHelper.cleanDeleted();
               Navigator.pop(context);
               Navigator.pushReplacement(
                 context,

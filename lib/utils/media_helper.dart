@@ -14,7 +14,8 @@ class MediaHelper {
     try {
       dir = await getApplicationSupportDirectory();
     } catch (e) {
-      dir = await getApplicationDocumentsDirectory();
+      await Future.delayed(const Duration(milliseconds: 300));
+      dir = await getApplicationSupportDirectory();
     }
 
     Hive.init(dir.path);
