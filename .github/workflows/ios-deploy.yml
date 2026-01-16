@@ -65,11 +65,38 @@ jobs:
                   PP_UUID=$(grep -a -A1 'UUID' $PP_PATH | grep string | sed -e 's/<string>//' -e 's/<\/string>//' | tr -d '\t ')
                   cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$PP_UUID.mobileprovision
 
+                  # Extract signing identity
+                  CERTIFICATE_NAME=$(security find-identity -v -p codesigning $KEYCHAIN_PATH | head -1 | grep '"' | sed -e 's/[^"]*"//' -e 's/".*//') 
+                  echo "CERTIFICATE_NAME=$CERTIFICATE_NAME" >> $GITHUB_ENV
+
             - name: Build iOS app
               run: |
-                  flutter build ipa \
-                    --release \
-                    --export-options-plist=ios/ExportOptions.plist
+                  # Build with Xcode directly for better control
+                  flutter build ios --release --no-codesign
+
+                  # Create archive with proper signing
+                  cd ios
+                  xcodebuild -workspace Runner.xcworkspace \
+                    -scheme Runner \
+                    -configuration Release \
+                    -archivePath $RUNNER_TEMP/Runner.xcarchive \
+                    -allowProvisioningUpdates \
+                    CODE_SIGN_STYLE=Manual \
+                    CODE_SIGN_IDENTITY="$CERTIFICATE_NAME" \
+                    PROVISIONING_PROFILE_SPECIFIER="" \
+                    DEVELOPMENT_TEAM="${{ secrets.TEAM_ID }}" \
+                    archive
+
+                  # Export IPA
+                  xcodebuild -exportArchive \
+                    -archivePath $RUNNER_TEMP/Runner.xcarchive \
+                    -exportPath $RUNNER_TEMP/build \
+                    -exportOptionsPlist ExportOptions.plist \
+                    -allowProvisioningUpdates
+
+                  # Move IPA to expected location
+                  mkdir -p ../build/ios/ipa
+                  mv $RUNNER_TEMP/build/*.ipa ../build/ios/ipa/
 
             - name: Upload to TestFlight
               if: github.event_name == 'push' || github.event.inputs.deploy_to_testflight == 'true'
