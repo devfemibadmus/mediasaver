@@ -12,11 +12,11 @@ migrate_working_dir/
 
 # Sensitive files
 *.json
-key.properties
-*.jks
-*.p12
-*.mobileprovision
-*.p8
+android/key.properties
+android/app/*.jks
+ios/*.p12
+ios/*.mobileprovision
+ios/*.p8
 
 # IntelliJ related
 *.iml
