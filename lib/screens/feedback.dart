@@ -13,17 +13,28 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   int _rating = 4;
 
   Future<void> _submitFeedback() async {
-    final Email email = Email(
-      body: _reviewController.text.isNotEmpty
-          ? _reviewController.text
-          : 'Rating: $_rating stars\nNo review provided.',
-      subject: 'Media Saver Feedback - $_rating Stars',
-      recipients: ['devfemiBADMUS@gmail.com'],
-      isHTML: false,
-    );
+    if (_rating == 0 || _reviewController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please rate and provide feedback")),
+      );
+      return;
+    }
 
     try {
-      await FlutterEmailSender.send(email);
+      await FlutterEmailSender.send(Email(
+        subject: "Media Saver Feedback - Rating: $_rating/5",
+        body: _reviewController.text,
+        recipients: ["devfemibadmus@gmail.com"],
+      ));
+
+      if (mounted) {
+        _reviewController.clear();
+        setState(() => _rating = 0);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Thank you for your feedback!")),
+        );
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Could not send email.")),

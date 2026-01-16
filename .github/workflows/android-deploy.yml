@@ -58,7 +58,7 @@ jobs:
                   storePassword=$KEYSTORE_PASSWORD
                   keyPassword=$KEY_PASSWORD
                   keyAlias=$KEY_ALIAS
-                  storeFile=app/upload-keystore.jks
+                  storeFile=upload-keystore.jks
                   EOF
 
             - name: Build Android App Bundle
@@ -86,14 +86,14 @@ jobs:
               with:
                   name: mediasaver-android-aab-${{ github.sha }}
                   path: build/app/outputs/bundle/release/app-release.aab
-                  retention-days: 30
+                  retention-days: 1
 
             - name: Upload APK artifacts
               uses: actions/upload-artifact@v4
               with:
                   name: mediasaver-android-apks-${{ github.sha }}
                   path: build/app/outputs/flutter-apk/*.apk
-                  retention-days: 30
+                  retention-days: 7
 
             - name: Clean up
               if: always()

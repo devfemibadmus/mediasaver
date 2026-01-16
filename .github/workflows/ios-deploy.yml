@@ -127,4 +127,4 @@ jobs:
               with:
                   name: mediasaver-ios-${{ github.sha }}
                   path: build/ios/ipa/*.ipa
-                  retention-days: 30
+                  retention-days: 1

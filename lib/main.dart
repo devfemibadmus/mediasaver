@@ -4,7 +4,7 @@ import 'screens/onboarding.dart';
 import 'navigation.dart';
 import 'package:upgrader/upgrader.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const MediaSaverApp());
 }
@@ -50,8 +50,12 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkOnboarding() async {
+    await Future.delayed(const Duration(milliseconds: 300));
+
     final prefs = await SharedPreferences.getInstance();
     final onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
+
+    debugPrint('Onboarding completed: $onboardingCompleted');
 
     if (mounted) {
       Navigator.pushReplacement(

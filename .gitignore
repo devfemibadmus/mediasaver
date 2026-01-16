@@ -11,10 +11,16 @@
 migrate_working_dir/
 
 # Sensitive files
-*.json
+dev-femi-badmus-*.json
 android/key.properties
 android/app/*.jks
+android/app/upload-keystore.jks
 ios/*.p12
+ios/*.pem
+ios/*.csr
+ios/*.key
+ios/*.cer
+ios/*.certSigningRequest
 ios/*.mobileprovision
 ios/*.p8
 
