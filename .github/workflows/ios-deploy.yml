@@ -77,6 +77,10 @@ jobs:
 
             - name: Build iOS app
               run: |
+                  # Clean previous builds
+                  flutter clean
+                  flutter pub get
+
                   # Use Flutter's built-in IPA builder with export options
                   flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
