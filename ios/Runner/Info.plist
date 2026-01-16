@@ -47,5 +47,14 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Photo Library permissions -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>We need access to your photo library to save downloaded media</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>We need permission to save videos and images to your photo library</string>
+	
+	<!-- Storage permissions for iOS 14+ -->
+	<key>PHPhotoLibraryPreventAutomaticLimitedAccessAlert</key>
+	<true/>
 </dict>
 </plist>

@@ -17,6 +17,7 @@ class PreviewScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: false,
         title: Text(mediaUrl.split('/').last),
         actions: [
           if (isLocalFile)

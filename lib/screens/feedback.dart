@@ -33,61 +33,65 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Feedback")),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text("Rate your experience", style: TextStyle(fontSize: 16)),
-            const SizedBox(height: 12),
-            Row(
-              children: List.generate(
-                5,
-                (index) => GestureDetector(
-                  onTap: () => setState(() => _rating = index + 1),
-                  child: Icon(
-                    index < _rating ? Icons.star : Icons.star_border,
-                    color: index < _rating ? Colors.yellow[700] : Colors.grey,
-                    size: 36,
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        appBar: AppBar(centerTitle: false, title: const Text("Feedback")),
+        body: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text("Rate your experience",
+                  style: TextStyle(fontSize: 16)),
+              const SizedBox(height: 12),
+              Row(
+                children: List.generate(
+                  5,
+                  (index) => GestureDetector(
+                    onTap: () => setState(() => _rating = index + 1),
+                    child: Icon(
+                      index < _rating ? Icons.star : Icons.star_border,
+                      color: index < _rating ? Colors.yellow[700] : Colors.grey,
+                      size: 36,
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 24),
-            const Text("Write a review", style: TextStyle(fontSize: 16)),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _reviewController,
-              maxLines: 6,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-              ),
-            ),
-            const Spacer(),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: _submitFeedback,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF3F61D7),
-                  shape: RoundedRectangleBorder(
+              const SizedBox(height: 24),
+              const Text("Write a review", style: TextStyle(fontSize: 16)),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _reviewController,
+                maxLines: 6,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
                   ),
                 ),
-                child: const Text(
-                  "Submit",
-                  style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+              const Spacer(),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: _submitFeedback,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF3F61D7),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    "Submit",
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-          ],
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );

@@ -61,6 +61,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
+          centerTitle: false,
           title: const Text("History"),
           bottom: const TabBar(
             indicatorColor: Color(0xFF3F61D7),

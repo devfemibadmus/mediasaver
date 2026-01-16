@@ -23,6 +23,12 @@ jobs:
             - name: Checkout repository
               uses: actions/checkout@v4
 
+            - name: Select latest Xcode
+              run: |
+                  # List available Xcode versions and select the latest
+                  sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
+                  xcodebuild -version
+
             - name: Set up Flutter
               uses: subosito/flutter-action@v2
               with:
