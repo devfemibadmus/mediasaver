@@ -58,7 +58,7 @@ jobs:
                   storePassword=$KEYSTORE_PASSWORD
                   keyPassword=$KEY_PASSWORD
                   keyAlias=$KEY_ALIAS
-                  storeFile=upload-keystore.jks
+                  storeFile=app/upload-keystore.jks
                   EOF
 
             - name: Build Android App Bundle
