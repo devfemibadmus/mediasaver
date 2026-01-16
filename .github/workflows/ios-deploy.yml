@@ -87,9 +87,11 @@ jobs:
                   APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
                   APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
               run: |
-                  # Save API key
-                  API_KEY_PATH=$RUNNER_TEMP/AuthKey.p8
-                  echo -n "$APP_STORE_CONNECT_API_KEY_BASE64" | base64 --decode -o $API_KEY_PATH
+                  # Create private_keys directory in expected location
+                  mkdir -p ~/.appstoreconnect/private_keys
+
+                  # Save API key with correct filename
+                  echo -n "$APP_STORE_CONNECT_API_KEY_BASE64" | base64 --decode -o ~/.appstoreconnect/private_keys/AuthKey_$APP_STORE_CONNECT_API_KEY_ID.p8
 
                   # Upload to TestFlight
                   xcrun altool --upload-app \
