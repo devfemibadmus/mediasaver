@@ -4,6 +4,8 @@
 <dict>
     <key>method</key>
     <string>app-store</string>
+    <key>signingStyle</key>
+    <string>manual</string>
     <key>uploadBitcode</key>
     <false/>
     <key>uploadSymbols</key>
@@ -12,5 +14,12 @@
     <false/>
     <key>teamID</key>
     <string>NB8QPVZ6PA</string>
+    <key>provisioningProfiles</key>
+    <dict>
+        <key>com.blackstackhub.mediasaver</key>
+        <string>MediaSaver AppStore Profile</string>
+    </dict>
+    <key>signingCertificate</key>
+    <string>Apple Distribution</string>
 </dict>
 </plist>
