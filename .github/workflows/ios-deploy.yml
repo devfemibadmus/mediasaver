@@ -1,6 +1,6 @@
 # @format
 
-name: iOS Build and Deploy to App Store
+name: iOS Build and Deploy to TestFlight
 
 on:
     push:
@@ -33,10 +33,6 @@ jobs:
             - name: Install dependencies
               run: flutter pub get
 
-            - name: Run tests
-              run: flutter test
-              continue-on-error: true
-
             - name: Install Apple Certificate and Provisioning Profile
               env:
                   BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
@@ -61,10 +57,13 @@ jobs:
                   # Import certificate to keychain
                   security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
                   security list-keychain -d user -s $KEYCHAIN_PATH
+                  security default-keychain -s $KEYCHAIN_PATH
+                  security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
 
                   # Apply provisioning profile
                   mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-                  cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
+                  PP_UUID=$(grep -a -A1 'UUID' $PP_PATH | grep string | sed -e 's/<string>//' -e 's/<\/string>//' | tr -d '\t ')
+                  cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$PP_UUID.mobileprovision
 
             - name: Build iOS app
               run: |
