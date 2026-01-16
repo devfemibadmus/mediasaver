@@ -1,0 +1,102 @@
+# @format
+
+# filepath: c:\Users\Femi.Badmus\Desktop\mediasaver\.github\workflows\android-deploy.yml
+# @format
+
+name: Android Build and Deploy to Play Store
+
+on:
+    push:
+        branches:
+            - android
+    workflow_dispatch:
+        inputs:
+            deploy_to_playstore:
+                description: "Deploy to Play Store Internal Testing"
+                required: true
+                default: "true"
+                type: boolean
+
+jobs:
+    build-and-deploy-android:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Set up Java
+              uses: actions/setup-java@v4
+              with:
+                  distribution: "temurin"
+                  java-version: "17"
+                  cache: "gradle"
+
+            - name: Set up Flutter
+              uses: subosito/flutter-action@v2
+              with:
+                  flutter-version: "3.27.0"
+                  channel: "stable"
+                  cache: true
+
+            - name: Install dependencies
+              run: flutter pub get
+
+            - name: Decode Keystore
+              env:
+                  KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+              run: |
+                  echo "$KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+
+            - name: Create key.properties
+              env:
+                  KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+                  KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+                  KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+              run: |
+                  cat > android/key.properties <<EOF
+                  storePassword=$KEYSTORE_PASSWORD
+                  keyPassword=$KEY_PASSWORD
+                  keyAlias=$KEY_ALIAS
+                  storeFile=upload-keystore.jks
+                  EOF
+
+            - name: Build Android App Bundle
+              run: |
+                  flutter clean
+                  flutter pub get
+                  flutter build appbundle --release
+
+            - name: Build Android APK
+              run: flutter build apk --release --split-per-abi
+
+            - name: Upload to Google Play Store
+              if: github.event_name == 'push' || github.event.inputs.deploy_to_playstore == 'true'
+              uses: r0adkll/upload-google-play@v1.1.3
+              with:
+                  serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+                  packageName: com.blackstackhub.mediasaver
+                  releaseFiles: build/app/outputs/bundle/release/app-release.aab
+                  track: internal
+                  status: completed
+                  inAppUpdatePriority: 2
+
+            - name: Upload AAB artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: mediasaver-android-aab-${{ github.sha }}
+                  path: build/app/outputs/bundle/release/app-release.aab
+                  retention-days: 30
+
+            - name: Upload APK artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: mediasaver-android-apks-${{ github.sha }}
+                  path: build/app/outputs/flutter-apk/*.apk
+                  retention-days: 30
+
+            - name: Clean up
+              if: always()
+              run: |
+                  rm -f android/app/upload-keystore.jks
+                  rm -f android/key.properties

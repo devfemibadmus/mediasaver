@@ -56,5 +56,9 @@
 	<!-- Storage permissions for iOS 14+ -->
 	<key>PHPhotoLibraryPreventAutomaticLimitedAccessAlert</key>
 	<true/>
+	
+	<!-- Pasteboard/Clipboard permission -->
+	<key>NSUserTrackingUsageDescription</key>
+	<string>We need access to paste links from your clipboard to download media</string>
 </dict>
 </plist>

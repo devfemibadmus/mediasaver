@@ -5,8 +5,7 @@ name: iOS Build and Deploy to TestFlight
 on:
     push:
         branches:
-            - main
-            - release
+            - ios
     workflow_dispatch:
         inputs:
             deploy_to_testflight:
