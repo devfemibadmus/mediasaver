@@ -80,16 +80,15 @@ jobs:
                   # Build with Xcode directly for better control
                   flutter build ios --release --no-codesign
 
-                  # Create archive with proper signing
+                  # Create archive with proper signing (only for Runner target, not Pods)
                   cd ios
                   xcodebuild -workspace Runner.xcworkspace \
                     -scheme Runner \
                     -configuration Release \
                     -archivePath $RUNNER_TEMP/Runner.xcarchive \
                     -allowProvisioningUpdates \
-                    CODE_SIGN_STYLE=Manual \
                     CODE_SIGN_IDENTITY="$CERTIFICATE_NAME" \
-                    PROVISIONING_PROFILE="$PP_UUID" \
+                    PROVISIONING_PROFILE_SPECIFIER="MediaSaver AppStore Profile" \
                     DEVELOPMENT_TEAM="${{ secrets.TEAM_ID }}" \
                     archive
 
