@@ -31,7 +31,12 @@ jobs:
                   cache: true
 
             - name: Install dependencies
-              run: flutter pub get
+              run: |
+                  flutter pub get
+                  cd ios
+                  pod repo update
+                  rm -rf Pods Podfile.lock
+                  pod install
 
             - name: Install Apple Certificate and Provisioning Profile
               env:
