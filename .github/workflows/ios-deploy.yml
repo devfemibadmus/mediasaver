@@ -69,6 +69,7 @@ jobs:
                   mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
                   PP_UUID=$(grep -a -A1 'UUID' $PP_PATH | grep string | sed -e 's/<string>//' -e 's/<\/string>//' | tr -d '\t ')
                   cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$PP_UUID.mobileprovision
+                  echo "PP_UUID=$PP_UUID" >> $GITHUB_ENV
 
                   # Extract signing identity
                   CERTIFICATE_NAME=$(security find-identity -v -p codesigning $KEYCHAIN_PATH | head -1 | grep '"' | sed -e 's/[^"]*"//' -e 's/".*//') 
@@ -88,7 +89,7 @@ jobs:
                     -allowProvisioningUpdates \
                     CODE_SIGN_STYLE=Manual \
                     CODE_SIGN_IDENTITY="$CERTIFICATE_NAME" \
-                    PROVISIONING_PROFILE_SPECIFIER="" \
+                    PROVISIONING_PROFILE="$PP_UUID" \
                     DEVELOPMENT_TEAM="${{ secrets.TEAM_ID }}" \
                     archive
 
