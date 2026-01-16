@@ -22,11 +22,18 @@ jobs:
             - name: Checkout repository
               uses: actions/checkout@v4
 
+            - name: List available Xcode versions
+              run: ls /Applications | grep Xcode
+
             - name: Select latest Xcode
               run: |
-                  # List available Xcode versions and select the latest
-                  sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
+                  # Select latest available Xcode (should have iOS 18+ SDK)
+                  LATEST_XCODE=$(ls -d /Applications/Xcode*.app | tail -1)
+                  sudo xcode-select -s "$LATEST_XCODE/Contents/Developer"
+                  echo "Selected Xcode version:"
                   xcodebuild -version
+                  echo "Available SDKs:"
+                  xcodebuild -showsdks
 
             - name: Set up Flutter
               uses: subosito/flutter-action@v2
