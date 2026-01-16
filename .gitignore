@@ -48,3 +48,14 @@ token.txt
 .cxx
 .vscode
 androidkkkk
+
+# iOS Certificates and Keys (NEVER commit these!)
+*.p12
+*.p8
+*.cer
+*.csr
+*.pem
+*.key
+*.mobileprovision
+AuthKey_*.p8
+desktop.ini
