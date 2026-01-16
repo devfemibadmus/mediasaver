@@ -155,7 +155,11 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
+        onTap: () {
+          FocusScope.of(context).unfocus();
+          FocusManager.instance.primaryFocus?.unfocus();
+        },
+        behavior: HitTestBehavior.opaque,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(

@@ -34,7 +34,11 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
+      onTap: () {
+        FocusScope.of(context).unfocus();
+        FocusManager.instance.primaryFocus?.unfocus();
+      },
+      behavior: HitTestBehavior.opaque,
       child: Scaffold(
         appBar: AppBar(centerTitle: false, title: const Text("Feedback")),
         body: Padding(

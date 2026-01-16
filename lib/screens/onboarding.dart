@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mediasaver/utils/media_helper.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../navigation.dart';
 
 class OnboardingScreen extends StatelessWidget {
@@ -22,6 +23,11 @@ class OnboardingScreen extends StatelessWidget {
             onPressed: () async {
               await MediaHelper.initStore();
               await MediaHelper.cleanDeleted();
+
+              // Mark onboarding as completed
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setBool('onboarding_completed', true);
+
               Navigator.pop(context);
               Navigator.pushReplacement(
                 context,
