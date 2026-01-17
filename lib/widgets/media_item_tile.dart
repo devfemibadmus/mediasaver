@@ -35,8 +35,13 @@ class _MediaItemTileState extends State<MediaItemTile> {
     final existingMedia = await MediaHelper.getMediaByUrl(widget.mediaUrl);
     if (existingMedia != null) {
       if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Already downloaded')),
+          SnackBar(
+            content: const Text('Already downloaded'),
+            backgroundColor: Colors.grey[800],
+            duration: const Duration(seconds: 2),
+          ),
         );
       }
       setState(() => _isDownloading = false);
@@ -46,38 +51,59 @@ class _MediaItemTileState extends State<MediaItemTile> {
     final extension = MediaHelper.getFileExtension(widget.mediaUrl);
     final fileName = '${DateTime.now().millisecondsSinceEpoch}$extension';
 
-    final file = await MediaHelper.saveToGalleryAndStore(
-      url: widget.mediaUrl,
-      fileName: fileName,
-    );
-
-    if (widget.audioUrl != null && MediaHelper.isVideoUrl(widget.mediaUrl)) {
-      final mergedFile = await MediaHelper.mergeAudioWithVideo(
-        videoFile: file,
-        audioUrl: widget.audioUrl!,
-        outputFileName: 'merged_${DateTime.now().millisecondsSinceEpoch}.mp4',
+    try {
+      final file = await MediaHelper.saveToGalleryAndStore(
+        url: widget.mediaUrl,
+        fileName: fileName,
       );
 
+      if (widget.audioUrl != null && MediaHelper.isVideoUrl(widget.mediaUrl)) {
+        final mergedFile = await MediaHelper.mergeAudioWithVideo(
+          videoFile: file,
+          audioUrl: widget.audioUrl!,
+          outputFileName: 'merged_${DateTime.now().millisecondsSinceEpoch}.mp4',
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).clearSnackBars();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(mergedFile != null ? 'Video saved' : 'Video saved'),
+              backgroundColor: Colors.grey[800],
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).clearSnackBars();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Media saved'),
+              backgroundColor: Colors.grey[800],
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+
+      if (widget.onDownloadComplete != null) {
+        widget.onDownloadComplete!();
+      }
+    } catch (e) {
       if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-                mergedFile != null ? 'Video saved' : 'Video saved (no audio)'),
+            content: const Text('Download failed'),
+            backgroundColor: Colors.grey[800],
+            duration: const Duration(seconds: 2),
           ),
         );
       }
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Media saved')),
-        );
-      }
+    } finally {
+      setState(() => _isDownloading = false);
     }
-
-    if (widget.onDownloadComplete != null) {
-      widget.onDownloadComplete!();
-    }
-    setState(() => _isDownloading = false);
   }
 
   @override

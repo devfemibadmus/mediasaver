@@ -107,10 +107,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         final List<String> mediaList = List<String>.from(data['data'] ?? []);
 
         if (mediaList.isEmpty) {
+          ScaffoldMessenger.of(context).clearSnackBars();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('No media found'),
-              backgroundColor: Colors.orange,
+            SnackBar(
+              content: const Text('No media found'),
+              backgroundColor: Colors.grey[800],
+              duration: const Duration(seconds: 2),
             ),
           );
           setState(() => _results = []);
@@ -118,20 +120,24 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           setState(() => _results = mediaList);
         }
       } else {
+        ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(data['message'] ??
                 data['error_message'] ??
                 'Error: ${response.statusCode}'),
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.grey[800],
+            duration: const Duration(seconds: 2),
           ),
         );
       }
     } catch (e) {
+      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Network error: $e'),
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.grey[800],
+          duration: const Duration(seconds: 2),
         ),
       );
     } finally {
@@ -210,8 +216,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         message = 'Download failed';
       }
 
+      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.grey[800],
+          duration: const Duration(seconds: 2),
+        ),
       );
 
       Navigator.push(

@@ -53,14 +53,24 @@ class _HistoryScreenState extends State<HistoryScreen> {
     if (success) {
       _loadFiles();
       if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Deleted')),
+          SnackBar(
+            content: const Text('Deleted'),
+            backgroundColor: Colors.grey[800],
+            duration: const Duration(seconds: 2),
+          ),
         );
       }
     } else {
       if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Delete failed')),
+          SnackBar(
+            content: const Text('Delete failed'),
+            backgroundColor: Colors.grey[800],
+            duration: const Duration(seconds: 2),
+          ),
         );
       }
     }

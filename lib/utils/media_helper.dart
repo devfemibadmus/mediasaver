@@ -25,6 +25,7 @@ class MediaHelper {
         Hive.init(dir.path);
         await Hive.openBox('mediaBox');
         await Hive.openBox('urlBox');
+        await Hive.openBox('pathToUrlBox');
       }
 
       if (Platform.isAndroid) {
@@ -136,6 +137,7 @@ class MediaHelper {
 
     final box = Hive.box('mediaBox');
     final urlBox = Hive.box('urlBox');
+    final pathToUrlBox = Hive.box('pathToUrlBox');
 
     await SaverGallery.saveFile(
       filePath: tempFile.path,
@@ -145,9 +147,10 @@ class MediaHelper {
 
     box.add(tempFile.path);
 
-    // Use MD5 hash of URL as key to avoid 255 char limit
     final urlHash = md5.convert(utf8.encode(url)).toString();
     urlBox.put(urlHash, tempFile.path);
+
+    pathToUrlBox.put(tempFile.path, url);
 
     return tempFile;
   }
@@ -180,8 +183,10 @@ class MediaHelper {
   static Future<void> cleanDeleted() async {
     final box = Hive.box('mediaBox');
     final urlBox = Hive.box('urlBox');
+    final pathToUrlBox = Hive.box('pathToUrlBox');
     final toRemove = <int>[];
     final urlsToRemove = <String>[];
+    final pathsToRemove = <String>[];
 
     for (var i = 0; i < box.length; i++) {
       final p = box.getAt(i);
@@ -201,6 +206,16 @@ class MediaHelper {
     for (final url in urlsToRemove) {
       urlBox.delete(url);
     }
+
+    for (var entry in pathToUrlBox.toMap().entries) {
+      if (!File(entry.key).existsSync()) {
+        pathsToRemove.add(entry.key);
+      }
+    }
+
+    for (final path in pathsToRemove) {
+      pathToUrlBox.delete(path);
+    }
   }
 
   static Future<String?> getMediaByUrl(String url) async {
@@ -218,14 +233,25 @@ class MediaHelper {
 
       final box = Hive.box('mediaBox');
       final urlBox = Hive.box('urlBox');
+      final pathToUrlBox = Hive.box('pathToUrlBox');
+
+      // Get original URL from path mapping
+      final originalUrl = pathToUrlBox.get(filePath) ?? url;
+
+      // Remove from mediaBox
       for (var i = 0; i < box.length; i++) {
         if (box.getAt(i) == filePath) {
           await box.deleteAt(i);
           break;
         }
       }
-      final urlHash = md5.convert(utf8.encode(url)).toString();
+
+      // Remove from urlBox using hash
+      final urlHash = md5.convert(utf8.encode(originalUrl)).toString();
       await urlBox.delete(urlHash);
+
+      // Remove path to URL mapping
+      await pathToUrlBox.delete(filePath);
 
       return true;
     } catch (e) {
