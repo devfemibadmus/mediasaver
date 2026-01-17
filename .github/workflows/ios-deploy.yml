@@ -27,13 +27,11 @@ jobs:
 
             - name: Select latest Xcode
               run: |
-                  # Select latest available Xcode (should have iOS 18+ SDK)
-                  LATEST_XCODE=$(ls -d /Applications/Xcode*.app | tail -1)
-                  sudo xcode-select -s "$LATEST_XCODE/Contents/Developer"
-                  echo "Selected Xcode version:"
+                  sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer || \
+                  sudo xcode-select -s /Applications/Xcode_26.1.1.app/Contents/Developer || \
+                  sudo xcode-select -s /Applications/Xcode_26.app/Contents/Developer
                   xcodebuild -version
-                  echo "Available SDKs:"
-                  xcodebuild -showsdks
+                  xcodebuild -showsdks | grep iOS
 
             - name: Set up Flutter
               uses: subosito/flutter-action@v2

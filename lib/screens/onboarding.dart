@@ -25,8 +25,7 @@ class OnboardingScreen extends StatelessWidget {
               await MediaHelper.cleanDeleted();
 
               final prefs = await SharedPreferences.getInstance();
-              final saved = await prefs.setBool('onboarding_completed', true);
-              debugPrint('Onboarding preference saved: $saved');
+              await prefs.setBool('onboarding_completed', true);
 
               if (!context.mounted) return;
               Navigator.pop(context);

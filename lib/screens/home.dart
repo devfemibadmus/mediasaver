@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'dart:io' show Platform;
 import 'package:mediasaver/screens/history.dart';
 import 'package:mediasaver/screens/preview.dart';
 import 'package:mediasaver/utils/media_helper.dart';
@@ -19,6 +20,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   bool _downloadingAll = false;
   int _completedDownloads = 0;
   List<String> _results = [];
+  String _lastClipboard = '';
+  static const platform =
+      MethodChannel('com.blackstackhub.mediasaver/clipboard');
 
   String get _baseUrl {
     return 'https://mediasaver.link';
@@ -28,7 +32,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _checkClipboard();
+    _autoFillFromClipboard();
   }
 
   @override
@@ -41,23 +45,33 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      _checkClipboard();
+      _autoFillFromClipboard();
     }
   }
 
-  Future<void> _checkClipboard() async {
+  Future<void> _autoFillFromClipboard() async {
     try {
-      final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
-      if (clipboardData != null && clipboardData.text != null) {
-        final text = clipboardData.text!;
-        if (text.startsWith('http') && _urlController.text.isEmpty) {
-          setState(() {
-            _urlController.text = text;
-          });
-        }
+      String? clipboardText;
+
+      if (Platform.isIOS) {
+        clipboardText = await platform.invokeMethod('getClipboard');
+      } else {
+        final data = await Clipboard.getData(Clipboard.kTextPlain);
+        clipboardText = data?.text;
+      }
+
+      if (clipboardText != null &&
+          clipboardText.isNotEmpty &&
+          clipboardText != _lastClipboard &&
+          (clipboardText.startsWith('http://') ||
+              clipboardText.startsWith('https://'))) {
+        _lastClipboard = clipboardText;
+        setState(() {
+          _urlController.text = clipboardText!;
+        });
       }
     } catch (e) {
-      debugPrint('Clipboard read error: $e');
+      debugPrint('Clipboard error: $e');
     }
   }
 

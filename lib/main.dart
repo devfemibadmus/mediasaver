@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mediasaver/utils/media_helper.dart';
 import 'screens/onboarding.dart';
 import 'navigation.dart';
 import 'package:upgrader/upgrader.dart';
@@ -55,18 +56,18 @@ class _SplashScreenState extends State<SplashScreen> {
     final prefs = await SharedPreferences.getInstance();
     final onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
 
-    debugPrint('Onboarding completed: $onboardingCompleted');
-
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => onboardingCompleted
-              ? const MainNavigation()
-              : const OnboardingScreen(),
-        ),
-      );
+    if (onboardingCompleted) {
+      await MediaHelper.initStore();
+      await MediaHelper.cleanDeleted();
     }
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => onboardingCompleted
+            ? const MainNavigation()
+            : const OnboardingScreen(),
+      ),
+    );
   }
 
   @override
