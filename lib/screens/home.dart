@@ -9,7 +9,10 @@ import 'dart:convert';
 import '../widgets/media_item_tile.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final String? sharedText;
+
+  const HomeScreen({super.key, this.sharedText});
+
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -32,7 +35,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _autoFillFromClipboard();
+
+    // If shared text exists, use it
+    if (widget.sharedText != null && widget.sharedText!.isNotEmpty) {
+      _urlController.text = widget.sharedText!;
+      _lastClipboard = widget.sharedText!;
+    } else {
+      _autoFillFromClipboard();
+    }
   }
 
   @override
@@ -69,6 +79,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         setState(() {
           _urlController.text = clipboardText!;
         });
+
+        await Future.delayed(const Duration(milliseconds: 300));
+        if (mounted && !_isLoading) {
+          _fetchMedia();
+        }
       }
     } catch (e) {
       debugPrint('Clipboard error: $e');

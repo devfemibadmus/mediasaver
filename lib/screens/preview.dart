@@ -79,7 +79,12 @@ class _VideoPreviewState extends State<_VideoPreview> {
 
     _controller!.initialize().then((_) {
       if (mounted) {
-        setState(() => _isInitialized = true);
+        setState(() {
+          _isInitialized = true;
+          _isPlaying = true;
+        });
+        _controller!.setLooping(true);
+        _controller!.play();
       }
     });
   }
@@ -95,14 +100,15 @@ class _VideoPreviewState extends State<_VideoPreview> {
     return Column(
       children: [
         Expanded(
-          child: Center(
-            child: _isInitialized
-                ? AspectRatio(
+          child: _isInitialized
+              ? SizedBox(
+                  width: double.infinity,
+                  child: AspectRatio(
                     aspectRatio: _controller!.value.aspectRatio,
                     child: VideoPlayer(_controller!),
-                  )
-                : const CircularProgressIndicator(),
-          ),
+                  ),
+                )
+              : const Center(child: CircularProgressIndicator()),
         ),
         if (_isInitialized)
           VideoProgressIndicator(

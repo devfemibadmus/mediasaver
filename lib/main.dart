@@ -3,15 +3,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mediasaver/utils/media_helper.dart';
 import 'screens/onboarding.dart';
 import 'navigation.dart';
-import 'package:upgrader/upgrader.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MediaSaverApp());
+  runApp(const MyApp());
 }
 
-class MediaSaverApp extends StatelessWidget {
-  const MediaSaverApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,19 +18,10 @@ class MediaSaverApp extends StatelessWidget {
       title: 'Media Saver',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        scaffoldBackgroundColor: Colors.white,
-        primaryColor: const Color(0xFF3F61D7),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          iconTheme: IconThemeData(color: Colors.black),
-          titleTextStyle: TextStyle(
-              color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
-        ),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF3F61D7)),
+        useMaterial3: true,
       ),
-      home: UpgradeAlert(
-        child: const SplashScreen(),
-      ),
+      home: const SplashScreen(),
     );
   }
 }
@@ -61,13 +51,16 @@ class _SplashScreenState extends State<SplashScreen> {
       await MediaHelper.cleanDeleted();
     }
 
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => onboardingCompleted
-            ? const MainNavigation()
-            : const OnboardingScreen(),
-      ),
-    );
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => onboardingCompleted
+              ? const MainNavigation()
+              : const OnboardingScreen(),
+        ),
+      );
+    }
   }
 
   @override
