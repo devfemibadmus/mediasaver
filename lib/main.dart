@@ -29,7 +29,7 @@ class MediaSaverApp extends StatelessWidget {
         ),
       ),
       home: UpgradeAlert(
-        child: const OnboardingScreen(),
+        child: const SplashScreen(),
       ),
     );
   }
