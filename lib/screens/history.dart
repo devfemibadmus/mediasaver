@@ -46,12 +46,23 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return controller;
   }
 
-  Future<void> _deleteFile(FileSystemEntity file) async {
-    try {
-      await file.delete();
+  Future<void> _deleteMedia(FileSystemEntity file) async {
+    final filePath = file.path;
+    final success = await MediaHelper.deleteMedia(filePath, filePath);
+
+    if (success) {
       _loadFiles();
-    } catch (e) {
-      debugPrint(e.toString());
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Deleted')),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Delete failed')),
+        );
+      }
     }
   }
 
@@ -180,7 +191,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         shape: BoxShape.circle,
                       ),
                       child: IconButton(
-                        onPressed: () => _deleteFile(file),
+                        onPressed: () => _deleteMedia(file),
                         icon: const Icon(Icons.delete_outline,
                             size: 18, color: Colors.white),
                         padding: EdgeInsets.zero,

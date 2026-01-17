@@ -208,4 +208,29 @@ class MediaHelper {
     final urlHash = md5.convert(utf8.encode(url)).toString();
     return urlBox.get(urlHash);
   }
+
+  static Future<bool> deleteMedia(String filePath, String url) async {
+    try {
+      final file = File(filePath);
+      if (file.existsSync()) {
+        await file.delete();
+      }
+
+      final box = Hive.box('mediaBox');
+      final urlBox = Hive.box('urlBox');
+      for (var i = 0; i < box.length; i++) {
+        if (box.getAt(i) == filePath) {
+          await box.deleteAt(i);
+          break;
+        }
+      }
+      final urlHash = md5.convert(utf8.encode(url)).toString();
+      await urlBox.delete(urlHash);
+
+      return true;
+    } catch (e) {
+      debugPrint('Delete error: $e');
+      return false;
+    }
+  }
 }
