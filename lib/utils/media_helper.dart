@@ -9,27 +9,33 @@ import 'package:permission_handler/permission_handler.dart';
 
 class MediaHelper {
   static Future<void> initStore() async {
-    Directory dir;
-
     try {
-      dir = await getApplicationSupportDirectory();
+      Directory dir;
+
+      try {
+        dir = await getApplicationSupportDirectory();
+      } catch (e) {
+        await Future.delayed(const Duration(milliseconds: 300));
+        dir = await getApplicationSupportDirectory();
+      }
+
+      if (!Hive.isBoxOpen('mediaBox')) {
+        Hive.init(dir.path);
+        await Hive.openBox('mediaBox');
+        await Hive.openBox('urlBox');
+      }
+
+      if (Platform.isAndroid) {
+        if (!await Permission.storage.isGranted) {
+          await Permission.storage.request();
+        }
+      } else if (Platform.isIOS) {
+        if (!await Permission.photosAddOnly.isGranted) {
+          await Permission.photosAddOnly.request();
+        }
+      }
     } catch (e) {
-      await Future.delayed(const Duration(milliseconds: 300));
-      dir = await getApplicationSupportDirectory();
-    }
-
-    Hive.init(dir.path);
-    await Hive.openBox('mediaBox');
-    await Hive.openBox('urlBox');
-
-    if (Platform.isAndroid) {
-      if (!await Permission.storage.isGranted) {
-        await Permission.storage.request();
-      }
-    } else if (Platform.isIOS) {
-      if (!await Permission.photosAddOnly.isGranted) {
-        await Permission.photosAddOnly.request();
-      }
+      debugPrint('Init store error: $e');
     }
   }
 
