@@ -6,6 +6,8 @@ import 'package:saver_gallery/saver_gallery.dart';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 
 class MediaHelper {
   static Future<void> initStore() async {
@@ -142,7 +144,10 @@ class MediaHelper {
     );
 
     box.add(tempFile.path);
-    urlBox.put(url, tempFile.path);
+
+    // Use MD5 hash of URL as key to avoid 255 char limit
+    final urlHash = md5.convert(utf8.encode(url)).toString();
+    urlBox.put(urlHash, tempFile.path);
 
     return tempFile;
   }
@@ -200,6 +205,7 @@ class MediaHelper {
 
   static Future<String?> getMediaByUrl(String url) async {
     final urlBox = Hive.box('urlBox');
-    return urlBox.get(url);
+    final urlHash = md5.convert(utf8.encode(url)).toString();
+    return urlBox.get(urlHash);
   }
 }

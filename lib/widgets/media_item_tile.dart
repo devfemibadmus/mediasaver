@@ -32,63 +32,52 @@ class _MediaItemTileState extends State<MediaItemTile> {
   Future<void> _downloadMedia() async {
     setState(() => _isDownloading = true);
 
-    try {
-      // Check if already downloaded
-      final existingMedia = await MediaHelper.getMediaByUrl(widget.mediaUrl);
-      if (existingMedia != null) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Already downloaded')),
-          );
-        }
-        setState(() => _isDownloading = false);
-        return;
-      }
-
-      final extension = MediaHelper.getFileExtension(widget.mediaUrl);
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}$extension';
-
-      final file = await MediaHelper.saveToGalleryAndStore(
-        url: widget.mediaUrl,
-        fileName: fileName,
-      );
-
-      if (widget.audioUrl != null && MediaHelper.isVideoUrl(widget.mediaUrl)) {
-        final mergedFile = await MediaHelper.mergeAudioWithVideo(
-          videoFile: file,
-          audioUrl: widget.audioUrl!,
-          outputFileName: 'merged_${DateTime.now().millisecondsSinceEpoch}.mp4',
-        );
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(mergedFile != null
-                  ? 'Video saved'
-                  : 'Video saved (no audio)'),
-            ),
-          );
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Media saved')),
-          );
-        }
-      }
-
-      if (widget.onDownloadComplete != null) {
-        widget.onDownloadComplete!();
-      }
-    } catch (e) {
+    final existingMedia = await MediaHelper.getMediaByUrl(widget.mediaUrl);
+    if (existingMedia != null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Download failed')),
+          const SnackBar(content: Text('Already downloaded')),
         );
       }
-    } finally {
       setState(() => _isDownloading = false);
+      return;
     }
+
+    final extension = MediaHelper.getFileExtension(widget.mediaUrl);
+    final fileName = '${DateTime.now().millisecondsSinceEpoch}$extension';
+
+    final file = await MediaHelper.saveToGalleryAndStore(
+      url: widget.mediaUrl,
+      fileName: fileName,
+    );
+
+    if (widget.audioUrl != null && MediaHelper.isVideoUrl(widget.mediaUrl)) {
+      final mergedFile = await MediaHelper.mergeAudioWithVideo(
+        videoFile: file,
+        audioUrl: widget.audioUrl!,
+        outputFileName: 'merged_${DateTime.now().millisecondsSinceEpoch}.mp4',
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                mergedFile != null ? 'Video saved' : 'Video saved (no audio)'),
+          ),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Media saved')),
+        );
+      }
+    }
+
+    if (widget.onDownloadComplete != null) {
+      widget.onDownloadComplete!();
+    }
+    setState(() => _isDownloading = false);
   }
 
   @override
