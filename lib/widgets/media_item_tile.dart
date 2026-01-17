@@ -29,9 +29,22 @@ class _MediaItemTileState extends State<MediaItemTile> {
 
   bool get _isVideo => MediaHelper.isVideoUrl(widget.mediaUrl);
 
-  Future<void> _download() async {
+  Future<void> _downloadMedia() async {
     setState(() => _isDownloading = true);
+
     try {
+      // Check if already downloaded
+      final existingMedia = await MediaHelper.getMediaByUrl(widget.mediaUrl);
+      if (existingMedia != null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Already downloaded')),
+          );
+        }
+        setState(() => _isDownloading = false);
+        return;
+      }
+
       final extension = MediaHelper.getFileExtension(widget.mediaUrl);
       final fileName = '${DateTime.now().millisecondsSinceEpoch}$extension';
 
@@ -40,36 +53,41 @@ class _MediaItemTileState extends State<MediaItemTile> {
         fileName: fileName,
       );
 
-      if (widget.audioUrl != null && _isVideo) {
+      if (widget.audioUrl != null && MediaHelper.isVideoUrl(widget.mediaUrl)) {
         final mergedFile = await MediaHelper.mergeAudioWithVideo(
           videoFile: file,
           audioUrl: widget.audioUrl!,
           outputFileName: 'merged_${DateTime.now().millisecondsSinceEpoch}.mp4',
         );
 
-        if (mergedFile != null) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Merged video+audio: ${mergedFile.path}")),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Saved: ${file.path}")),
+            SnackBar(
+              content: Text(mergedFile != null
+                  ? 'Video saved'
+                  : 'Video saved (no audio)'),
+            ),
           );
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Saved: ${file.path}")),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Media saved')),
+          );
+        }
       }
 
-      widget.onDownloadComplete?.call();
+      if (widget.onDownloadComplete != null) {
+        widget.onDownloadComplete!();
+      }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("Error: $e")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Download failed')),
+        );
       }
     } finally {
-      if (mounted) setState(() => _isDownloading = false);
+      setState(() => _isDownloading = false);
     }
   }
 
@@ -77,7 +95,7 @@ class _MediaItemTileState extends State<MediaItemTile> {
   Widget build(BuildContext context) {
     if (widget.onlyButton) {
       return ElevatedButton(
-        onPressed: _isDownloading ? null : _download,
+        onPressed: _isDownloading ? null : _downloadMedia,
         style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF3F61D7),
             shape:
@@ -131,7 +149,7 @@ class _MediaItemTileState extends State<MediaItemTile> {
               bottom: 15,
               right: 15,
               child: ElevatedButton(
-                onPressed: _isDownloading ? null : _download,
+                onPressed: _isDownloading ? null : _downloadMedia,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF3F61D7),
                   shape: RoundedRectangleBorder(
@@ -218,7 +236,7 @@ class _MediaItemTileState extends State<MediaItemTile> {
                         Icon(Icons.delete_outline, size: 18)
                       ])
                     : GestureDetector(
-                        onTap: _isDownloading ? null : _download,
+                        onTap: _isDownloading ? null : _downloadMedia,
                         child: _isDownloading
                             ? const SizedBox(
                                 width: 18,
