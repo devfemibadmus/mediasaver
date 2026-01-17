@@ -47,15 +47,6 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLName</key>
-			<string>com.blackstackhub.mediasaver</string>
-		</dict>
-	</array>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>We need access to your photo library to save downloaded media</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

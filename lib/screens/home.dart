@@ -148,9 +148,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
     final videoUrls = MediaHelper.filterVideoUrls(_results);
     final audioUrl = MediaHelper.getAudioUrl(_results);
+    int successCount = 0;
+    int skippedCount = 0;
 
     for (int i = 0; i < videoUrls.length; i++) {
       final url = videoUrls[i];
+
+      // Check if already downloaded
+      final existingMedia = await MediaHelper.getMediaByUrl(url);
+      if (existingMedia != null) {
+        skippedCount++;
+        setState(() => _completedDownloads = i + 1);
+        continue;
+      }
+
       try {
         final extension = MediaHelper.getFileExtension(url);
         final fileName =
@@ -170,24 +181,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           );
 
           if (mergedFile != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Merged video+audio: ${mergedFile.path}")),
-            );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Video saved (no audio): ${file.path}")),
-            );
+            successCount++;
           }
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Saved: ${file.path}")),
-          );
+          successCount++;
         }
       } catch (e) {
         debugPrint(e.toString());
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error downloading: ${e.toString()}")),
-        );
       }
 
       setState(() => _completedDownloads = i + 1);
@@ -197,6 +197,23 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     setState(() => _downloadingAll = false);
 
     if (mounted) {
+      String message = '';
+      if (successCount > 0) {
+        message = '$successCount media saved';
+      }
+      if (skippedCount > 0) {
+        message += message.isNotEmpty
+            ? ', $skippedCount already downloaded'
+            : '$skippedCount already downloaded';
+      }
+      if (message.isEmpty) {
+        message = 'Download failed';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const HistoryScreen()),

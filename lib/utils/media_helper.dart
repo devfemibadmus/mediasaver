@@ -20,6 +20,7 @@ class MediaHelper {
 
     Hive.init(dir.path);
     await Hive.openBox('mediaBox');
+    await Hive.openBox('urlBox');
 
     if (Platform.isAndroid) {
       if (!await Permission.storage.isGranted) {
@@ -126,6 +127,8 @@ class MediaHelper {
     await tempFile.writeAsBytes(bytes);
 
     final box = Hive.box('mediaBox');
+    final urlBox = Hive.box('urlBox');
+
     await SaverGallery.saveFile(
       filePath: tempFile.path,
       fileName: fileName,
@@ -133,6 +136,8 @@ class MediaHelper {
     );
 
     box.add(tempFile.path);
+    urlBox.put(url, tempFile.path);
+
     return tempFile;
   }
 
@@ -163,13 +168,32 @@ class MediaHelper {
 
   static Future<void> cleanDeleted() async {
     final box = Hive.box('mediaBox');
+    final urlBox = Hive.box('urlBox');
     final toRemove = <int>[];
+    final urlsToRemove = <String>[];
+
     for (var i = 0; i < box.length; i++) {
       final p = box.getAt(i);
       if (!File(p).existsSync()) toRemove.add(i);
     }
+
     for (final i in toRemove.reversed) {
       box.deleteAt(i);
     }
+
+    for (var entry in urlBox.toMap().entries) {
+      if (!File(entry.value).existsSync()) {
+        urlsToRemove.add(entry.key);
+      }
+    }
+
+    for (final url in urlsToRemove) {
+      urlBox.delete(url);
+    }
+  }
+
+  static Future<String?> getMediaByUrl(String url) async {
+    final urlBox = Hive.box('urlBox');
+    return urlBox.get(url);
   }
 }
