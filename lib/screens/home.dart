@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:mediasaver/screens/history.dart';
 import 'package:mediasaver/screens/preview.dart';
@@ -12,7 +13,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final TextEditingController _urlController = TextEditingController();
   bool _isLoading = false;
   bool _downloadingAll = false;
@@ -21,6 +22,43 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String get _baseUrl {
     return 'https://mediasaver.link';
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _checkClipboard();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _urlController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkClipboard();
+    }
+  }
+
+  Future<void> _checkClipboard() async {
+    try {
+      final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
+      if (clipboardData != null && clipboardData.text != null) {
+        final text = clipboardData.text!;
+        if (text.startsWith('http') && _urlController.text.isEmpty) {
+          setState(() {
+            _urlController.text = text;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Clipboard read error: $e');
+    }
   }
 
   Future<void> _fetchMedia() async {
