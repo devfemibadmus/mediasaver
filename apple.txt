@@ -1,0 +1,20 @@
+Hello App Review,
+
+We updated the app so it no longer supports arbitrary third-party media sources.
+
+The app now only allows downloading media from official NASA sources that state the content is public domain or otherwise free to download, use, and redistribute unless otherwise noted.
+
+Approved source:
+- https://svs.gsfc.nasa.gov/
+
+Supporting policy pages:
+- NASA Scientific Visualization Studio FAQ: https://svs.gsfc.nasa.gov/
+  This page states that NASA SVS content is public domain unless otherwise noted and is free to download, use, and redistribute.
+- NASA JPL Image Use Policy: https://www.jpl.nasa.gov/jpl-image-use-policy/
+  This page states that images and video on JPL public websites may be used without prior permission unless otherwise noted.
+
+The app does not support unauthorized third-party platforms such as YouTube, TikTok, Instagram, SoundCloud, Vimeo, or similar services.
+
+Please review the updated build.
+
+Best regards
