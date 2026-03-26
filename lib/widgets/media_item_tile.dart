@@ -306,13 +306,33 @@ class __VideoThumbnailSmallState extends State<_VideoThumbnailSmall> {
   @override
   Widget build(BuildContext context) {
     return _initialized
-        ? VideoPlayer(_controller)
-        : Container(
-            color: Colors.grey[200],
-            child: const Center(
-              child: Icon(Icons.videocam, size: 30, color: Colors.grey),
-            ),
-          );
+        ? LayoutBuilder(
+            builder: (context, constraints) {
+              final videoSize = _controller.value.size;
+              if (videoSize.isEmpty) {
+                return _videoPlaceholder();
+              }
+
+              return FittedBox(
+                fit: BoxFit.cover,
+                child: SizedBox(
+                  width: videoSize.width,
+                  height: videoSize.height,
+                  child: VideoPlayer(_controller),
+                ),
+              );
+            },
+          )
+        : _videoPlaceholder();
+  }
+
+  Widget _videoPlaceholder() {
+    return Container(
+      color: Colors.grey[200],
+      child: const Center(
+        child: Icon(Icons.videocam, size: 30, color: Colors.grey),
+      ),
+    );
   }
 }
 
@@ -352,12 +372,32 @@ class __VideoThumbnailLargeState extends State<_VideoThumbnailLarge> {
   @override
   Widget build(BuildContext context) {
     return _initialized
-        ? VideoPlayer(_controller)
-        : Container(
-            color: Colors.grey[200],
-            child: const Center(
-              child: Icon(Icons.videocam, size: 50, color: Colors.grey),
-            ),
-          );
+        ? LayoutBuilder(
+            builder: (context, constraints) {
+              final videoSize = _controller.value.size;
+              if (videoSize.isEmpty) {
+                return _videoPlaceholder();
+              }
+
+              return FittedBox(
+                fit: BoxFit.cover,
+                child: SizedBox(
+                  width: videoSize.width,
+                  height: videoSize.height,
+                  child: VideoPlayer(_controller),
+                ),
+              );
+            },
+          )
+        : _videoPlaceholder();
+  }
+
+  Widget _videoPlaceholder() {
+    return Container(
+      color: Colors.grey[200],
+      child: const Center(
+        child: Icon(Icons.videocam, size: 50, color: Colors.grey),
+      ),
+    );
   }
 }
