@@ -3,7 +3,7 @@
 name: mediasaver
 description: "Media Saver. Save Videos, Photos, Reels from Facebook, Instagram, TikTok, Twitter and Snapchat no watermark"
 publish_to: "none"
-version: 1.5.0+39
+version: 1.5.0+40
 
 environment:
     sdk: ^3.6.0

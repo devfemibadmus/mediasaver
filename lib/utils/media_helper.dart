@@ -10,6 +10,28 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 
 class MediaHelper {
+  static Map<String, String> buildRequestHeaders({
+    Map<String, String>? extraHeaders,
+  }) {
+    final normalizedVersion =
+        Platform.operatingSystemVersion.replaceAll(RegExp(r'\s+'), ' ').trim();
+
+    final headers = <String, String>{
+      HttpHeaders.userAgentHeader:
+          'MediaSaver (${Platform.operatingSystem}; $normalizedVersion)',
+      'X-App-Client': 'mediasaver',
+      'X-App-Platform': Platform.operatingSystem,
+      'X-App-Platform-Version': normalizedVersion,
+      HttpHeaders.acceptHeader: '*/*',
+    };
+
+    if (extraHeaders != null) {
+      headers.addAll(extraHeaders);
+    }
+
+    return headers;
+  }
+
   static Future<void> initStore() async {
     try {
       Directory dir;
@@ -73,7 +95,10 @@ class MediaHelper {
   static Future<bool> checkIfImageExists(String url) async {
     try {
       final cleanedUrl = cleanUrl(url);
-      final response = await http.head(Uri.parse(cleanedUrl));
+      final response = await http.head(
+        Uri.parse(cleanedUrl),
+        headers: buildRequestHeaders(),
+      );
       return response.statusCode == 200;
     } catch (e) {
       return false;
@@ -98,7 +123,10 @@ class MediaHelper {
     try {
       final dir = await getTemporaryDirectory();
       final cleanedAudioUrl = cleanUrl(audioUrl);
-      final audioResponse = await http.get(Uri.parse(cleanedAudioUrl));
+      final audioResponse = await http.get(
+        Uri.parse(cleanedAudioUrl),
+        headers: buildRequestHeaders(),
+      );
       final audioBytes = audioResponse.bodyBytes;
       final audioFile =
           File('${dir.path}/a${DateTime.now().millisecondsSinceEpoch}.m4a');
@@ -124,7 +152,10 @@ class MediaHelper {
     required String fileName,
   }) async {
     final cleanedUrl = cleanUrl(url);
-    final response = await http.get(Uri.parse(cleanedUrl));
+    final response = await http.get(
+      Uri.parse(cleanedUrl),
+      headers: buildRequestHeaders(),
+    );
     final bytes = response.bodyBytes;
     Directory dir;
     try {

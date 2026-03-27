@@ -98,8 +98,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     });
 
     try {
-      final response = await http
-          .get(Uri.parse('$_baseUrl/api/?url=${_urlController.text}'));
+      final response = await http.get(
+        Uri.parse('$_baseUrl/api/?url=${_urlController.text}'),
+        headers: MediaHelper.buildRequestHeaders(
+          extraHeaders: {
+            'X-Media-Source-Url': _urlController.text,
+          },
+        ),
+      );
 
       final data = json.decode(response.body);
 
