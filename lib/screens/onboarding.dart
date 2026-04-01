@@ -24,9 +24,7 @@ class OnboardingScreen extends StatelessWidget {
           TextButton(
             onPressed: () async {
               try {
-                final prefs = await SharedPreferences.getInstance().timeout(
-                  const Duration(seconds: 2),
-                );
+                final prefs = await SharedPreferences.getInstance();
                 await prefs.setBool('onboarding_completed', true);
               } catch (e) {
                 debugPrint('Failed to persist onboarding state: $e');
