@@ -1,16 +1,36 @@
-import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mediasaver/utils/media_helper.dart';
-import 'screens/onboarding.dart';
-import 'navigation.dart';
+import 'dart:async';
 
-void main() async {
+import 'package:flutter/material.dart';
+import 'package:mediasaver/utils/media_helper.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'navigation.dart';
+import 'screens/onboarding.dart';
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyApp());
+
+  var onboardingCompleted = false;
+
+  try {
+    final prefs = await SharedPreferences.getInstance().timeout(
+      const Duration(seconds: 2),
+    );
+    onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
+  } catch (e) {
+    debugPrint('Failed to read onboarding state: $e');
+  }
+
+  runApp(MyApp(onboardingCompleted: onboardingCompleted));
+
+  if (onboardingCompleted) {
+    unawaited(MediaHelper.prepareForLaunch());
+  }
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool onboardingCompleted;
+
+  const MyApp({super.key, required this.onboardingCompleted});
 
   @override
   Widget build(BuildContext context) {
@@ -21,60 +41,9 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF3F61D7)),
         useMaterial3: true,
       ),
-      home: const SplashScreen(),
-    );
-  }
-}
-
-class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
-
-  @override
-  State<SplashScreen> createState() => _SplashScreenState();
-}
-
-class _SplashScreenState extends State<SplashScreen> {
-  @override
-  void initState() {
-    super.initState();
-    _checkOnboarding();
-  }
-
-  Future<void> _checkOnboarding() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-
-    final prefs = await SharedPreferences.getInstance();
-    final onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
-
-    if (onboardingCompleted) {
-      await MediaHelper.initStore();
-      await MediaHelper.cleanDeleted();
-    }
-
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => onboardingCompleted
-              ? const MainNavigation()
-              : const OnboardingScreen(),
-        ),
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset('assets/icon-512.png', width: 200),
-            const SizedBox(height: 24),
-          ],
-        ),
-      ),
+      home: onboardingCompleted
+          ? const MainNavigation()
+          : const OnboardingScreen(),
     );
   }
 }

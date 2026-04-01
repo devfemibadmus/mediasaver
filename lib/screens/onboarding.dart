@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:mediasaver/utils/media_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,11 +23,16 @@ class OnboardingScreen extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () async {
-              await MediaHelper.initStore();
-              await MediaHelper.cleanDeleted();
+              try {
+                final prefs = await SharedPreferences.getInstance().timeout(
+                  const Duration(seconds: 2),
+                );
+                await prefs.setBool('onboarding_completed', true);
+              } catch (e) {
+                debugPrint('Failed to persist onboarding state: $e');
+              }
 
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.setBool('onboarding_completed', true);
+              unawaited(MediaHelper.prepareForLaunch());
 
               if (!context.mounted) return;
               Navigator.pop(context);
