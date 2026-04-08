@@ -11,6 +11,7 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
+  static const double _tabletBreakpoint = 768;
   final Map<String, VideoPlayerController> _videoControllers = {};
   late Future<List<FileSystemEntity>> _videosFuture;
   late Future<List<FileSystemEntity>> _imagesFuture;
@@ -114,12 +115,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
         if (files.isEmpty) {
           return _empty(icon, txt);
         }
+        final width = MediaQuery.of(context).size.width;
+        final crossAxisCount = width >= 1200
+            ? 4
+            : width >= _tabletBreakpoint
+                ? 3
+                : 2;
+
         return GridView.builder(
-          padding: const EdgeInsets.all(16),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
+          padding: EdgeInsets.all(width >= _tabletBreakpoint ? 24 : 16),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
+            childAspectRatio: width >= _tabletBreakpoint ? 0.95 : 1,
           ),
           itemCount: files.length,
           itemBuilder: (context, index) {

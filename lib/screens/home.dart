@@ -18,6 +18,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
+  static const double _tabletBreakpoint = 768;
+  static const double _contentMaxWidth = 720;
   final TextEditingController _urlController = TextEditingController();
   bool _isLoading = false;
   bool _downloadingAll = false;
@@ -240,6 +242,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final isTablet = width >= _tabletBreakpoint;
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: false,
@@ -262,61 +267,71 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         },
         behavior: HitTestBehavior.opaque,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text("URL",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              const Text("Supports videos, images and audio",
-                  style: TextStyle(color: Colors.grey, fontSize: 12)),
-              const SizedBox(height: 10),
-              TextField(
-                controller: _urlController,
-                decoration: InputDecoration(
-                  hintText: "Paste link here...",
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade300)),
-                ),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _fetchMedia,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF3F61D7),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+          padding: EdgeInsets.symmetric(
+            horizontal: isTablet ? 32 : 20,
+            vertical: 20,
+          ),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: _contentMaxWidth),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text("URL",
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const Text("Supports videos, images and audio",
+                      style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: _urlController,
+                    decoration: InputDecoration(
+                      hintText: "Paste link here...",
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300)),
+                    ),
                   ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                              color: Colors.white, strokeWidth: 2))
-                      : const Text("Preview",
-                          style: TextStyle(color: Colors.white, fontSize: 16)),
-                ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _fetchMedia,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF3F61D7),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                  color: Colors.white, strokeWidth: 2))
+                          : const Text("Preview",
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 16)),
+                    ),
+                  ),
+                  if (_results.isNotEmpty) ...[
+                    const SizedBox(height: 24),
+                    const Divider(),
+                    if (_results.length == 1)
+                      _buildSingleView(_results[0], isTablet)
+                    else
+                      _buildListView(),
+                  ]
+                ],
               ),
-              if (_results.isNotEmpty) ...[
-                const SizedBox(height: 24),
-                const Divider(),
-                if (_results.length == 1)
-                  _buildSingleView(_results[0])
-                else
-                  _buildListView(),
-              ]
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildSingleView(String url) {
+  Widget _buildSingleView(String url, bool isTablet) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -333,7 +348,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ),
           ),
           child: SizedBox(
-            height: 250,
+            height: isTablet ? 320 : 250,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(20),
               child: MediaItemTile(

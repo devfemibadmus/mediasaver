@@ -10,9 +10,6 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 
 class MediaHelper {
-  static Future<void>? _storeInitFuture;
-  static bool _hiveInitialized = false;
-
   static Map<String, String> buildRequestHeaders({
     Map<String, String>? extraHeaders,
   }) {
@@ -35,72 +32,35 @@ class MediaHelper {
     return headers;
   }
 
-  static Future<void> prepareForLaunch() async {
-    try {
-      await ensureStoreReady();
-      await cleanDeleted();
-    } catch (e) {
-      debugPrint('Launch preparation error: $e');
-    }
-  }
-
-  static Future<void> ensureStoreReady() {
-    final existingFuture = _storeInitFuture;
-    if (existingFuture != null) {
-      return existingFuture;
-    }
-
-    final initFuture = _initStoreInternal();
-    _storeInitFuture = initFuture;
-    return initFuture;
-  }
-
-  static Future<void> _initStoreInternal() async {
+  static Future<void> initStore() async {
     try {
       Directory dir;
 
       try {
         dir = await getApplicationSupportDirectory();
-      } catch (_) {
+      } catch (e) {
         await Future.delayed(const Duration(milliseconds: 300));
         dir = await getApplicationSupportDirectory();
       }
 
-      if (!_hiveInitialized) {
-        Hive.init(dir.path);
-        _hiveInitialized = true;
-      }
-
       if (!Hive.isBoxOpen('mediaBox')) {
+        Hive.init(dir.path);
         await Hive.openBox('mediaBox');
-      }
-      if (!Hive.isBoxOpen('urlBox')) {
         await Hive.openBox('urlBox');
-      }
-      if (!Hive.isBoxOpen('pathToUrlBox')) {
         await Hive.openBox('pathToUrlBox');
       }
-    } catch (e) {
-      _storeInitFuture = null;
-      rethrow;
-    }
-  }
 
-  static Future<void> _ensureSavePermission() async {
-    try {
       if (Platform.isAndroid) {
-        final status = await Permission.storage.status;
-        if (!status.isGranted) {
+        if (!await Permission.storage.isGranted) {
           await Permission.storage.request();
         }
       } else if (Platform.isIOS) {
-        final status = await Permission.photosAddOnly.status;
-        if (!status.isGranted && !status.isLimited) {
+        if (!await Permission.photosAddOnly.isGranted) {
           await Permission.photosAddOnly.request();
         }
       }
     } catch (e) {
-      debugPrint('Permission request error: $e');
+      debugPrint('Init store error: $e');
     }
   }
 
@@ -191,9 +151,6 @@ class MediaHelper {
     required String url,
     required String fileName,
   }) async {
-    await ensureStoreReady();
-    await _ensureSavePermission();
-
     final cleanedUrl = cleanUrl(url);
     final response = await http.get(
       Uri.parse(cleanedUrl),
@@ -233,8 +190,6 @@ class MediaHelper {
     required String path,
     required String fileName,
   }) async {
-    await _ensureSavePermission();
-
     final result = await SaverGallery.saveFile(
       filePath: path,
       fileName: fileName,
@@ -248,8 +203,6 @@ class MediaHelper {
   }
 
   static Future<List<FileSystemEntity>> getSavedPaths(String extension) async {
-    await ensureStoreReady();
-
     final box = Hive.box('mediaBox');
     final paths = box.values.where((p) => p.toString().endsWith(extension));
     return paths
@@ -259,8 +212,6 @@ class MediaHelper {
   }
 
   static Future<void> cleanDeleted() async {
-    await ensureStoreReady();
-
     final box = Hive.box('mediaBox');
     final urlBox = Hive.box('urlBox');
     final pathToUrlBox = Hive.box('pathToUrlBox');
@@ -270,9 +221,7 @@ class MediaHelper {
 
     for (var i = 0; i < box.length; i++) {
       final p = box.getAt(i);
-      if (p is! String || p.isEmpty || !File(p).existsSync()) {
-        toRemove.add(i);
-      }
+      if (!File(p).existsSync()) toRemove.add(i);
     }
 
     for (final i in toRemove.reversed) {
@@ -301,8 +250,6 @@ class MediaHelper {
   }
 
   static Future<String?> getMediaByUrl(String url) async {
-    await ensureStoreReady();
-
     final urlBox = Hive.box('urlBox');
     final urlHash = md5.convert(utf8.encode(url)).toString();
     return urlBox.get(urlHash);
@@ -310,8 +257,6 @@ class MediaHelper {
 
   static Future<bool> deleteMedia(String filePath, String url) async {
     try {
-      await ensureStoreReady();
-
       final file = File(filePath);
       if (file.existsSync()) {
         await file.delete();

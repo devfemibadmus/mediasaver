@@ -9,6 +9,8 @@ class FeedbackScreen extends StatefulWidget {
 }
 
 class _FeedbackScreenState extends State<FeedbackScreen> {
+  static const double _tabletBreakpoint = 768;
+  static const double _contentMaxWidth = 640;
   final TextEditingController _reviewController = TextEditingController();
   int _rating = 4;
 
@@ -44,6 +46,9 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final isTablet = mediaQuery.size.width >= _tabletBreakpoint;
+
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
@@ -52,60 +57,75 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       behavior: HitTestBehavior.opaque,
       child: Scaffold(
         appBar: AppBar(centerTitle: false, title: const Text("Feedback")),
-        body: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text("Rate your experience",
-                  style: TextStyle(fontSize: 16)),
-              const SizedBox(height: 12),
-              Row(
-                children: List.generate(
-                  5,
-                  (index) => GestureDetector(
-                    onTap: () => setState(() => _rating = index + 1),
-                    child: Icon(
-                      index < _rating ? Icons.star : Icons.star_border,
-                      color: index < _rating ? Colors.yellow[700] : Colors.grey,
-                      size: 36,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
+              isTablet ? 32 : 20,
+              20,
+              isTablet ? 32 : 20,
+              mediaQuery.viewInsets.bottom + 20,
+            ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: _contentMaxWidth),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text("Rate your experience",
+                        style: TextStyle(fontSize: 16)),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 4,
+                      children: List.generate(
+                        5,
+                        (index) => GestureDetector(
+                          onTap: () => setState(() => _rating = index + 1),
+                          child: Icon(
+                            index < _rating ? Icons.star : Icons.star_border,
+                            color: index < _rating
+                                ? Colors.yellow[700]
+                                : Colors.grey,
+                            size: isTablet ? 42 : 36,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              const Text("Write a review", style: TextStyle(fontSize: 16)),
-              const SizedBox(height: 10),
-              TextField(
-                controller: _reviewController,
-                maxLines: 6,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade300),
-                  ),
-                ),
-              ),
-              const Spacer(),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _submitFeedback,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF3F61D7),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                    const SizedBox(height: 24),
+                    const Text("Write a review",
+                        style: TextStyle(fontSize: 16)),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: _reviewController,
+                      maxLines: isTablet ? 8 : 6,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                      ),
                     ),
-                  ),
-                  child: const Text(
-                    "Submit",
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                  ),
+                    SizedBox(height: isTablet ? 32 : 24),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: _submitFeedback,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF3F61D7),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          "Submit",
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 20),
-            ],
+            ),
           ),
         ),
       ),

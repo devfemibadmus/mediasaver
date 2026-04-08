@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:mediasaver/utils/media_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,6 +5,9 @@ import '../navigation.dart';
 
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
+
+  static const double _tabletBreakpoint = 768;
+  static const double _contentMaxWidth = 560;
 
   void _showComplianceDialog(BuildContext context) {
     showDialog(
@@ -23,14 +24,11 @@ class OnboardingScreen extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () async {
-              try {
-                final prefs = await SharedPreferences.getInstance();
-                await prefs.setBool('onboarding_completed', true);
-              } catch (e) {
-                debugPrint('Failed to persist onboarding state: $e');
-              }
+              await MediaHelper.initStore();
+              await MediaHelper.cleanDeleted();
 
-              unawaited(MediaHelper.prepareForLaunch());
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setBool('onboarding_completed', true);
 
               if (!context.mounted) return;
               Navigator.pop(context);
@@ -51,68 +49,97 @@ class OnboardingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final size = mediaQuery.size;
+    final isTablet = size.width >= _tabletBreakpoint;
+    final horizontalPadding = isTablet ? 32.0 : 20.0;
+    final titleFontSize = isTablet ? 44.0 : 35.0;
+    final subtitleFontSize = isTablet ? 18.0 : 16.0;
+    final logoSize = isTablet ? 240.0 : (size.width * 0.6).clamp(180.0, 260.0);
+
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-        child: Column(
-          children: [
-            const Spacer(),
-            RichText(
-              text: const TextSpan(
-                style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black),
-                children: [
-                  TextSpan(text: "Media "),
-                  TextSpan(
-                      text: "Saver",
-                      style: TextStyle(color: Color(0xFF3F61D7))),
-                ],
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: _contentMaxWidth),
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(
+                horizontal: horizontalPadding,
+                vertical: isTablet ? 32 : 20,
               ),
-            ),
-            const SizedBox(height: 50),
-            Image.asset(
-              'assets/icon-512.png',
-              width: MediaQuery.of(context).size.width,
-              fit: BoxFit.cover,
-            ),
-            const SizedBox(height: 35),
-            const Text(
-              "Organize your favorite links and media!",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  fontSize: 35, fontWeight: FontWeight.w800, height: 1.2),
-            ),
-            const Text(
-              "Manage and view your personal media collections easily",
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey, fontSize: 16),
-            ),
-            const SizedBox(height: 60),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: SizedBox(
-                width: double.infinity,
-                height: 55,
-                child: ElevatedButton(
-                  onPressed: () => _showComplianceDialog(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF3F61D7),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15)),
-                  ),
-                  child: const Text("Continue",
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: size.height -
+                      mediaQuery.padding.top -
+                      mediaQuery.padding.bottom -
+                      (isTablet ? 64 : 40),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    RichText(
+                      text: const TextSpan(
+                        style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black),
+                        children: [
+                          TextSpan(text: "Media "),
+                          TextSpan(
+                              text: "Saver",
+                              style: TextStyle(color: Color(0xFF3F61D7))),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: isTablet ? 40 : 28),
+                    Image.asset(
+                      'assets/icon-512.png',
+                      width: logoSize,
+                      fit: BoxFit.contain,
+                    ),
+                    SizedBox(height: isTablet ? 32 : 24),
+                    Text(
+                      "Organize your favorite links and media!",
+                      textAlign: TextAlign.center,
                       style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600)),
+                        fontSize: titleFontSize,
+                        fontWeight: FontWeight.w800,
+                        height: 1.15,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      "Manage and view your personal media collections easily",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: subtitleFontSize,
+                      ),
+                    ),
+                    SizedBox(height: isTablet ? 48 : 36),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 55,
+                      child: ElevatedButton(
+                        onPressed: () => _showComplianceDialog(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF3F61D7),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15)),
+                        ),
+                        child: const Text("Continue",
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600)),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            const Spacer(),
-          ],
+          ),
         ),
       ),
     );

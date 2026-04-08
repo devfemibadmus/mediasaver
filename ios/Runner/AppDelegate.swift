@@ -7,9 +7,13 @@ import UIKit
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
+    guard let messenger = registrar(forPlugin: "ClipboardChannelPlugin")?.messenger() else {
+      GeneratedPluginRegistrant.register(with: self)
+      return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    }
+
     let clipboardChannel = FlutterMethodChannel(name: "com.blackstackhub.mediasaver/clipboard",
-                                                binaryMessenger: controller.binaryMessenger)
+                                                binaryMessenger: messenger)
     
     clipboardChannel.setMethodCallHandler({
       (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
