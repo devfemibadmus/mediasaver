@@ -56,6 +56,6 @@ import UIKit
       .value
     shareChannel?.invokeMethod("sharedTextReceived", arguments: sharedText)
 
-    return super.application(app, open: url, options: options)
+    return true
   }
 }

@@ -99,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _fillUrl(String text, {bool shouldFetch = true}) async {
-    final url = text.trim();
+    final url = _extractFirstUrl(text) ?? text.trim();
     _lastClipboard = url;
     setState(() => _urlController.text = url);
 
@@ -109,6 +109,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (mounted && !_isLoading) {
       _fetchMedia();
     }
+  }
+
+  String? _extractFirstUrl(String text) {
+    final match = RegExp(r'https?://\S+').firstMatch(text);
+    return match?.group(0)?.replaceAll(RegExp(r'[),.\]]+$'), '');
   }
 
   Future<void> _fetchMedia() async {
@@ -323,11 +328,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     controller: _urlController,
                     decoration: InputDecoration(
                       hintText: "Paste link here...",
-                      suffixIcon: IconButton(
-                        onPressed: _pasteFromClipboard,
-                        icon: const Icon(Icons.content_paste),
-                        tooltip: 'Paste',
-                      ),
+                      suffixIcon: Platform.isIOS
+                          ? null
+                          : IconButton(
+                              onPressed: _pasteFromClipboard,
+                              icon: const Icon(Icons.content_paste),
+                              tooltip: 'Paste',
+                            ),
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(color: Colors.grey.shade300)),

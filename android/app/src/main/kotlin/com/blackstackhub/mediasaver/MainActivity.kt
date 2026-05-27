@@ -8,12 +8,14 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity : FlutterActivity() {
     private val shareChannel = "com.blackstackhub.mediasaver/share"
     private var sharedText: String? = null
+    private var methodChannel: MethodChannel? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         sharedText = extractSharedText(intent)
 
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, shareChannel).setMethodCallHandler { call, result ->
+        methodChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, shareChannel)
+        methodChannel?.setMethodCallHandler { call, result ->
             when (call.method) {
                 "getInitialSharedText" -> {
                     result.success(sharedText)
@@ -28,6 +30,7 @@ class MainActivity : FlutterActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         sharedText = extractSharedText(intent)
+        methodChannel?.invokeMethod("sharedTextReceived", sharedText)
     }
 
     private fun extractSharedText(intent: Intent?): String? {
