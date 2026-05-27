@@ -28,6 +28,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   String _lastClipboard = '';
   static const platform =
       MethodChannel('com.blackstackhub.mediasaver/clipboard');
+  static const _shareChannel =
+      MethodChannel('com.blackstackhub.mediasaver/share');
 
   String get _baseUrl {
     return 'https://mediasaver.link';
@@ -37,12 +39,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _shareChannel.setMethodCallHandler(_handleShareMethodCall);
 
-    // If shared text exists, use it
     if (widget.sharedText != null && widget.sharedText!.isNotEmpty) {
-      _urlController.text = widget.sharedText!;
-      _lastClipboard = widget.sharedText!;
-    } else {
+      _fillUrl(widget.sharedText!, shouldFetch: true);
+    } else if (!Platform.isIOS) {
       _autoFillFromClipboard();
     }
   }
@@ -50,22 +51,35 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _shareChannel.setMethodCallHandler(null);
     _urlController.dispose();
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
+    if (state == AppLifecycleState.resumed && !Platform.isIOS) {
       _autoFillFromClipboard();
     }
   }
 
-  Future<void> _autoFillFromClipboard() async {
+  Future<void> _pasteFromClipboard() async {
+    await _autoFillFromClipboard(userInitiated: true);
+  }
+
+  Future<void> _handleShareMethodCall(MethodCall call) async {
+    if (call.method != 'sharedTextReceived') return;
+    final text = call.arguments as String?;
+    if (text == null || text.trim().isEmpty) return;
+    await _fillUrl(text);
+  }
+
+  Future<void> _autoFillFromClipboard({bool userInitiated = false}) async {
     try {
       String? clipboardText;
 
       if (Platform.isIOS) {
+        if (!userInitiated) return;
         clipboardText = await platform.invokeMethod('getClipboard');
       } else {
         final data = await Clipboard.getData(Clipboard.kTextPlain);
@@ -77,18 +91,23 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           clipboardText != _lastClipboard &&
           (clipboardText.startsWith('http://') ||
               clipboardText.startsWith('https://'))) {
-        _lastClipboard = clipboardText;
-        setState(() {
-          _urlController.text = clipboardText!;
-        });
-
-        await Future.delayed(const Duration(milliseconds: 300));
-        if (mounted && !_isLoading) {
-          _fetchMedia();
-        }
+        await _fillUrl(clipboardText);
       }
     } catch (e) {
       debugPrint('Clipboard error: $e');
+    }
+  }
+
+  Future<void> _fillUrl(String text, {bool shouldFetch = true}) async {
+    final url = text.trim();
+    _lastClipboard = url;
+    setState(() => _urlController.text = url);
+
+    if (!shouldFetch) return;
+
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (mounted && !_isLoading) {
+      _fetchMedia();
     }
   }
 
@@ -304,6 +323,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     controller: _urlController,
                     decoration: InputDecoration(
                       hintText: "Paste link here...",
+                      suffixIcon: IconButton(
+                        onPressed: _pasteFromClipboard,
+                        icon: const Icon(Icons.content_paste),
+                        tooltip: 'Paste',
+                      ),
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(color: Colors.grey.shade300)),

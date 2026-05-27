@@ -3,6 +3,9 @@ import UIKit
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
+  private var sharedText: String?
+  private var shareChannel: FlutterMethodChannel?
+
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -24,8 +27,35 @@ import UIKit
         result(FlutterMethodNotImplemented)
       }
     })
+
+    shareChannel = FlutterMethodChannel(name: "com.blackstackhub.mediasaver/share",
+                                        binaryMessenger: messenger)
+
+    shareChannel?.setMethodCallHandler({
+      [weak self] (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
+      if call.method == "getInitialSharedText" {
+        result(self?.sharedText)
+        self?.sharedText = nil
+      } else {
+        result(FlutterMethodNotImplemented)
+      }
+    })
     
     GeneratedPluginRegistrant.register(with: self)
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  override func application(
+    _ app: UIApplication,
+    open url: URL,
+    options: [UIApplication.OpenURLOptionsKey : Any] = [:]
+  ) -> Bool {
+    sharedText = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+      .queryItems?
+      .first(where: { $0.name == "text" })?
+      .value
+    shareChannel?.invokeMethod("sharedTextReceived", arguments: sharedText)
+
+    return super.application(app, open: url, options: options)
   }
 }

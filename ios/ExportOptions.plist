@@ -18,6 +18,8 @@
     <dict>
         <key>com.blackstackhub.mediasaver</key>
         <string>MediaSaver AppStore Profile</string>
+        <key>com.blackstackhub.mediasaver.ShareExtension</key>
+        <string>MediaSaver ShareExtension AppStore Profile</string>
     </dict>
     <key>signingCertificate</key>
     <string>Apple Distribution</string>

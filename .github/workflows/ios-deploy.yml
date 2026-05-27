@@ -53,16 +53,28 @@ jobs:
                   BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
                   P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
                   BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+                  SHARE_EXTENSION_PROVISION_PROFILE_BASE64: ${{ secrets.SHARE_EXTENSION_PROVISION_PROFILE_BASE64 }}
                   KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
               run: |
+                  if [ -z "$BUILD_PROVISION_PROFILE_BASE64" ]; then
+                    echo "BUILD_PROVISION_PROFILE_BASE64 is not set" >&2
+                    exit 1
+                  fi
+                  if [ -z "$SHARE_EXTENSION_PROVISION_PROFILE_BASE64" ]; then
+                    echo "SHARE_EXTENSION_PROVISION_PROFILE_BASE64 is not set" >&2
+                    exit 1
+                  fi
+
                   # Create variables
                   CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
                   PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
+                  SHARE_EXTENSION_PP_PATH=$RUNNER_TEMP/share_extension_pp.mobileprovision
                   KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
 
                   # Import certificate and provisioning profile from secrets
                   echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
                   echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_PATH
+                  echo -n "$SHARE_EXTENSION_PROVISION_PROFILE_BASE64" | base64 --decode -o $SHARE_EXTENSION_PP_PATH
 
                   # Create temporary keychain
                   security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
@@ -78,8 +90,20 @@ jobs:
                   # Apply provisioning profile
                   mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
                   PP_UUID=$(grep -a -A1 'UUID' $PP_PATH | grep string | sed -e 's/<string>//' -e 's/<\/string>//' | tr -d '\t ')
+                  if [ -z "$PP_UUID" ]; then
+                    echo "Could not read UUID from main app provisioning profile" >&2
+                    exit 1
+                  fi
                   cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$PP_UUID.mobileprovision
                   echo "PP_UUID=$PP_UUID" >> $GITHUB_ENV
+
+                  SHARE_EXTENSION_PP_UUID=$(grep -a -A1 'UUID' $SHARE_EXTENSION_PP_PATH | grep string | sed -e 's/<string>//' -e 's/<\/string>//' | tr -d '\t ')
+                  if [ -z "$SHARE_EXTENSION_PP_UUID" ]; then
+                    echo "Could not read UUID from share extension provisioning profile" >&2
+                    exit 1
+                  fi
+                  cp $SHARE_EXTENSION_PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$SHARE_EXTENSION_PP_UUID.mobileprovision
+                  echo "SHARE_EXTENSION_PP_UUID=$SHARE_EXTENSION_PP_UUID" >> $GITHUB_ENV
 
                   # Extract signing identity
                   CERTIFICATE_NAME=$(security find-identity -v -p codesigning $KEYCHAIN_PATH | head -1 | grep '"' | sed -e 's/[^"]*"//' -e 's/".*//') 
