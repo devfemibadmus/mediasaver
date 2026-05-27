@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mediasaver/utils/media_helper.dart';
+import 'package:mediasaver/utils/startup_helper.dart';
 import 'screens/onboarding.dart';
 import 'navigation.dart';
 
@@ -41,14 +41,19 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkOnboarding() async {
-    await Future.delayed(const Duration(milliseconds: 300));
+    await Future.delayed(startupDelay);
 
-    final prefs = await SharedPreferences.getInstance();
-    final onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
+    var onboardingCompleted = false;
 
-    if (onboardingCompleted) {
-      await MediaHelper.initStore();
-      await MediaHelper.cleanDeleted();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
+
+      if (onboardingCompleted) {
+        await initializeMediaStoreForStartup();
+      }
+    } catch (e) {
+      debugPrint('Startup route check failed: $e');
     }
 
     if (mounted) {

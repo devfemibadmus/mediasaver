@@ -68,6 +68,20 @@ class MediaHelper {
     return url.replaceAll('&amp;', '&');
   }
 
+  static bool isUnsupportedSocialUrl(String url) {
+    final uri = Uri.tryParse(cleanUrl(url).trim());
+    final host = uri?.host.toLowerCase() ?? '';
+
+    return host == 'instagram.com' ||
+        host.endsWith('.instagram.com') ||
+        host == 'facebook.com' ||
+        host.endsWith('.facebook.com') ||
+        host == 'fb.com' ||
+        host.endsWith('.fb.com') ||
+        host == 'fb.watch' ||
+        host.endsWith('.fb.watch');
+  }
+
   static bool isVideoUrl(String url) {
     final cleanedUrl = cleanUrl(url);
     return cleanedUrl.toLowerCase().contains('.mp4') ||

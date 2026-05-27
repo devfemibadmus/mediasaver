@@ -1,54 +1,37 @@
 # Media Saver Privacy Policy
 
-Welcome to Media Saver! Our privacy policy outlines how we collect, use, and safeguard your personal information when you use our application.
+Media Saver helps users preview, save, and organize videos, photos, and audio from direct public media links, including publicly available NASA media links.
 
 ## Information We Collect
 
-### Personal Information
-We do not collect any personally identifiable information from our users. We respect your privacy and do not require you to provide any personal details to use our app.
+Media Saver does not require users to create an account and does not collect personally identifiable information.
 
-### Device Information
-We do not collect any device information. Our app operates entirely offline and does not gather any data about your device.
+## Media Links
 
-### Media Files
-Media Saver allows you to download media from social platforms such as Instagram, TikTok, etc., and manage media files from WhatsApp and WhatsApp Business. The app will access and store media files on your device to perform these actions. We do not access or store these files on our servers.
+When you paste a media URL into the app, the URL may be sent to our service only so the app can preview and process the media requested by the user. Media Saver is intended for public media links, such as NASA video links, and for media the user owns or has permission to save.
 
-## Media Permission
+## Media Files
 
-To ensure our app operates smoothly, we require access to Android/media folder. This permission is necessary for:
+Media files saved through the app are stored on your device. Media Saver may request photo or storage permission so it can save downloaded media to your device gallery. We do not access your private media library except as needed for the save action you request.
 
-- Saving WhatsApp statuses and WhatsApp Business statuses on your device.
-- Sharing WhatsApp statuses and WhatsApp Business statuses on your device.
-- Fetching WhatsApp statuses and WhatsApp Business statuses on your device.
+## How We Use Information
 
-## Google Ads
+We use the media link you provide only to fetch, preview, and save the requested media. We do not sell personal information.
 
-Our app includes Google Ads, which may collect and use certain information from your device to provide personalized advertising. Google Ads may collect:
+## Information Sharing
 
-- Device information (e.g., device model, operating system version)
-- Advertising ID
-- Location information (if location services are enabled)
+We do not share personal information with third parties. The app may open or process links from external websites, and those websites are governed by their own privacy policies.
 
-For more details on how Google Ads collects and uses data, please refer to [Google's Privacy Policy](https://policies.google.com/privacy).
+## Your Choices
 
-## How We Use Your Information
-
-We do not collect or use any information from our users. Our app functions by allowing you to save and manage status updates from WhatsApp and WhatsApp Business seamlessly and download public media from social platforms such as Instagram, TikTok, etc., without collecting any data.
-
-## Information Sharing and Disclosure
-
-We do not share your personal information with third-party services or companies because we do not collect any information. Our app may contain links to external websites or services that have their own privacy policies. We are not responsible for the privacy practices of these third-party services.
-
-## Your Choices and Rights
-
-Since we do not collect any information, there are no choices or rights related to information collection, access, update, or deletion.
+You can choose not to paste a media link into the app. You can also manage or revoke photo and storage permissions from your device settings.
 
 ## Changes to This Privacy Policy
 
-We may update our privacy policy from time to time to reflect changes in our practices or for other operational, legal, or regulatory reasons. We encourage you to review this policy periodically for any updates.
+We may update this privacy policy from time to time. Any updates will be posted on this page.
 
 ## Contact Us
 
-If you have any questions or concerns about our privacy policy or our app's practices, please contact us at [devfemibadmus@gmail.com](mailto:devfemibadmus@gmail.com).
+If you have any questions about this privacy policy, please contact us at [devfemibadmus@gmail.com](mailto:devfemibadmus@gmail.com).
 
-Last Updated: 5/7/2024
+Last Updated: May 27, 2026

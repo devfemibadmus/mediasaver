@@ -40,6 +40,7 @@ class PreviewScreen extends StatelessWidget {
       fileName: fileName,
     );
 
+    if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(success ? 'Saved to gallery' : 'Failed to save'),

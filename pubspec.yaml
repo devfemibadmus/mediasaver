@@ -1,9 +1,9 @@
 # @format
 
 name: mediasaver
-description: "Media Saver. Save Videos, Photos, Reels from Facebook, Instagram, TikTok, Twitter and Snapchat no watermark"
+description: "Media Saver. Save and organize videos, photos, and audio from direct media links."
 publish_to: "none"
-version: 1.5.0+42
+version: 1.6.0+43
 
 environment:
     sdk: ^3.6.0

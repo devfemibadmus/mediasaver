@@ -38,6 +38,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
         );
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Could not send email.")),
       );
