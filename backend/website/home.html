@@ -1,0 +1,665 @@
+<!-- @format -->
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Media Saver - Free Video & Photo Downloader for Social Media</title>
+
+		<!-- Primary Meta Tags -->
+		<meta name="title" content="Media Saver - Free Video & Photo Downloader for Social Media" />
+		<meta
+			name="description"
+			content="Download videos, photos, reels, and NASA SVS media from Instagram, TikTok, Facebook, Twitter, Snapchat, and NASA. No registration. Fast & secure online downloader."
+		/>
+		<meta
+			name="keywords"
+			content="video downloader, Instagram downloader, TikTok downloader, Facebook downloader, NASA downloader, social media downloader, save videos, download reels, free media downloader, snapchat saver"
+		/>
+		<meta name="author" content="devfemibadmus" />
+		<meta name="robots" content="index, follow, max-image-preview:large" />
+		<meta name="googlebot" content="index, follow" />
+		<meta name="rating" content="safe for kids" />
+
+		<!-- Open Graph / Facebook -->
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content="https://mediasaver.link/" />
+		<meta property="og:title" content="Media Saver - Free Video & Photo Downloader for Social Media" />
+		<meta
+			property="og:description"
+			content="Download videos, photos, reels, and NASA SVS media from Instagram, TikTok, Facebook, Twitter, Snapchat, and NASA. No registration required."
+		/>
+		<meta property="og:image" content="https://mediasaver.link/static/og-image.jpg" />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta property="og:locale" content="en_US" />
+		<meta property="og:site_name" content="Media Saver" />
+
+		<!-- Twitter -->
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:url" content="https://mediasaver.link/" />
+		<meta name="twitter:title" content="Media Saver - Free Video & Photo Downloader for Social Media" />
+		<meta
+			name="twitter:description"
+			content="Download videos, photos, reels, and NASA SVS media from Instagram, TikTok, Facebook, Twitter, Snapchat, and NASA."
+		/>
+		<meta name="twitter:image" content="https://mediasaver.link/static/twitter-card.jpg" />
+		<meta name="twitter:creator" content="@devfemibadmus" />
+
+		<!-- Additional SEO -->
+		<link rel="canonical" href="https://mediasaver.link/" />
+		<meta name="theme-color" content="#000000" />
+		<meta name="mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-title" content="Media Saver" />
+		<meta name="application-name" content="Media Saver" />
+		<meta name="msapplication-TileColor" content="#000000" />
+		<meta name="referrer" content="origin-when-cross-origin" />
+
+		<!-- Structured Data -->
+		<script type="application/ld+json">
+			{
+				"@context": "https://schema.org",
+				"@type": "WebApplication",
+				"name": "Media Saver",
+				"description": "Free online tool to download videos and photos from social media platforms",
+				"url": "https://mediasaver.link/",
+				"applicationCategory": "UtilitiesApplication",
+				"operatingSystem": "Any",
+				"author": {
+					"@type": "Person",
+					"name": "devfemibadmus",
+					"url": "https://github.com/devfemibadmus"
+				},
+				"offers": {
+					"@type": "Offer",
+					"price": "0",
+					"priceCurrency": "USD"
+				},
+				"aggregateRating": {
+					"@type": "AggregateRating",
+					"ratingValue": "4.8",
+					"reviewCount": "1250"
+				}
+			}
+		</script>
+
+		<link rel="icon" type="image/x-icon" href="/static/favicon.ico" />
+		<link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png" />
+		<link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png" />
+		<link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png" />
+		<link rel="manifest" href="/static/site.webmanifest" />
+		<meta name="msapplication-TileColor" content="#000000" />
+		<meta name="theme-color" content="#000000" />
+
+		<script src="https://cdn.tailwindcss.com"></script>
+		<script src="https://unpkg.com/lucide@latest"></script>
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+		<style>
+			body {
+				font-family: "Inter", sans-serif;
+				background-color: #ffffff;
+				color: #1a1a1a;
+				overflow-x: hidden;
+				scroll-behavior: smooth;
+			}
+			.glass-nav {
+				background: rgba(255, 255, 255, 0.95);
+				backdrop-filter: blur(12px);
+				border-bottom: 1px solid #f0f0f0;
+			}
+			.loader-spin {
+				border: 2px solid #f3f3f3;
+				border-top: 2px solid #000;
+				border-radius: 50%;
+				width: 24px;
+				height: 24px;
+				animation: spin 0.8s linear infinite;
+			}
+			@keyframes spin {
+				0% {
+					transform: rotate(0deg);
+				}
+				100% {
+					transform: rotate(360deg);
+				}
+			}
+			.fade-in {
+				animation: fadeIn 0.4s ease-out forwards;
+			}
+			@keyframes fadeIn {
+				from {
+					opacity: 0;
+					transform: translateY(10px);
+				}
+				to {
+					opacity: 1;
+					transform: translateY(0);
+				}
+			}
+
+			.modal {
+				transition: opacity 0.2s ease;
+			}
+			body.modal-active {
+				overflow: hidden;
+			}
+
+			.store-button {
+				transition: transform 0.2s ease, filter 0.2s ease;
+			}
+			.store-button:hover {
+				transform: translateY(-2px);
+				filter: brightness(1.05);
+			}
+
+			input:focus {
+				outline: none;
+			}
+
+			.asset-card-media {
+				position: relative;
+				background-color: #f9fafb;
+			}
+
+			.media-loading-overlay {
+				position: absolute;
+				inset: 0;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				background-color: #f9fafb;
+				z-index: 10;
+			}
+		</style>
+	</head>
+	<body class="min-h-screen selection:bg-slate-900 selection:text-white pb-20">
+		<!-- Navigation -->
+		<nav class="sticky top-0 z-50 glass-nav">
+			<div class="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
+				<div class="flex items-center gap-3 cursor-pointer" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+					<img
+						src="static/icon-512.png"
+						onerror="this.src='https://cdn-icons-png.flaticon.com/512/3046/3046121.png'"
+						class="w-12 h-12"
+						alt="Logo"
+					/>
+					<span class="text-2xl font-black tracking-tighter text-black uppercase">Media<span class="text-slate-400">Saver</span></span>
+				</div>
+				<div class="hidden md:flex items-center gap-10 text-xs font-black uppercase tracking-[0.2em] text-slate-400">
+					<a href="#mobileApp" class="hover:text-black transition-colors">Mobile App</a>
+					<button onclick="togglePrivacyModal()" class="hover:text-black transition-colors">Privacy</button>
+				</div>
+				<div class="md:hidden">
+					<button onclick="togglePrivacyModal()" class="p-2 text-black"><i data-lucide="menu" class="w-6 h-6"></i></button>
+				</div>
+			</div>
+		</nav>
+
+		<div class="max-w-6xl mx-auto px-6 py-12 md:py-20">
+			<!-- Hero Section -->
+			<header class="flex flex-col items-center mb-16 text-center">
+				<h1 class="text-5xl md:text-8xl font-black text-black mb-8 tracking-tighter leading-[0.9]">
+					ONE LINK.<br /><span class="text-slate-300 uppercase">EVERYTHING.</span>
+				</h1>
+				<p class="text-slate-500 text-xl max-w-xl font-medium leading-relaxed">
+					Save high-quality content instantly. Paste your link and we'll handle the rest.
+				</p>
+			</header>
+
+			<!-- Search Section -->
+			<section class="max-w-3xl mx-auto mb-20">
+				<div class="relative">
+					<div
+						class="relative flex flex-col sm:flex-row bg-white border-2 border-slate-100 rounded-[2.5rem] p-3 shadow-2xl shadow-slate-100/60 hover:border-slate-300 transition-all"
+					>
+						<div class="flex-1 flex items-center px-6">
+							<i data-lucide="link-2" class="text-slate-300 w-6 h-6 mr-4"></i>
+							<input
+								id="urlInput"
+								type="text"
+								placeholder="Paste your social link here..."
+								class="w-full bg-transparent border-none text-black py-4 text-xl placeholder:text-slate-300 font-semibold"
+							/>
+						</div>
+						<button
+							id="fetchBtn"
+							class="px-10 py-5 bg-black hover:bg-slate-800 disabled:bg-slate-200 text-white font-black rounded-[1.8rem] transition-all flex items-center justify-center gap-3 active:scale-95 text-sm tracking-widest uppercase"
+						>
+							<span id="btnText">DOWNLOAD</span>
+							<div id="btnLoader" class="hidden w-5 h-5 border-2 border-white/30 border-t-white loader-spin rounded-full"></div>
+						</button>
+					</div>
+				</div>
+
+				<!-- Error Message -->
+				<div id="errorBox" class="hidden mt-8 p-6 bg-red-50 border border-red-100 rounded-3xl flex items-center gap-4 text-red-600 fade-in">
+					<i data-lucide="alert-circle" class="w-6 h-6 flex-shrink-0"></i>
+					<p id="errorText" class="font-bold text-sm uppercase tracking-tight"></p>
+				</div>
+			</section>
+
+			<!-- Supported Platforms -->
+			<section class="mb-32">
+				<p class="text-center text-slate-300 text-[10px] font-black uppercase tracking-[0.5em] mb-12">Universal Support</p>
+				<div class="flex flex-wrap justify-center items-center gap-10 md:gap-20">
+					<div class="flex flex-col items-center gap-4 group cursor-default">
+						<img
+							src="static/ig.png"
+							onerror="this.src='https://cdn-icons-png.flaticon.com/512/174/174855.png'"
+							class="w-16 h-16 object-contain grayscale group-hover:grayscale-0 transition-all group-hover:scale-110"
+							alt="IG"
+						/>
+						<span class="text-[10px] font-black text-slate-400 group-hover:text-black uppercase tracking-widest">Instagram</span>
+					</div>
+					<div class="flex flex-col items-center gap-4 group cursor-default">
+						<img
+							src="static/fb.png"
+							onerror="this.src='https://cdn-icons-png.flaticon.com/512/733/733547.png'"
+							class="w-16 h-16 object-contain grayscale group-hover:grayscale-0 transition-all group-hover:scale-110"
+							alt="FB"
+						/>
+						<span class="text-[10px] font-black text-slate-400 group-hover:text-black uppercase tracking-widest">Facebook</span>
+					</div>
+					<div class="flex flex-col items-center gap-4 group cursor-default">
+						<img
+							src="static/tk.png"
+							onerror="this.src='https://cdn-icons-png.flaticon.com/512/3046/3046121.png'"
+							class="w-16 h-16 object-contain grayscale group-hover:grayscale-0 transition-all group-hover:scale-110"
+							alt="TK"
+						/>
+						<span class="text-[10px] font-black text-slate-400 group-hover:text-black uppercase tracking-widest">TikTok</span>
+					</div>
+					<div class="flex flex-col items-center gap-4 group cursor-default">
+						<img
+							src="static/sc.png"
+							onerror="this.src='https://cdn-icons-png.flaticon.com/512/3670/3670325.png'"
+							class="w-16 h-16 object-contain grayscale group-hover:grayscale-0 transition-all group-hover:scale-110"
+							alt="SC"
+						/>
+						<span class="text-[10px] font-black text-slate-400 group-hover:text-black uppercase tracking-widest">Snapchat</span>
+					</div>
+					<div class="flex flex-col items-center gap-4 group cursor-default">
+						<img
+							src="static/x.png"
+							onerror="this.src='https://cdn-icons-png.flaticon.com/512/5968/5968830.png'"
+							class="w-16 h-16 object-contain grayscale group-hover:grayscale-0 transition-all group-hover:scale-110"
+							alt="X"
+						/>
+						<span class="text-[10px] font-black text-slate-400 group-hover:text-black uppercase tracking-widest">Twitter (X)</span>
+					</div>
+					<div class="flex flex-col items-center gap-4 group cursor-default">
+						<div
+							class="w-16 h-16 rounded-full border border-slate-200 bg-white text-black flex items-center justify-center text-[11px] font-black tracking-[0.2em] group-hover:scale-110 transition-all"
+						>
+							NASA
+						</div>
+						<span class="text-[10px] font-black text-slate-400 group-hover:text-black uppercase tracking-widest">NASA SVS</span>
+					</div>
+				</div>
+			</section>
+
+			<!-- Split Media Warning (Hidden by default) -->
+			<div
+				id="splitMediaNotice"
+				class="hidden mb-12 p-8 bg-black text-white rounded-[3rem] shadow-2xl fade-in flex flex-col md:flex-row items-center gap-8 border border-white/10"
+			>
+				<div class="bg-white/10 p-4 rounded-2xl">
+					<i data-lucide="info" class="w-10 h-10 text-white"></i>
+				</div>
+				<div class="text-center md:text-left flex-1">
+					<h3 class="text-xl font-black mb-2 uppercase tracking-tighter">Split Media Detected</h3>
+					<p class="text-slate-400 font-medium">
+						This content contains separate video and audio streams. While you can download them individually below, our
+						<b>Mobile App</b> is the best tool to merge them automatically into one high-quality file.
+					</p>
+				</div>
+				<a
+					href="#mobileApp"
+					class="px-8 py-4 bg-white text-black font-black rounded-2xl text-xs uppercase tracking-widest hover:bg-slate-200 transition-all"
+					>Get the App</a
+				>
+			</div>
+
+			<!-- Results Display -->
+			<div id="resultsHeader" class="hidden mb-12 flex flex-wrap items-center justify-between gap-6 fade-in border-b border-slate-100 pb-8">
+				<div class="flex items-center gap-4">
+					<h2 class="text-4xl font-black text-black tracking-tighter uppercase">Gallery</h2>
+					<span
+						id="platformBadge"
+						class="px-4 py-1.5 bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-[0.2em] rounded-full"
+					></span>
+				</div>
+				<button
+					id="downloadAllBtn"
+					class="px-8 py-4 bg-black text-white hover:bg-slate-800 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-3 transition-all active:scale-95 shadow-xl shadow-slate-200"
+				>
+					<i data-lucide="download-cloud" class="w-5 h-5"></i>
+					Save All
+				</button>
+			</div>
+
+			<div id="resultsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 mb-32"></div>
+
+			<!-- App Download Section -->
+			<section id="mobileApp" class="bg-slate-50 rounded-[4rem] p-12 md:p-24 relative overflow-hidden text-center border border-slate-100">
+				<div class="relative z-10 flex flex-col items-center">
+					<div class="mb-8 bg-white shadow-xl shadow-slate-200/50 p-6 rounded-3xl inline-block">
+						<i data-lucide="smartphone" class="w-12 h-12 text-black"></i>
+					</div>
+					<h2 class="text-4xl md:text-6xl font-black text-black mb-6 tracking-tighter uppercase">Professional Saver</h2>
+					<p class="text-slate-500 text-xl max-w-lg mb-12 font-medium leading-relaxed">
+						The only app you need to download and merge split media seamlessly. Available for Android and iOS.
+					</p>
+
+					<div class="flex flex-wrap justify-center gap-6">
+						<a href="https://play.google.com/store/apps/details?id=com.blackstackhub.mediasaver" target="_blank" class="store-button">
+							<img
+								src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
+								class="h-16"
+								alt="Play Store"
+							/>
+						</a>
+						<a href="https://github.com/devfemibadmus/mediasaver" target="_blank" class="store-button">
+							<div
+								class="flex items-center justify-center bg-[#24292f] hover:bg-[#2d333b] text-white px-8 py-4 rounded-2xl h-16 min-w-[180px] transition-all"
+							>
+								<svg class="w-8 h-8 mr-3" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+									<path
+										fill-rule="evenodd"
+										d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+										clip-rule="evenodd"
+									/>
+								</svg>
+								<div class="text-left">
+									<div class="text-xs font-semibold uppercase tracking-wide">View on</div>
+									<div class="text-lg font-bold">GitHub</div>
+								</div>
+							</div>
+						</a>
+						<a href="https://www.apple.com/app-store/" target="_blank" class="store-button">
+							<img
+								src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg"
+								class="h-16"
+								alt="App Store"
+							/>
+						</a>
+					</div>
+				</div>
+			</section>
+		</div>
+
+		<!-- Footer -->
+		<footer class="max-w-6xl mx-auto px-6 py-16 border-t border-slate-100 mt-20 flex flex-col md:flex-row justify-between items-center gap-10">
+			<div class="flex items-center gap-4">
+				<img
+					src="static/icon-512.png"
+					onerror="this.src='https://cdn-icons-png.flaticon.com/512/3046/3046121.png'"
+					class="w-12 h-12 grayscale-0"
+					alt="Logo"
+				/>
+				<div class="text-black text-sm font-black tracking-widest uppercase">MediaSaver Pro &copy; 2026</div>
+			</div>
+			<div class="flex gap-10 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
+				<button onclick="togglePrivacyModal()" class="hover:text-black transition-colors">Privacy Policy</button>
+				<a href="mailto:devfemibadmus@gmail.com" class="hover:text-black transition-colors">Support</a>
+			</div>
+		</footer>
+
+		<!-- Privacy Modal -->
+		<div id="privacyModal" class="fixed inset-0 z-[100] flex items-center justify-center opacity-0 pointer-events-none modal">
+			<div class="absolute inset-0 bg-white/95 backdrop-blur-md" onclick="togglePrivacyModal()"></div>
+			<div
+				class="relative bg-white border border-slate-200 w-full max-w-2xl max-h-[85vh] overflow-y-auto m-6 p-10 rounded-[3rem] shadow-[0_0_100px_rgba(0,0,0,0.05)]"
+			>
+				<button onclick="togglePrivacyModal()" class="absolute top-8 right-8 p-3 bg-slate-50 hover:bg-slate-100 rounded-full transition-all">
+					<i data-lucide="x" class="w-6 h-6 text-black"></i>
+				</button>
+				<h2 class="text-4xl font-black text-black mb-8 tracking-tighter uppercase">Privacy</h2>
+				<div class="space-y-8 text-slate-500 leading-relaxed text-sm font-medium">
+					<p class="text-slate-900 font-black uppercase tracking-[0.2em] text-[10px]">Updated: 5/7/2024</p>
+					<p class="text-lg text-black font-semibold">
+						Your privacy is our priority. Web Media Saver is designed to be safe and anonymous.
+					</p>
+					<div class="space-y-6">
+						<div>
+							<p class="text-black font-black uppercase text-xs mb-2">01. No Tracking</p>
+							<p>
+								We do not store your search history, media URLs, or downloaded files on any server. Everything is processed locally.
+							</p>
+						</div>
+						<div>
+							<p class="text-black font-black uppercase text-xs mb-2">02. App Permissions</p>
+							<p>The mobile app requires file permissions solely to save content to your gallery. We never access private photos.</p>
+						</div>
+						<div>
+							<p class="text-black font-black uppercase text-xs mb-2">03. Contact</p>
+							<p>For any queries, contact our developer directly at devfemibadmus@gmail.com.</p>
+						</div>
+					</div>
+				</div>
+				<button
+					onclick="togglePrivacyModal()"
+					class="mt-12 w-full py-5 bg-black hover:bg-slate-800 text-white font-black rounded-3xl transition-all shadow-xl shadow-slate-200 uppercase tracking-widest text-xs"
+				>
+					Accept & Close
+				</button>
+			</div>
+		</div>
+
+		<script>
+			const urlInput = document.getElementById("urlInput");
+			const fetchBtn = document.getElementById("fetchBtn");
+			const btnText = document.getElementById("btnText");
+			const btnLoader = document.getElementById("btnLoader");
+			const errorBox = document.getElementById("errorBox");
+			const errorText = document.getElementById("errorText");
+			const resultsGrid = document.getElementById("resultsGrid");
+			const resultsHeader = document.getElementById("resultsHeader");
+			const platformBadge = document.getElementById("platformBadge");
+			const downloadAllBtn = document.getElementById("downloadAllBtn");
+			const privacyModal = document.getElementById("privacyModal");
+			const splitMediaNotice = document.getElementById("splitMediaNotice");
+
+			let currentMediaList = [];
+			let currentPlatform = "";
+
+			function cleanUrl(url) {
+				return url.trim();
+			}
+
+			function isVideoUrl(url) {
+				const cleanedUrl = cleanUrl(url);
+				const low = cleanedUrl.toLowerCase();
+				return (
+					low.includes(".mp4") ||
+					low.includes(".mov") ||
+					url.includes("/play/") ||
+					url.includes("/video/") ||
+					url.includes("video_id=") ||
+					url.includes(".27.IRZXSOY") ||
+					url.includes(".1034.IRZXSOY") ||
+					url.includes("aweme/v1/play") ||
+					url.includes("audio===")
+				);
+			}
+
+			function inferExtension(url) {
+				const cleanedUrl = cleanUrl(url).replace("audio===", "");
+
+				try {
+					const parsed = new URL(cleanedUrl, window.location.origin);
+					const match = parsed.pathname.match(/\.([a-z0-9]+)$/i);
+					if (match) {
+						return match[1].toLowerCase();
+					}
+				} catch (error) {}
+
+				return isVideoUrl(cleanedUrl) ? "mp4" : "jpg";
+			}
+
+			function togglePrivacyModal() {
+				const isHidden = privacyModal.classList.contains("pointer-events-none");
+				if (isHidden) {
+					privacyModal.classList.remove("pointer-events-none", "opacity-0");
+					document.body.classList.add("modal-active");
+				} else {
+					privacyModal.classList.add("pointer-events-none", "opacity-0");
+					document.body.classList.remove("modal-active");
+				}
+			}
+
+			async function downloadFile(url, filename) {
+				try {
+					const response = await fetch(url);
+					const blob = await response.blob();
+					const blobUrl = window.URL.createObjectURL(blob);
+					const link = document.createElement("a");
+					link.href = blobUrl;
+					link.download = filename;
+					document.body.appendChild(link);
+					link.click();
+					document.body.removeChild(link);
+					window.URL.revokeObjectURL(blobUrl);
+				} catch (error) {
+					window.open(url, "_blank");
+				}
+			}
+
+			function renderResults(data, platform) {
+				resultsGrid.innerHTML = "";
+				currentMediaList = data;
+				currentPlatform = platform || "media";
+
+				resultsHeader.classList.remove("hidden");
+				platformBadge.textContent = currentPlatform;
+
+				let hasSplitMedia = false;
+
+				data.forEach((url, index) => {
+					const isVideo = isVideoUrl(url);
+					const isSplit = url.includes("audio===");
+					url = url.replace("audio===", "");
+					if (isSplit) hasSplitMedia = true;
+
+					const card = document.createElement("div");
+					card.className =
+						"group bg-white border border-slate-100 rounded-[3rem] overflow-hidden hover:shadow-2xl hover:shadow-slate-100 transition-all duration-500 fade-in";
+					card.style.animationDelay = `${index * 0.1}s`;
+
+					let mediaHtml = "";
+					if (isSplit) {
+						mediaHtml = `
+                        <div class="w-full h-full flex flex-col items-center justify-center bg-slate-50">
+                            <div class="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+                                <i data-lucide="music" class="w-10 h-10 text-slate-400"></i>
+                            </div>
+                            <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Audio Stream</span>
+                            <!-- Hidden tag to trigger loader removal for audio -->
+                            <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" class="hidden" onload="this.parentElement.parentElement.querySelector('.media-loading-overlay').remove()">
+                        </div>`;
+					} else if (isVideo) {
+						mediaHtml = `<video src="${url}" class="w-full h-full object-cover" muted playsInline onloadeddata="this.parentElement.querySelector('.media-loading-overlay').remove()" onmouseenter="this.play()" onmouseleave="this.pause(); this.currentTime=0;"></video>
+                       <div class="absolute inset-0 flex items-center justify-center pointer-events-none group-hover:opacity-0 transition-opacity">
+                           <div class="w-16 h-16 rounded-full bg-white/70 backdrop-blur-md flex items-center justify-center border border-white">
+                               <i data-lucide="play" class="w-8 h-8 text-black fill-black"></i>
+                           </div>
+                       </div>`;
+					} else {
+						mediaHtml = `<img src="${url}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" onload="this.parentElement.querySelector('.media-loading-overlay').remove()" alt="Preview">`;
+					}
+
+					card.innerHTML = `
+                    <div class="aspect-square asset-card-media flex items-center justify-center overflow-hidden">
+                        <div class="media-loading-overlay">
+                            <div class="loader-spin"></div>
+                        </div>
+                        ${mediaHtml}
+                        <div class="absolute top-6 left-6 flex flex-col gap-2">
+                            <span class="px-4 py-1.5 bg-white/90 backdrop-blur-sm border border-slate-100 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-black">
+                                ${isSplit ? "SPLIT MEDIA" : isVideo ? "VIDEO" : "IMAGE"}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="p-8">
+                        <div class="flex items-center justify-between mb-8">
+                           <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Asset #${index + 1}</span>
+                           <a href="${url}" target="_blank" class="p-2 text-slate-300 hover:text-black transition-colors">
+                              <i data-lucide="maximize-2" class="w-5 h-5"></i>
+                           </a>
+                        </div>
+                        ${
+							isSplit
+								? `
+                            <div class="mb-6 p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-center gap-3">
+                                <i data-lucide="alert-circle" class="w-4 h-4 text-amber-600"></i>
+                                <span class="text-[10px] font-bold text-amber-800 uppercase tracking-tight leading-tight">Merged file only in Mobile App</span>
+                            </div>
+                        `
+								: ""
+						}
+                        <button onclick="downloadFile('${url}', '${currentPlatform}_${index + 1}.${inferExtension(url)}')" 
+                                class="w-full py-5 bg-slate-50 hover:bg-black hover:text-white text-black font-black rounded-3xl transition-all flex items-center justify-center gap-3 active:scale-95 text-xs uppercase tracking-widest">
+                            <i data-lucide="download" class="w-5 h-5"></i>
+                            SAVE ASSET
+                        </button>
+                    </div>
+                `;
+					resultsGrid.appendChild(card);
+				});
+
+				if (hasSplitMedia) {
+					splitMediaNotice.classList.remove("hidden");
+				} else {
+					splitMediaNotice.classList.add("hidden");
+				}
+
+				lucide.createIcons();
+				resultsHeader.scrollIntoView({ behavior: "smooth", block: "start" });
+			}
+
+			async function handleFetch() {
+				const url = urlInput.value.trim();
+				if (!url) return;
+
+				errorBox.classList.add("hidden");
+				fetchBtn.disabled = true;
+				btnText.textContent = "CONNECTING...";
+				btnLoader.classList.remove("hidden");
+				splitMediaNotice.classList.add("hidden");
+
+				try {
+					const response = await fetch(`/api/?url=${encodeURIComponent(url)}`);
+					const result = await response.json();
+
+					if (response.ok && !result.error) {
+						renderResults(result.data, result.platform);
+					} else {
+						throw new Error(result.message || result.error_message || "COULD NOT FETCH CONTENT FROM THIS LINK.");
+					}
+				} catch (err) {
+					errorText.textContent = err.message || "CHECK YOUR LOCAL API SERVICE (PORT 8080).";
+					errorBox.classList.remove("hidden");
+				} finally {
+					fetchBtn.disabled = false;
+					btnText.textContent = "DOWNLOAD";
+					btnLoader.classList.add("hidden");
+				}
+			}
+
+			fetchBtn.addEventListener("click", handleFetch);
+			urlInput.addEventListener("keypress", (e) => {
+				if (e.key === "Enter") handleFetch();
+			});
+			downloadAllBtn.addEventListener("click", () => {
+				currentMediaList.forEach((url, index) => {
+					const ext = inferExtension(url);
+					downloadFile(url, `${currentPlatform}_${index + 1}.${ext}`);
+				});
+			});
+
+			lucide.createIcons();
+		</script>
+	</body>
+</html>
