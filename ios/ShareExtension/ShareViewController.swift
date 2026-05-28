@@ -84,31 +84,9 @@ final class ShareViewController: UIViewController {
       return
     }
 
-    var responder: UIResponder? = self
-
-    if #available(iOS 18.0, *) {
-      while let currentResponder = responder {
-        if let application = currentResponder as? UIApplication {
-          application.open(url, options: [:], completionHandler: nil)
-          break
-        }
-
-        responder = currentResponder.next
-      }
-    } else {
-      let selector = sel_registerName("openURL:")
-
-      while let currentResponder = responder {
-        if currentResponder.responds(to: selector) {
-          _ = currentResponder.perform(selector, with: url)
-          break
-        }
-
-        responder = currentResponder.next
-      }
+    extensionContext?.open(url) { [weak self] _ in
+      self?.finish()
     }
-
-    finish()
   }
 
   private func finish() {
