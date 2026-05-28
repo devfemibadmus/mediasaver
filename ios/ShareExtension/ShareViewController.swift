@@ -58,21 +58,19 @@ final class ShareViewController: UIViewController {
   }
 
   private func saveAndOpenHostApp(_ value: String?) {
-    guard let value = value, !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-      finish()
-      return
-    }
-
-    let appGroupId = Bundle.main.object(forInfoDictionaryKey: "AppGroupId") as? String
     let hostBundleId = hostAppBundleIdentifier()
-    let defaults = UserDefaults(suiteName: appGroupId ?? "group.\(hostBundleId)")
-    let mediaType = value.hasPrefix("http://") || value.hasPrefix("https://") ? "url" : "text"
 
-    let media = SharedMediaFile(path: value, mimeType: "text/plain", type: mediaType)
-    if let data = try? JSONEncoder().encode([media]) {
-      defaults?.set(data, forKey: defaultsMediaKey)
-      defaults?.removeObject(forKey: defaultsMessageKey)
-      defaults?.synchronize()
+    if let value = value?.trimmingCharacters(in: .whitespacesAndNewlines), !value.isEmpty {
+      let appGroupId = Bundle.main.object(forInfoDictionaryKey: "AppGroupId") as? String
+      let defaults = UserDefaults(suiteName: appGroupId ?? "group.\(hostBundleId)")
+      let mediaType = value.hasPrefix("http://") || value.hasPrefix("https://") ? "url" : "text"
+      let media = SharedMediaFile(path: value, mimeType: "text/plain", type: mediaType)
+
+      if let data = try? JSONEncoder().encode([media]) {
+        defaults?.set(data, forKey: defaultsMediaKey)
+        defaults?.removeObject(forKey: defaultsMessageKey)
+        defaults?.synchronize()
+      }
     }
 
     DispatchQueue.main.async {
@@ -86,29 +84,31 @@ final class ShareViewController: UIViewController {
       return
     }
 
-    extensionContext?.open(url) { [weak self] opened in
-      guard let self = self else { return }
-
-      if !opened {
-        self.openWithResponderChain(url)
-      }
-
-      self.finish()
-    }
-  }
-
-  private func openWithResponderChain(_ url: URL) {
-    let selector = sel_registerName("openURL:")
     var responder: UIResponder? = self
 
-    while let currentResponder = responder {
-      if currentResponder.responds(to: selector) {
-        _ = currentResponder.perform(selector, with: url)
-        return
-      }
+    if #available(iOS 18.0, *) {
+      while let currentResponder = responder {
+        if let application = currentResponder as? UIApplication {
+          application.open(url, options: [:], completionHandler: nil)
+          break
+        }
 
-      responder = currentResponder.next
+        responder = currentResponder.next
+      }
+    } else {
+      let selector = sel_registerName("openURL:")
+
+      while let currentResponder = responder {
+        if currentResponder.responds(to: selector) {
+          _ = currentResponder.perform(selector, with: url)
+          break
+        }
+
+        responder = currentResponder.next
+      }
     }
+
+    finish()
   }
 
   private func finish() {
