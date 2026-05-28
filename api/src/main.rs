@@ -4,6 +4,7 @@ use actix_web::{App, HttpRequest, HttpResponse, HttpServer, Responder, get, rout
 use regex::Regex;
 use rust_embed::RustEmbed;
 use std::collections::HashMap;
+use std::env;
 use tera::{Context, Tera};
 
 mod platforms;
@@ -166,6 +167,11 @@ async fn home() -> impl Responder {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let client = reqwest::Client::new();
+    let host = env::var("APP_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+    let port = env::var("APP_PORT")
+        .ok()
+        .and_then(|value| value.parse::<u16>().ok())
+        .unwrap_or(8080);
 
     HttpServer::new(move || {
         App::new()
@@ -181,7 +187,7 @@ async fn main() -> std::io::Result<()> {
             .route("/static/{_:.*}", web::get().to(static_handler))
             .app_data(web::Data::new(client.clone()))
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind((host.as_str(), port))?
     .run()
     .await
 }
