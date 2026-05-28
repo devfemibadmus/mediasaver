@@ -3,7 +3,7 @@
 name: mediasaver
 description: "Media Saver. Save and organize videos, photos, and audio from direct media links."
 publish_to: "none"
-version: 1.6.0+44
+version: 1.6.0+45
 
 environment:
     sdk: ^3.6.0
@@ -23,6 +23,7 @@ dependencies:
     path_provider: ^2.1.5
     shared_preferences: ^2.3.3
     crypto: ^3.0.7
+    receive_sharing_intent: 1.8.1
 
 dev_dependencies:
     flutter_test:

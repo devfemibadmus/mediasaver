@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mediasaver/utils/startup_helper.dart';
 import 'screens/onboarding.dart';
@@ -35,9 +34,6 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  static const _shareChannel =
-      MethodChannel('com.blackstackhub.mediasaver/share');
-
   @override
   void initState() {
     super.initState();
@@ -48,12 +44,10 @@ class _SplashScreenState extends State<SplashScreen> {
     await Future.delayed(startupDelay);
 
     var onboardingCompleted = false;
-    String? sharedText;
 
     try {
       final prefs = await SharedPreferences.getInstance();
       onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
-      sharedText = await _getInitialSharedText();
       if (onboardingCompleted) {
         await initializeMediaStoreForStartup();
       }
@@ -66,22 +60,10 @@ class _SplashScreenState extends State<SplashScreen> {
         context,
         MaterialPageRoute(
           builder: (_) => onboardingCompleted
-              ? MainNavigation(sharedText: sharedText)
+              ? const MainNavigation()
               : const OnboardingScreen(),
         ),
       );
-    }
-  }
-
-  Future<String?> _getInitialSharedText() async {
-    try {
-      final text = await _shareChannel.invokeMethod<String>(
-        'getInitialSharedText',
-      );
-      return text?.trim().isEmpty ?? true ? null : text?.trim();
-    } catch (e) {
-      debugPrint('Initial shared text unavailable: $e');
-      return null;
     }
   }
 

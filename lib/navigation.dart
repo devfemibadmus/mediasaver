@@ -4,9 +4,7 @@ import 'screens/history.dart';
 import 'screens/feedback.dart';
 
 class MainNavigation extends StatefulWidget {
-  final String? sharedText;
-
-  const MainNavigation({super.key, this.sharedText});
+  const MainNavigation({super.key});
 
   @override
   State<MainNavigation> createState() => _MainNavigationState();
@@ -19,7 +17,7 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   void initState() {
     super.initState();
-    _homeScreen = HomeScreen(sharedText: widget.sharedText);
+    _homeScreen = const HomeScreen();
   }
 
   @override

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -5,13 +6,12 @@ import 'dart:io' show Platform;
 import 'package:mediasaver/screens/history.dart';
 import 'package:mediasaver/screens/preview.dart';
 import 'package:mediasaver/utils/media_helper.dart';
+import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'dart:convert';
 import '../widgets/media_item_tile.dart';
 
 class HomeScreen extends StatefulWidget {
-  final String? sharedText;
-
-  const HomeScreen({super.key, this.sharedText});
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -26,10 +26,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int _completedDownloads = 0;
   List<String> _results = [];
   String _lastClipboard = '';
-  static const platform =
-      MethodChannel('com.blackstackhub.mediasaver/clipboard');
-  static const _shareChannel =
-      MethodChannel('com.blackstackhub.mediasaver/share');
+  StreamSubscription<List<SharedMediaFile>>? _shareSubscription;
 
   String get _baseUrl {
     return 'https://mediasaver.link';
@@ -39,11 +36,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _shareChannel.setMethodCallHandler(_handleShareMethodCall);
+    _listenForSharedMedia();
 
-    if (widget.sharedText != null && widget.sharedText!.isNotEmpty) {
-      _fillUrl(widget.sharedText!, shouldFetch: true);
-    } else if (!Platform.isIOS) {
+    if (!Platform.isIOS) {
       _autoFillFromClipboard();
     }
   }
@@ -51,7 +46,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _shareChannel.setMethodCallHandler(null);
+    _shareSubscription?.cancel();
     _urlController.dispose();
     super.dispose();
   }
@@ -64,27 +59,52 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _pasteFromClipboard() async {
-    await _autoFillFromClipboard(userInitiated: true);
+    await _autoFillFromClipboard();
   }
 
-  Future<void> _handleShareMethodCall(MethodCall call) async {
-    if (call.method != 'sharedTextReceived') return;
-    final text = call.arguments as String?;
+  void _listenForSharedMedia() {
+    _shareSubscription = ReceiveSharingIntent.instance.getMediaStream().listen(
+          _handleSharedMedia,
+          onError: (err) => debugPrint('Share stream error: $err'),
+        );
+
+    ReceiveSharingIntent.instance.getInitialMedia().then((media) async {
+      await _handleSharedMedia(media);
+      await ReceiveSharingIntent.instance.reset();
+    }).catchError((err) {
+      debugPrint('Initial share error: $err');
+    });
+  }
+
+  Future<void> _handleSharedMedia(List<SharedMediaFile> media) async {
+    final text = _sharedTextFromMedia(media);
     if (text == null || text.trim().isEmpty) return;
     await _fillUrl(text);
   }
 
-  Future<void> _autoFillFromClipboard({bool userInitiated = false}) async {
+  String? _sharedTextFromMedia(List<SharedMediaFile> media) {
+    for (final item in media) {
+      final fromPath = _extractFirstUrl(item.path) ?? item.path.trim();
+      if (fromPath.isNotEmpty) return fromPath;
+
+      final message = item.message;
+      if (message != null) {
+        final fromMessage = _extractFirstUrl(message) ?? message.trim();
+        if (fromMessage.isNotEmpty) return fromMessage;
+      }
+    }
+
+    return null;
+  }
+
+  Future<void> _autoFillFromClipboard() async {
     try {
       String? clipboardText;
 
-      if (Platform.isIOS) {
-        if (!userInitiated) return;
-        clipboardText = await platform.invokeMethod('getClipboard');
-      } else {
-        final data = await Clipboard.getData(Clipboard.kTextPlain);
-        clipboardText = data?.text;
-      }
+      if (Platform.isIOS) return;
+
+      final data = await Clipboard.getData(Clipboard.kTextPlain);
+      clipboardText = data?.text;
 
       if (clipboardText != null &&
           clipboardText.isNotEmpty &&
