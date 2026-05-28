@@ -26,6 +26,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int _completedDownloads = 0;
   List<String> _results = [];
   String _lastClipboard = '';
+  DateTime? _lastShareHandledAt;
   StreamSubscription<List<SharedMediaFile>>? _shareSubscription;
 
   String get _baseUrl {
@@ -37,10 +38,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _listenForSharedMedia();
-
-    if (!Platform.isIOS) {
-      _autoFillFromClipboard();
-    }
+    _autoFillFromClipboard();
   }
 
   @override
@@ -53,7 +51,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && !Platform.isIOS) {
+    if (state == AppLifecycleState.resumed) {
       _autoFillFromClipboard();
     }
   }
@@ -79,6 +77,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future<void> _handleSharedMedia(List<SharedMediaFile> media) async {
     final text = _sharedTextFromMedia(media);
     if (text == null || text.trim().isEmpty) return;
+    _lastShareHandledAt = DateTime.now();
     await _fillUrl(text);
   }
 
@@ -101,7 +100,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     try {
       String? clipboardText;
 
-      if (Platform.isIOS) return;
+      final lastShareHandledAt = _lastShareHandledAt;
+      if (lastShareHandledAt != null &&
+          DateTime.now().difference(lastShareHandledAt) <
+              const Duration(seconds: 2)) {
+        return;
+      }
 
       final data = await Clipboard.getData(Clipboard.kTextPlain);
       clipboardText = data?.text;
