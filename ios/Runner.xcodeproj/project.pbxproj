@@ -825,6 +825,11 @@
 				DEVELOPMENT_TEAM = NB8QPVZ6PA;
 				ENABLE_BITCODE = NO;
 				GENERATE_INFOPLIST_FILE = NO;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Flutter/Flutter.framework/Headers",
+					"$(PODS_ROOT)/Headers/Public/Flutter",
+				);
 				INFOPLIST_FILE = ShareExtension/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -855,6 +860,11 @@
 				DEVELOPMENT_TEAM = NB8QPVZ6PA;
 				ENABLE_BITCODE = NO;
 				GENERATE_INFOPLIST_FILE = NO;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Flutter/Flutter.framework/Headers",
+					"$(PODS_ROOT)/Headers/Public/Flutter",
+				);
 				INFOPLIST_FILE = ShareExtension/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -885,6 +895,11 @@
 				DEVELOPMENT_TEAM = NB8QPVZ6PA;
 				ENABLE_BITCODE = NO;
 				GENERATE_INFOPLIST_FILE = NO;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Flutter/Flutter.framework/Headers",
+					"$(PODS_ROOT)/Headers/Public/Flutter",
+				);
 				INFOPLIST_FILE = ShareExtension/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
