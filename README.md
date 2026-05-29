@@ -56,7 +56,7 @@ curl -X POST https://mediasaver.link/api/ \
 | TikTok    | OK     | `tiktok.com/...`, `vm.tiktok.com/...`                |
 | Snapchat  | OK     | `snapchat.com/t/...`                                 |
 | Twitter/X | OK     | `twitter.com/.../status/...`, `x.com/.../status/...` |
-| NASA SVS  | OK     | `svs.gsfc.nasa.gov/12345`, `...#media_group_67890`   |
+| NASA      | OK     | `svs.gsfc.nasa.gov/12345`, `images.nasa.gov/details/...` |
 
 ## Response Format
 
@@ -116,6 +116,12 @@ NASA SVS:
 
 ```bash
 curl "https://mediasaver.link/api/?url=https://svs.gsfc.nasa.gov/31373/#media_group_379948"
+```
+
+NASA Image Library:
+
+```bash
+curl "https://mediasaver.link/api/?url=https://images.nasa.gov/details/iss074e0609033"
 ```
 
 ## Disclaimer

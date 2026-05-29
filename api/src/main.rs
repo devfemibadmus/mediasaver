@@ -51,6 +51,7 @@ impl Validator {
             (r"snapchat\.com/t/", "Snapchat"),
             (r"(twitter\.com/|x\.com/).*/status/", "Twitter"),
             (r"svs\.gsfc\.nasa\.gov/\d+/?(#media_group_\d+)?", "NASA"),
+            (r"images\.nasa\.gov/details/[A-Za-z0-9_-]+/?", "NASA"),
         ];
         for (pattern, platform) in patterns.iter() {
             if Regex::new(pattern).unwrap().is_match(&url) {
