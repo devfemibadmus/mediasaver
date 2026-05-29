@@ -7,10 +7,10 @@ import '../utils/media_helper.dart' show MediaHelper;
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
   @override
-  State<HistoryScreen> createState() => _HistoryScreenState();
+  State<HistoryScreen> createState() => HistoryScreenState();
 }
 
-class _HistoryScreenState extends State<HistoryScreen> {
+class HistoryScreenState extends State<HistoryScreen> {
   static const double _tabletBreakpoint = 768;
   final Map<String, VideoPlayerController> _videoControllers = {};
   late Future<List<FileSystemEntity>> _videosFuture;
@@ -27,6 +27,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
       _videosFuture = MediaHelper.getSavedPaths('.mp4');
       _imagesFuture = MediaHelper.getSavedPaths('.jpg');
     });
+  }
+
+  void refresh() {
+    _loadFiles();
   }
 
   Future<VideoPlayerController> _createVideoController(String path) async {

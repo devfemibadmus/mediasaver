@@ -6,7 +6,6 @@ import 'dart:io' show Platform;
 import 'package:mediasaver/screens/history.dart';
 import 'package:mediasaver/screens/preview.dart';
 import 'package:mediasaver/utils/media_helper.dart';
-import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'dart:convert';
 import '../widgets/media_item_tile.dart';
 
@@ -14,10 +13,10 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomeScreen> createState() => HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
+class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   static const double _tabletBreakpoint = 768;
   static const double _contentMaxWidth = 720;
   final TextEditingController _urlController = TextEditingController();
@@ -27,7 +26,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   List<String> _results = [];
   String _lastClipboard = '';
   DateTime? _lastShareHandledAt;
-  StreamSubscription<List<SharedMediaFile>>? _shareSubscription;
+  int _fetchSerial = 0;
 
   String get _baseUrl {
     return 'https://mediasaver.link';
@@ -37,14 +36,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _listenForSharedMedia();
     _autoFillFromClipboard();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _shareSubscription?.cancel();
     _urlController.dispose();
     super.dispose();
   }
@@ -60,40 +57,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     await _autoFillFromClipboard();
   }
 
-  void _listenForSharedMedia() {
-    _shareSubscription = ReceiveSharingIntent.instance.getMediaStream().listen(
-          _handleSharedMedia,
-          onError: (err) => debugPrint('Share stream error: $err'),
-        );
-
-    ReceiveSharingIntent.instance.getInitialMedia().then((media) async {
-      await _handleSharedMedia(media);
-      await ReceiveSharingIntent.instance.reset();
-    }).catchError((err) {
-      debugPrint('Initial share error: $err');
-    });
-  }
-
-  Future<void> _handleSharedMedia(List<SharedMediaFile> media) async {
-    final text = _sharedTextFromMedia(media);
-    if (text == null || text.trim().isEmpty) return;
+  Future<void> applySharedText(String text) async {
     _lastShareHandledAt = DateTime.now();
     await _fillUrl(text);
-  }
-
-  String? _sharedTextFromMedia(List<SharedMediaFile> media) {
-    for (final item in media) {
-      final fromPath = _extractFirstUrl(item.path) ?? item.path.trim();
-      if (fromPath.isNotEmpty) return fromPath;
-
-      final message = item.message;
-      if (message != null) {
-        final fromMessage = _extractFirstUrl(message) ?? message.trim();
-        if (fromMessage.isNotEmpty) return fromMessage;
-      }
-    }
-
-    return null;
   }
 
   Future<void> _autoFillFromClipboard() async {
@@ -125,7 +91,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future<void> _fillUrl(String text, {bool shouldFetch = true}) async {
     final url = _extractFirstUrl(text) ?? text.trim();
     _lastClipboard = url;
-    setState(() => _urlController.text = url);
+    setState(() {
+      _urlController.text = url;
+      _results = [];
+    });
 
     if (!shouldFetch) return;
 
@@ -141,8 +110,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _fetchMedia() async {
-    if (_urlController.text.isEmpty) return;
-    if (MediaHelper.isUnsupportedSocialUrl(_urlController.text)) {
+    final requestUrl = _urlController.text.trim();
+    if (requestUrl.isEmpty) return;
+    if (MediaHelper.isUnsupportedSocialUrl(requestUrl)) {
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -154,6 +124,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       return;
     }
 
+    final requestId = ++_fetchSerial;
     setState(() {
       _isLoading = true;
       _results = [];
@@ -161,10 +132,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/api/?url=${_urlController.text}'),
+        Uri.parse('$_baseUrl/api/?url=$requestUrl'),
         headers: MediaHelper.buildRequestHeaders(
           extraHeaders: {
-            'X-Media-Source-Url': _urlController.text,
+            'X-Media-Source-Url': requestUrl,
           },
         ),
       );
@@ -172,6 +143,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       final data = json.decode(response.body);
 
       if (!mounted) return;
+      if (requestId != _fetchSerial ||
+          requestUrl != _urlController.text.trim()) {
+        return;
+      }
 
       if (response.statusCode == 200) {
         final List<String> mediaList = List<String>.from(data['data'] ?? []);
@@ -203,6 +178,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       }
     } catch (e) {
       if (!mounted) return;
+      if (requestId != _fetchSerial ||
+          requestUrl != _urlController.text.trim()) {
+        return;
+      }
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -212,7 +191,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ),
       );
     } finally {
-      if (mounted) {
+      if (mounted &&
+          requestId == _fetchSerial &&
+          requestUrl == _urlController.text.trim()) {
         setState(() => _isLoading = false);
       }
     }
