@@ -155,7 +155,7 @@ jobs:
                   # Upload to TestFlight
                   xcrun altool --upload-app \
                     --type ios \
-                    --file mobile/build/ios/ipa/*.ipa \
+                    --file build/ios/ipa/*.ipa \
                     --apiKey $APP_STORE_CONNECT_API_KEY_ID \
                     --apiIssuer $APP_STORE_CONNECT_ISSUER_ID
 
