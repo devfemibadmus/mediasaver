@@ -70,9 +70,6 @@ jobs:
                   flutter pub get
                   flutter build appbundle --release
 
-            - name: Build Android APK
-              run: flutter build apk --release --split-per-abi
-
             - name: Upload to Google Play Store
               if: github.event_name == 'push' || github.event.inputs.deploy_to_playstore == 'true'
               uses: r0adkll/upload-google-play@v1.1.3
