@@ -84,20 +84,6 @@ jobs:
                   status: completed
                   inAppUpdatePriority: 2
 
-            - name: Upload AAB artifact
-              uses: actions/upload-artifact@v4
-              with:
-                  name: mediasaver-android-aab-${{ github.sha }}
-                  path: mobile/build/app/outputs/bundle/release/app-release.aab
-                  retention-days: 1
-
-            - name: Upload APK artifacts
-              uses: actions/upload-artifact@v4
-              with:
-                  name: mediasaver-android-apks-${{ github.sha }}
-                  path: mobile/build/app/outputs/flutter-apk/*.apk
-                  retention-days: 7
-
             - name: Clean up
               if: always()
               run: |

@@ -165,9 +165,3 @@ jobs:
                   security delete-keychain $RUNNER_TEMP/app-signing.keychain-db || true
                   rm -rf ~/Library/MobileDevice/Provisioning\ Profiles || true
 
-            - name: Upload IPA artifact
-              uses: actions/upload-artifact@v4
-              with:
-                  name: mediasaver-ios-${{ github.sha }}
-                  path: mobile/build/ios/ipa/*.ipa
-                  retention-days: 1
