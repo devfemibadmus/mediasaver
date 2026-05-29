@@ -1,7 +1,7 @@
 {
 	"name": "Media Saver",
 	"short_name": "MediaSaver",
-	"description": "Download videos & photos from social media",
+	"description": "Save NASA public-domain videos and images",
 	"start_url": "/",
 	"display": "standalone",
 	"background_color": "#ffffff",
