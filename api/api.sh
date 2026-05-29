@@ -112,6 +112,7 @@ EOF
 ensure_nginx_and_certbot() {
   ensure_package nginx nginx
   ensure_package certbot certbot
+  ensure_package openssl openssl
 
   sudo systemctl enable nginx >/dev/null
   sudo systemctl start nginx
@@ -192,11 +193,12 @@ port_80_owner() {
   sudo ss -H -ltnp "sport = :80" 2>/dev/null || true
 }
 
-ensure_standalone_certificate() {
-  if sudo test -f "/etc/letsencrypt/live/${APP_DOMAIN}/fullchain.pem"; then
-    echo "  - SSL certificate already exists for ${APP_DOMAIN}"
-    return
-  fi
+restart_nginx_after_certbot() {
+  sudo systemctl start nginx
+}
+
+run_standalone_certbot() {
+  local action="$1"
 
   local owner
   owner="$(port_80_owner)"
@@ -208,15 +210,34 @@ ensure_standalone_certificate() {
     exit 1
   fi
 
-  echo "  - Requesting standalone SSL certificate for ${APP_DOMAIN}"
+  echo "  - ${action} standalone SSL certificate for ${APP_DOMAIN}"
   sudo systemctl stop nginx || true
+  trap restart_nginx_after_certbot EXIT
   sudo certbot certonly \
     --standalone \
     --non-interactive \
     --agree-tos \
     --email "${CERTBOT_EMAIL}" \
+    --cert-name "${APP_DOMAIN}" \
     -d "${APP_DOMAIN}"
-  sudo systemctl start nginx
+  trap - EXIT
+  restart_nginx_after_certbot
+}
+
+ensure_standalone_certificate() {
+  local cert_path="/etc/letsencrypt/live/${APP_DOMAIN}/fullchain.pem"
+  local renew_window_seconds=2592000
+
+  if sudo test -f "$cert_path" && sudo openssl x509 -checkend "$renew_window_seconds" -noout -in "$cert_path" >/dev/null 2>&1; then
+    echo "  - SSL certificate for ${APP_DOMAIN} is valid for more than 30 days"
+    return
+  fi
+
+  if sudo test -f "$cert_path"; then
+    run_standalone_certbot "Renewing"
+  else
+    run_standalone_certbot "Requesting"
+  fi
 }
 
 install_binary() {
