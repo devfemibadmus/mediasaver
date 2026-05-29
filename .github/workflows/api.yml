@@ -18,34 +18,41 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v4
 
-            - name: 1. Check secrets
+            - name: 1. Check deploy secret
               env:
-                  VPS_HOST: ${{ secrets.VPS_HOST }}
-                  VPS_USER: ${{ secrets.VPS_USER }}
-                  SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-                  APP_NAME: ${{ secrets.APP_NAME }}
-                  APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
-                  APP_PORT: ${{ secrets.APP_PORT }}
-                  APP_HOST: ${{ secrets.APP_HOST }}
-                  APP_ENV_FILE: ${{ secrets.APP_ENV_FILE }}
-                  CERTBOT_EMAIL: ${{ secrets.CERTBOT_EMAIL }}
+                  DEPLOY_SECRET: ${{ secrets.DEPLOY_SECRET }}
+                  DEPLOY_APP_ENV: ${{ secrets.DEPLOY_APP_ENV }}
               run: |
                   set -euo pipefail
 
+                  if [ -z "$DEPLOY_SECRET" ]; then
+                    echo "::error::Missing GitHub secret: DEPLOY_SECRET"
+                    exit 1
+                  fi
+
+                  mkdir -p deploy
+                  printf '%s\n' "$DEPLOY_SECRET" > deploy/deploy.env
+                  printf '%s\n' "$DEPLOY_APP_ENV" > deploy/app.env
+                  chmod 600 deploy/deploy.env
+                  chmod 600 deploy/app.env
+
+                  set -a
+                  . deploy/deploy.env
+                  set +a
+
                   missing=0
-                  for secret_name in \
+                  for key in \
                     VPS_HOST \
                     VPS_USER \
-                    SSH_PRIVATE_KEY \
+                    SSH_PRIVATE_KEY_B64 \
                     APP_NAME \
                     APP_DOMAIN \
                     APP_PORT \
                     APP_HOST \
-                    APP_ENV_FILE \
                     CERTBOT_EMAIL
                   do
-                    if [ -z "${!secret_name}" ]; then
-                      echo "::error::Missing GitHub secret: ${secret_name}"
+                    if [ -z "${!key:-}" ]; then
+                      echo "::error::DEPLOY_SECRET is missing ${key}"
                       missing=1
                     fi
                   done
@@ -59,68 +66,64 @@ jobs:
                     exit 1
                   fi
 
-                  echo "Required API deployment secrets are present."
+                  echo "DEPLOY_SECRET is valid."
 
             - name: 2. Test VM
-              uses: appleboy/ssh-action@v1.2.0
-              with:
-                  host: ${{ secrets.VPS_HOST }}
-                  username: ${{ secrets.VPS_USER }}
-                  key: ${{ secrets.SSH_PRIVATE_KEY }}
-                  port: ${{ secrets.VPS_SSH_PORT || 22 }}
-                  script: |
-                      echo "Connected to $(hostname)"
-                      uname -a
+              run: |
+                  set -euo pipefail
+                  set -a
+                  . deploy/deploy.env
+                  set +a
+
+                  mkdir -p ~/.ssh
+                  printf '%s' "$SSH_PRIVATE_KEY_B64" | base64 -d > ~/.ssh/api_deploy_key
+                  chmod 600 ~/.ssh/api_deploy_key
+
+                  VPS_SSH_PORT="${VPS_SSH_PORT:-22}"
+                  ssh-keyscan -p "$VPS_SSH_PORT" -H "$VPS_HOST" >> ~/.ssh/known_hosts
+                  ssh -i ~/.ssh/api_deploy_key -p "$VPS_SSH_PORT" -o StrictHostKeyChecking=yes "${VPS_USER}@${VPS_HOST}" \
+                    'echo "Connected to $(hostname)" && uname -a'
 
             - name: 3. Check server requirements
-              uses: appleboy/ssh-action@v1.2.0
-              env:
-                  DEPLOY_MODE: requirements
-                  APP_NAME: ${{ secrets.APP_NAME }}
-                  APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
-                  APP_PORT: ${{ secrets.APP_PORT }}
-                  APP_HOST: ${{ secrets.APP_HOST }}
-                  CERTBOT_EMAIL: ${{ secrets.CERTBOT_EMAIL }}
-                  ENABLE_UFW: ${{ secrets.ENABLE_UFW }}
-              with:
-                  host: ${{ secrets.VPS_HOST }}
-                  username: ${{ secrets.VPS_USER }}
-                  key: ${{ secrets.SSH_PRIVATE_KEY }}
-                  port: ${{ secrets.VPS_SSH_PORT || 22 }}
-                  envs: DEPLOY_MODE,APP_NAME,APP_DOMAIN,APP_PORT,APP_HOST,CERTBOT_EMAIL,ENABLE_UFW
-                  script_path: api/api.sh
+              run: |
+                  set -euo pipefail
+                  set -a
+                  . deploy/deploy.env
+                  set +a
+
+                  VPS_SSH_PORT="${VPS_SSH_PORT:-22}"
+                  SSH_TARGET="${VPS_USER}@${VPS_HOST}"
+                  SSH_OPTS=(-i ~/.ssh/api_deploy_key -p "$VPS_SSH_PORT" -o StrictHostKeyChecking=yes)
+                  SCP_OPTS=(-i ~/.ssh/api_deploy_key -P "$VPS_SSH_PORT" -o StrictHostKeyChecking=yes)
+
+                  scp "${SCP_OPTS[@]}" api/api.sh "$SSH_TARGET:/tmp/mediasaver-api-requirements.sh"
+
+                  REMOTE_ENV=$(printf 'DEPLOY_MODE=%q APP_NAME=%q APP_DOMAIN=%q APP_PORT=%q APP_HOST=%q CERTBOT_EMAIL=%q' \
+                    "requirements" "$APP_NAME" "$APP_DOMAIN" "$APP_PORT" "$APP_HOST" "$CERTBOT_EMAIL")
+
+                  ssh "${SSH_OPTS[@]}" "$SSH_TARGET" "$REMOTE_ENV bash /tmp/mediasaver-api-requirements.sh"
 
             - name: 4. Cargo build
               run: |
+                  set -euo pipefail
+
                   rustup default stable
                   cd api
                   cargo build --release
                   cd ..
+
                   mkdir -p deploy
                   cp api/target/release/mediascraper deploy/mediascraper
                   cp api/api.sh deploy/api.sh
-                  printf '%s' "${{ secrets.APP_ENV_FILE }}" > deploy/app.env
 
             - name: 5. Deploy API service
-              env:
-                  VPS_HOST: ${{ secrets.VPS_HOST }}
-                  VPS_USER: ${{ secrets.VPS_USER }}
-                  VPS_SSH_PORT: ${{ secrets.VPS_SSH_PORT || 22 }}
-                  SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-                  APP_NAME: ${{ secrets.APP_NAME }}
-                  APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
-                  APP_PORT: ${{ secrets.APP_PORT }}
-                  APP_HOST: ${{ secrets.APP_HOST }}
-                  CERTBOT_EMAIL: ${{ secrets.CERTBOT_EMAIL }}
-                  ENABLE_UFW: ${{ secrets.ENABLE_UFW }}
               run: |
                   set -euo pipefail
+                  set -a
+                  . deploy/deploy.env
+                  set +a
 
-                  mkdir -p ~/.ssh
-                  printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/api_deploy_key
-                  chmod 600 ~/.ssh/api_deploy_key
-                  ssh-keyscan -p "$VPS_SSH_PORT" -H "$VPS_HOST" >> ~/.ssh/known_hosts
-
+                  VPS_SSH_PORT="${VPS_SSH_PORT:-22}"
                   SSH_TARGET="${VPS_USER}@${VPS_HOST}"
                   SSH_OPTS=(-i ~/.ssh/api_deploy_key -p "$VPS_SSH_PORT" -o StrictHostKeyChecking=yes)
                   SCP_OPTS=(-i ~/.ssh/api_deploy_key -P "$VPS_SSH_PORT" -o StrictHostKeyChecking=yes)
@@ -128,7 +131,7 @@ jobs:
                   ssh "${SSH_OPTS[@]}" "$SSH_TARGET" "rm -rf /tmp/mediasaver-deploy && mkdir -p /tmp/mediasaver-deploy/deploy"
                   scp "${SCP_OPTS[@]}" deploy/mediascraper deploy/api.sh deploy/app.env "$SSH_TARGET:/tmp/mediasaver-deploy/deploy/"
 
-                  REMOTE_ENV=$(printf 'APP_NAME=%q APP_DOMAIN=%q APP_PORT=%q APP_HOST=%q CERTBOT_EMAIL=%q ENABLE_UFW=%q' \
-                    "$APP_NAME" "$APP_DOMAIN" "$APP_PORT" "$APP_HOST" "$CERTBOT_EMAIL" "$ENABLE_UFW")
+                  REMOTE_ENV=$(printf 'APP_NAME=%q APP_DOMAIN=%q APP_PORT=%q APP_HOST=%q CERTBOT_EMAIL=%q' \
+                    "$APP_NAME" "$APP_DOMAIN" "$APP_PORT" "$APP_HOST" "$CERTBOT_EMAIL")
 
                   ssh "${SSH_OPTS[@]}" "$SSH_TARGET" "$REMOTE_ENV chmod +x /tmp/mediasaver-deploy/deploy/api.sh && $REMOTE_ENV APP_BINARY_PATH=/tmp/mediasaver-deploy/deploy/mediascraper APP_ENV_FILE_PATH=/tmp/mediasaver-deploy/deploy/app.env /tmp/mediasaver-deploy/deploy/api.sh"

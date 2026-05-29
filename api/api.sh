@@ -10,7 +10,6 @@ APP_BINARY_PATH="${APP_BINARY_PATH:-/tmp/${APP_NAME}}"
 APP_HOST="${APP_HOST:-127.0.0.1}"
 CERTBOT_EMAIL="${CERTBOT_EMAIL:-admin@${APP_DOMAIN}}"
 DEPLOY_MODE="${DEPLOY_MODE:-deploy}"
-ENABLE_UFW="${ENABLE_UFW:-false}"
 
 SERVICE_NAME="${APP_NAME//[^a-zA-Z0-9_-]/-}"
 APP_ROOT="/opt/${SERVICE_NAME}"
@@ -18,7 +17,6 @@ BIN_PATH="${APP_ROOT}/${SERVICE_NAME}"
 ENV_DIR="/etc/${SERVICE_NAME}"
 ENV_PATH="${ENV_DIR}/${SERVICE_NAME}.env"
 SERVICE_PATH="/etc/systemd/system/${SERVICE_NAME}.service"
-ACME_ROOT="/var/www/${SERVICE_NAME}"
 NGINX_AVAILABLE="/etc/nginx/sites-available/${SERVICE_NAME}.conf"
 NGINX_ENABLED="/etc/nginx/sites-enabled/${SERVICE_NAME}.conf"
 
@@ -83,12 +81,7 @@ EOF
     return
   fi
 
-  if [ "$ENABLE_UFW" = "true" ]; then
-    sudo ufw --force enable >/dev/null
-    echo "  - UFW enabled"
-  else
-    echo "  - UFW is installed and rules are added, but not enabled. Set ENABLE_UFW=true to enable it on a new VM."
-  fi
+  echo "  - UFW is installed and rules are added, but UFW was not active so it was not enabled."
 }
 
 ensure_nginx_and_certbot() {
@@ -119,17 +112,11 @@ write_nginx_config() {
   local cert_path="/etc/letsencrypt/live/${APP_DOMAIN}/fullchain.pem"
   local key_path="/etc/letsencrypt/live/${APP_DOMAIN}/privkey.pem"
 
-  sudo mkdir -p "${ACME_ROOT}/.well-known/acme-challenge"
-
   if sudo test -f "$cert_path" && sudo test -f "$key_path"; then
     sudo tee "$NGINX_AVAILABLE" >/dev/null <<EOF
 server {
     listen 80;
     server_name ${APP_DOMAIN};
-
-    location /.well-known/acme-challenge/ {
-        root ${ACME_ROOT};
-    }
 
     location / {
         return 301 https://\$host\$request_uri;
@@ -159,10 +146,6 @@ server {
     listen 80;
     server_name ${APP_DOMAIN};
 
-    location /.well-known/acme-challenge/ {
-        root ${ACME_ROOT};
-    }
-
     location / {
         proxy_pass http://${APP_HOST}:${APP_PORT};
         proxy_http_version 1.1;
@@ -180,20 +163,35 @@ EOF
   sudo systemctl reload nginx
 }
 
-ensure_webroot_certificate() {
+port_80_owner() {
+  sudo ss -H -ltnp "sport = :80" 2>/dev/null || true
+}
+
+ensure_standalone_certificate() {
   if sudo test -f "/etc/letsencrypt/live/${APP_DOMAIN}/fullchain.pem"; then
     echo "  - SSL certificate already exists for ${APP_DOMAIN}"
     return
   fi
 
-  echo "  - Requesting webroot SSL certificate for ${APP_DOMAIN}"
+  local owner
+  owner="$(port_80_owner)"
+
+  if [ -n "$owner" ] && ! printf '%s\n' "$owner" | grep -qi 'nginx'; then
+    echo "Port 80 is used by a non-nginx process:"
+    printf '%s\n' "$owner"
+    echo "Refusing to stop it so this deployment does not interrupt another app."
+    exit 1
+  fi
+
+  echo "  - Requesting standalone SSL certificate for ${APP_DOMAIN}"
+  sudo systemctl stop nginx || true
   sudo certbot certonly \
-    --webroot \
-    -w "$ACME_ROOT" \
+    --standalone \
     --non-interactive \
     --agree-tos \
     --email "${CERTBOT_EMAIL}" \
     -d "${APP_DOMAIN}"
+  sudo systemctl start nginx
 }
 
 install_binary() {
@@ -269,11 +267,10 @@ ensure_nginx_and_certbot
 echo "[3/9] Checking nginx domain ownership"
 ensure_domain_is_available
 
-echo "[4/9] Writing app-scoped nginx config"
-write_nginx_config
+echo "[4/9] Checking standalone SSL certificate"
+ensure_standalone_certificate
 
-echo "[5/9] Checking webroot SSL certificate"
-ensure_webroot_certificate
+echo "[5/9] Writing app-scoped nginx config"
 write_nginx_config
 
 if [ "$DEPLOY_MODE" = "requirements" ]; then

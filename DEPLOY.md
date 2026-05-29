@@ -32,36 +32,85 @@ The workflow runs when:
 
 ## Required GitHub Secrets
 
-Add these in GitHub:
+Add these secrets in GitHub:
 
 ```text
 Repository -> Settings -> Secrets and variables -> Actions -> New repository secret
 ```
 
-| Secret | Required | Example | Purpose |
-| --- | --- | --- | --- |
-| `VPS_HOST` | Yes | `123.123.123.123` | VM public IP address or hostname |
-| `VPS_USER` | Yes | `root` | SSH username for the VM |
-| `SSH_PRIVATE_KEY` | Yes | Private key text | SSH private key used by GitHub Actions |
-| `VPS_SSH_PORT` | No | `22` | SSH port. Defaults to `22` if empty |
-| `APP_NAME` | Yes | `mediasaver-api` | Service name used for systemd, `/opt`, and `/etc` paths |
-| `APP_DOMAIN` | Yes | `api.example.com` | Domain used for SSL certificate generation |
-| `APP_PORT` | Yes | `8080` | Port the Rust API listens on |
-| `APP_HOST` | Yes | `127.0.0.1` | Host/interface the Rust API binds to |
-| `APP_ENV_FILE` | Yes | `KEY=value` lines | Extra environment variables written to the server env file |
-| `CERTBOT_EMAIL` | Yes | `admin@example.com` | Email used by Certbot/Let's Encrypt |
-| `ENABLE_UFW` | No | `true` | Set to `true` only when you want the script to enable UFW on a new VM |
+```text
+DEPLOY_SECRET
+DEPLOY_APP_ENV
+```
 
-## APP_ENV_FILE Format
+`DEPLOY_SECRET` is one env-style file containing deployment settings only.
 
-`APP_ENV_FILE` should be plain environment file content:
+`DEPLOY_APP_ENV` is the app runtime env file content that will be written to the server.
+
+`DEPLOY_SECRET` example:
+
+```env
+VPS_HOST=123.123.123.123
+VPS_USER=root
+VPS_SSH_PORT=22
+SSH_PRIVATE_KEY_B64=base64_encoded_private_key_here
+
+APP_NAME=mediasaver-api
+APP_DOMAIN=api.example.com
+APP_PORT=8080
+APP_HOST=127.0.0.1
+CERTBOT_EMAIL=admin@example.com
+```
+
+`DEPLOY_APP_ENV` example:
 
 ```env
 RUST_LOG=info
-SOME_API_KEY=your_value_here
 ```
 
+If the API has no extra runtime env values, `DEPLOY_APP_ENV` can be empty.
+
+## DEPLOY_SECRET Keys
+
+| Key | Required | Example | Purpose |
+| --- | --- | --- | --- |
+| `VPS_HOST` | Yes | `123.123.123.123` | VM public IP address or hostname |
+| `VPS_USER` | Yes | `root` | SSH username for the VM |
+| `SSH_PRIVATE_KEY_B64` | Yes | Base64 private key | Base64 of the SSH private key used by GitHub Actions |
+| `VPS_SSH_PORT` | No | `22` | SSH port. Defaults to `22` if empty |
+| `APP_NAME` | Yes | `mediasaver-api` | Service name used for systemd, `/opt`, and `/etc` paths |
+| `APP_DOMAIN` | Yes | `api.example.com` | Domain used for nginx and SSL |
+| `APP_PORT` | Yes | `8080` | Port the Rust API listens on |
+| `APP_HOST` | Yes | `127.0.0.1` | Host/interface the Rust API binds to |
+| `CERTBOT_EMAIL` | Yes | `admin@example.com` | Email used by Certbot/Let's Encrypt |
+
+## SSH Key Base64
+
+On Windows PowerShell:
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("C:\path\to\private_key")) | Set-Clipboard
+```
+
+On macOS/Linux:
+
+```bash
+base64 < ~/.ssh/id_rsa | tr -d '\n'
+```
+
+## App Runtime Env Format
+
+Runtime app env values should be plain `KEY=value` lines inside `DEPLOY_APP_ENV`:
+
+```env
+RUST_LOG=info
+```
+
+Do not repeat deployment keys like `VPS_HOST`, `APP_DOMAIN`, or `SSH_PRIVATE_KEY_B64` inside `DEPLOY_APP_ENV`.
+
 Do not wrap the full value in quotes. Each variable should be on its own line.
+
+The workflow uploads `DEPLOY_APP_ENV` as the app env file.
 
 The deploy script writes the final environment file on the VM here:
 
@@ -99,7 +148,7 @@ If `APP_HOST` is not `127.0.0.1` or `localhost`, it also allows the configured `
 
 Before enabling UFW, the script checks existing listening ports using `ss` and adds matching UFW allow rules. This is to avoid blocking other apps already running on the same VM.
 
-The script does not force-enable UFW by default. This avoids locking down or interrupting an existing VM. On a brand-new VM, set `ENABLE_UFW=true` if you want the script to enable UFW after preserving existing listening ports and adding the required rules.
+The script does not force-enable UFW. If UFW is already active, rules are updated. If UFW is not active, rules are added but UFW is left disabled to avoid locking down or interrupting an existing VM.
 
 It also starts and enables `nginx` if needed.
 
@@ -115,7 +164,6 @@ It only manages app-scoped files:
 /etc/systemd/system/<APP_NAME>.service
 /etc/nginx/sites-available/<APP_NAME>.conf
 /etc/nginx/sites-enabled/<APP_NAME>.conf
-/var/www/<APP_NAME>/
 ```
 
 Before writing nginx config, it checks whether another nginx site already owns `APP_DOMAIN`. If another config already uses that domain, deployment stops instead of overwriting or hijacking the domain.
@@ -124,9 +172,13 @@ The script reloads nginx only after `nginx -t` passes.
 
 ## SSL Behavior
 
-The deploy script uses Certbot webroot mode for `APP_DOMAIN`.
+The deploy script uses Certbot standalone mode for `APP_DOMAIN`.
 
-For a new certificate, port `80` must point to this VM and nginx must be able to serve the ACME challenge. The script does not stop nginx.
+For a new certificate, port `80` must point to this VM and must be available for Certbot.
+
+If port `80` is held by nginx, the script temporarily stops nginx, requests the certificate, then starts nginx again.
+
+If port `80` is held by a non-nginx process, the script stops and refuses to continue so it does not interrupt another app.
 
 Certificate path:
 
