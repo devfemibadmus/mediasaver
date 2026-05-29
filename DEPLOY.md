@@ -39,28 +39,19 @@ Repository -> Settings -> Secrets and variables -> Actions -> New repository sec
 ```
 
 ```text
-DEPLOY_SECRET
+VPS_HOST
+VPS_USER
+VPS_SSH_PORT
+SSH_PRIVATE_KEY_B64
+APP_NAME
+APP_DOMAIN
+APP_PORT
+APP_HOST
+CERTBOT_EMAIL
 DEPLOY_APP_ENV
 ```
 
-`DEPLOY_SECRET` is one env-style file containing deployment settings only.
-
 `DEPLOY_APP_ENV` is the app runtime env file content that will be written to the server.
-
-`DEPLOY_SECRET` example:
-
-```env
-VPS_HOST=123.123.123.123
-VPS_USER=root
-VPS_SSH_PORT=22
-SSH_PRIVATE_KEY_B64=base64_encoded_private_key_here
-
-APP_NAME=mediasaver-api
-APP_DOMAIN=api.example.com
-APP_PORT=8080
-APP_HOST=127.0.0.1
-CERTBOT_EMAIL=admin@example.com
-```
 
 `DEPLOY_APP_ENV` example:
 
@@ -70,9 +61,9 @@ RUST_LOG=info
 
 If the API has no extra runtime env values, `DEPLOY_APP_ENV` can be empty.
 
-## DEPLOY_SECRET Keys
+## Secret Keys
 
-| Key | Required | Example | Purpose |
+| Secret | Required | Example | Purpose |
 | --- | --- | --- | --- |
 | `VPS_HOST` | Yes | `123.123.123.123` | VM public IP address or hostname |
 | `VPS_USER` | Yes | `root` | SSH username for the VM |
@@ -83,6 +74,7 @@ If the API has no extra runtime env values, `DEPLOY_APP_ENV` can be empty.
 | `APP_PORT` | Yes | `8080` | Port the Rust API listens on |
 | `APP_HOST` | Yes | `127.0.0.1` | Host/interface the Rust API binds to |
 | `CERTBOT_EMAIL` | Yes | `admin@example.com` | Email used by Certbot/Let's Encrypt |
+| `DEPLOY_APP_ENV` | No | `RUST_LOG=info` | Runtime app env file content |
 
 ## SSH Key Base64
 

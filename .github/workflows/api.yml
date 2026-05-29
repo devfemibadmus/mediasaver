@@ -13,35 +13,28 @@ on:
 jobs:
     deploy-api:
         runs-on: ubuntu-latest
+        env:
+            VPS_HOST: ${{ secrets.VPS_HOST }}
+            VPS_USER: ${{ secrets.VPS_USER }}
+            VPS_SSH_PORT: ${{ secrets.VPS_SSH_PORT }}
+            SSH_PRIVATE_KEY_B64: ${{ secrets.SSH_PRIVATE_KEY_B64 }}
+            APP_NAME: ${{ secrets.APP_NAME }}
+            APP_DOMAIN: ${{ secrets.APP_DOMAIN }}
+            APP_PORT: ${{ secrets.APP_PORT }}
+            APP_HOST: ${{ secrets.APP_HOST }}
+            CERTBOT_EMAIL: ${{ secrets.CERTBOT_EMAIL }}
+            DEPLOY_APP_ENV: ${{ secrets.DEPLOY_APP_ENV }}
 
         steps:
             - name: Checkout code
               uses: actions/checkout@v4
 
-            - name: 1. Check deploy secret
-              env:
-                  DEPLOY_SECRET: ${{ secrets.DEPLOY_SECRET }}
-                  DEPLOY_APP_ENV: ${{ secrets.DEPLOY_APP_ENV }}
+            - name: 1. Check secrets
               run: |
                   set -euo pipefail
 
-                  if [ -z "$DEPLOY_SECRET" ]; then
-                    echo "::error::Missing GitHub secret: DEPLOY_SECRET"
-                    exit 1
-                  fi
-
-                  mkdir -p deploy
-                  printf '%s\n' "$DEPLOY_SECRET" > deploy/deploy.env
-                  printf '%s\n' "$DEPLOY_APP_ENV" > deploy/app.env
-                  chmod 600 deploy/deploy.env
-                  chmod 600 deploy/app.env
-
-                  set -a
-                  . deploy/deploy.env
-                  set +a
-
                   missing=0
-                  for key in \
+                  for secret_name in \
                     VPS_HOST \
                     VPS_USER \
                     SSH_PRIVATE_KEY_B64 \
@@ -51,8 +44,8 @@ jobs:
                     APP_HOST \
                     CERTBOT_EMAIL
                   do
-                    if [ -z "${!key:-}" ]; then
-                      echo "::error::DEPLOY_SECRET is missing ${key}"
+                    if [ -z "${!secret_name:-}" ]; then
+                      echo "::error::Missing GitHub secret: ${secret_name}"
                       missing=1
                     fi
                   done
@@ -66,14 +59,15 @@ jobs:
                     exit 1
                   fi
 
-                  echo "DEPLOY_SECRET is valid."
+                  mkdir -p deploy
+                  printf '%s\n' "$DEPLOY_APP_ENV" > deploy/app.env
+                  chmod 600 deploy/app.env
+
+                  echo "Required API deployment secrets are present."
 
             - name: 2. Test VM
               run: |
                   set -euo pipefail
-                  set -a
-                  . deploy/deploy.env
-                  set +a
 
                   mkdir -p ~/.ssh
                   printf '%s' "$SSH_PRIVATE_KEY_B64" | base64 -d > ~/.ssh/api_deploy_key
@@ -87,9 +81,6 @@ jobs:
             - name: 3. Check server requirements
               run: |
                   set -euo pipefail
-                  set -a
-                  . deploy/deploy.env
-                  set +a
 
                   VPS_SSH_PORT="${VPS_SSH_PORT:-22}"
                   SSH_TARGET="${VPS_USER}@${VPS_HOST}"
@@ -119,9 +110,6 @@ jobs:
             - name: 5. Deploy API service
               run: |
                   set -euo pipefail
-                  set -a
-                  . deploy/deploy.env
-                  set +a
 
                   VPS_SSH_PORT="${VPS_SSH_PORT:-22}"
                   SSH_TARGET="${VPS_USER}@${VPS_HOST}"
