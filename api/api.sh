@@ -43,6 +43,31 @@ ensure_package() {
   sudo apt-get install -y "$package_name"
 }
 
+print_vm_info() {
+  echo "VM info"
+  echo "  - Hostname: $(hostname)"
+  echo "  - Kernel: $(uname -srmo)"
+  echo "  - Uptime: $(uptime -p 2>/dev/null || uptime)"
+
+  awk '
+    /^MemTotal:/ { total=$2 }
+    /^MemAvailable:/ { available=$2 }
+    END {
+      if (total > 0) {
+        used = total - available
+        used_percent = used * 100 / total
+        free_percent = available * 100 / total
+        printf "  - Memory: %.2f GiB used / %.2f GiB total (%.1f%% used, %.1f%% left)\n", used / 1048576, total / 1048576, used_percent, free_percent
+      }
+    }
+  ' /proc/meminfo
+
+  df -h / | awk 'NR == 2 {
+    gsub("%", "", $5)
+    printf "  - Disk /: %s used / %s total (%s%% used, %s%% left)\n", $3, $2, $5, 100 - $5
+  }'
+}
+
 ensure_firewall() {
   ensure_package ufw ufw
 
@@ -258,19 +283,22 @@ wait_for_service() {
   exit 1
 }
 
-echo "[1/9] Checking VM packages and firewall"
+echo "[1/10] VM information"
+print_vm_info
+
+echo "[2/10] Checking VM packages and firewall"
 ensure_firewall
 
-echo "[2/9] Checking nginx and certbot"
+echo "[3/10] Checking nginx and certbot"
 ensure_nginx_and_certbot
 
-echo "[3/9] Checking nginx domain ownership"
+echo "[4/10] Checking nginx domain ownership"
 ensure_domain_is_available
 
-echo "[4/9] Checking standalone SSL certificate"
+echo "[5/10] Checking standalone SSL certificate"
 ensure_standalone_certificate
 
-echo "[5/9] Writing app-scoped nginx config"
+echo "[6/10] Writing app-scoped nginx config"
 write_nginx_config
 
 if [ "$DEPLOY_MODE" = "requirements" ]; then
@@ -278,16 +306,16 @@ if [ "$DEPLOY_MODE" = "requirements" ]; then
   exit 0
 fi
 
-echo "[6/9] Installing binary"
+echo "[7/10] Installing binary"
 install_binary
 
-echo "[7/9] Writing environment"
+echo "[8/10] Writing environment"
 write_env_file
 
-echo "[8/9] Writing systemd service"
+echo "[9/10] Writing systemd service"
 write_systemd_service
 
-echo "[9/9] Restarting and verifying service"
+echo "[10/10] Restarting and verifying service"
 sudo systemctl restart "${SERVICE_NAME}.service"
 wait_for_service
 sudo systemctl --no-pager --full status "${SERVICE_NAME}.service" | sed -n '1,14p'
