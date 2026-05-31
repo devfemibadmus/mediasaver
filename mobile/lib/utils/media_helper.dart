@@ -64,22 +64,17 @@ class MediaHelper {
     }
   }
 
-  static String cleanUrl(String url) {
-    return url.replaceAll('&amp;', '&');
+  static Future<Directory> _historyDirectory() async {
+    final dir = await getApplicationDocumentsDirectory();
+    final historyDir = Directory('${dir.path}/MediaSaverHistory');
+    if (!await historyDir.exists()) {
+      await historyDir.create(recursive: true);
+    }
+    return historyDir;
   }
 
-  static bool isUnsupportedSocialUrl(String url) {
-    final uri = Uri.tryParse(cleanUrl(url).trim());
-    final host = uri?.host.toLowerCase() ?? '';
-
-    return host == 'instagram.com' ||
-        host.endsWith('.instagram.com') ||
-        host == 'facebook.com' ||
-        host.endsWith('.facebook.com') ||
-        host == 'fb.com' ||
-        host.endsWith('.fb.com') ||
-        host == 'fb.watch' ||
-        host.endsWith('.fb.watch');
+  static String cleanUrl(String url) {
+    return url.replaceAll('&amp;', '&');
   }
 
   static bool isVideoUrl(String url) {
@@ -124,8 +119,10 @@ class MediaHelper {
   }
 
   static String? getAudioUrl(List<String> urls) {
-    final audio =
-        urls.firstWhere((url) => url.contains('audio==='), orElse: () => '');
+    final audio = urls.firstWhere(
+      (url) => url.contains('audio==='),
+      orElse: () => '',
+    );
     return audio.isNotEmpty ? audio.replaceAll('audio===', '') : null;
   }
 
@@ -142,14 +139,16 @@ class MediaHelper {
         headers: buildRequestHeaders(),
       );
       final audioBytes = audioResponse.bodyBytes;
-      final audioFile =
-          File('${dir.path}/a${DateTime.now().millisecondsSinceEpoch}.m4a');
+      final audioFile = File(
+        '${dir.path}/a${DateTime.now().millisecondsSinceEpoch}.m4a',
+      );
       await audioFile.writeAsBytes(audioBytes);
 
       final mergedFile = File('${dir.path}/$outputFileName');
 
       await FFmpegKit.execute(
-          '-i "${videoFile.path}" -i "${audioFile.path}" -c:v copy -c:a aac -map 0:v:0 -map 1:a:0 -shortest "${mergedFile.path}"');
+        '-i "${videoFile.path}" -i "${audioFile.path}" -c:v copy -c:a aac -map 0:v:0 -map 1:a:0 -shortest "${mergedFile.path}"',
+      );
 
       await videoFile.delete();
       await audioFile.delete();
@@ -171,33 +170,30 @@ class MediaHelper {
       headers: buildRequestHeaders(),
     );
     final bytes = response.bodyBytes;
-    Directory dir;
-    try {
-      dir = await getTemporaryDirectory();
-    } catch (e) {
-      dir = await getTemporaryDirectory();
-    }
-    final tempFile = File('${dir.path}/$fileName');
-    await tempFile.writeAsBytes(bytes);
+    final dir = await _historyDirectory();
+    final savedFile = File('${dir.path}/$fileName');
+    await savedFile.writeAsBytes(bytes);
 
     final box = Hive.box('mediaBox');
     final urlBox = Hive.box('urlBox');
     final pathToUrlBox = Hive.box('pathToUrlBox');
 
     await SaverGallery.saveFile(
-      filePath: tempFile.path,
+      filePath: savedFile.path,
       fileName: fileName,
       skipIfExists: false,
     );
 
-    box.add(tempFile.path);
+    if (!box.values.contains(savedFile.path)) {
+      await box.add(savedFile.path);
+    }
 
     final urlHash = md5.convert(utf8.encode(url)).toString();
-    urlBox.put(urlHash, tempFile.path);
+    await urlBox.put(urlHash, savedFile.path);
 
-    pathToUrlBox.put(tempFile.path, url);
+    await pathToUrlBox.put(savedFile.path, url);
 
-    return tempFile;
+    return savedFile;
   }
 
   static Future<bool> saveToGallery({
@@ -218,11 +214,33 @@ class MediaHelper {
 
   static Future<List<FileSystemEntity>> getSavedPaths(String extension) async {
     final box = Hive.box('mediaBox');
-    final paths = box.values.where((p) => p.toString().endsWith(extension));
-    return paths
-        .map((p) => File(p.toString()))
-        .where((f) => f.existsSync())
-        .toList();
+    final staleIndexes = <int>[];
+    final seen = <String>{};
+    final files = <FileSystemEntity>[];
+
+    for (var i = box.length - 1; i >= 0; i--) {
+      final path = box.getAt(i)?.toString();
+      if (path == null ||
+          !path.toLowerCase().endsWith(extension.toLowerCase())) {
+        continue;
+      }
+
+      final file = File(path);
+      if (!await file.exists()) {
+        staleIndexes.add(i);
+        continue;
+      }
+
+      if (seen.add(path)) {
+        files.add(file);
+      }
+    }
+
+    for (final index in staleIndexes) {
+      await box.deleteAt(index);
+    }
+
+    return files;
   }
 
   static Future<void> cleanDeleted() async {

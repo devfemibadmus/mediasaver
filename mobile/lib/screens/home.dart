@@ -112,17 +112,6 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future<void> _fetchMedia() async {
     final requestUrl = _urlController.text.trim();
     if (requestUrl.isEmpty) return;
-    if (MediaHelper.isUnsupportedSocialUrl(requestUrl)) {
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('This link is not supported'),
-          backgroundColor: Colors.grey[800],
-          duration: const Duration(seconds: 2),
-        ),
-      );
-      return;
-    }
 
     final requestId = ++_fetchSerial;
     setState(() {

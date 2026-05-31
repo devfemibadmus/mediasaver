@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mediasaver/screens/preview.dart';
 import 'dart:io';
-import 'package:video_player/video_player.dart';
 import '../utils/media_helper.dart' show MediaHelper;
 
 class HistoryScreen extends StatefulWidget {
@@ -12,7 +11,6 @@ class HistoryScreen extends StatefulWidget {
 
 class HistoryScreenState extends State<HistoryScreen> {
   static const double _tabletBreakpoint = 768;
-  final Map<String, VideoPlayerController> _videoControllers = {};
   late Future<List<FileSystemEntity>> _videosFuture;
   late Future<List<FileSystemEntity>> _imagesFuture;
 
@@ -31,17 +29,6 @@ class HistoryScreenState extends State<HistoryScreen> {
 
   void refresh() {
     _loadFiles();
-  }
-
-  Future<VideoPlayerController> _createVideoController(String path) async {
-    if (_videoControllers.containsKey(path)) {
-      return _videoControllers[path]!;
-    }
-
-    final controller = VideoPlayerController.file(File(path));
-    _videoControllers[path] = controller;
-    await controller.initialize();
-    return controller;
   }
 
   Future<void> _deleteMedia(FileSystemEntity file) async {
@@ -86,14 +73,20 @@ class HistoryScreenState extends State<HistoryScreen> {
             indicatorColor: Color(0xFF3F61D7),
             labelColor: Color(0xFF3F61D7),
             unselectedLabelColor: Colors.grey,
-            tabs: [Tab(text: "Video"), Tab(text: "Image")],
+            tabs: [
+              Tab(text: "Video"),
+              Tab(text: "Image"),
+            ],
           ),
         ),
         body: TabBarView(
           children: [
             _buildTab(_videosFuture, Icons.videocam_off_outlined, "No video"),
             _buildTab(
-                _imagesFuture, Icons.image_not_supported_outlined, "No image"),
+              _imagesFuture,
+              Icons.image_not_supported_outlined,
+              "No image",
+            ),
           ],
         ),
       ),
@@ -101,7 +94,10 @@ class HistoryScreenState extends State<HistoryScreen> {
   }
 
   Widget _buildTab(
-      Future<List<FileSystemEntity>> future, IconData icon, String txt) {
+    Future<List<FileSystemEntity>> future,
+    IconData icon,
+    String txt,
+  ) {
     return FutureBuilder<List<FileSystemEntity>>(
       future: future,
       builder: (context, snapshot) {
@@ -135,10 +131,8 @@ class HistoryScreenState extends State<HistoryScreen> {
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => PreviewScreen(
-                    mediaUrl: file.path,
-                    isLocalFile: true,
-                  ),
+                  builder: (_) =>
+                      PreviewScreen(mediaUrl: file.path, isLocalFile: true),
                 ),
               ),
               child: Stack(
@@ -151,31 +145,18 @@ class HistoryScreenState extends State<HistoryScreen> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: isVideo
-                          ? FutureBuilder<VideoPlayerController>(
-                              future: _createVideoController(file.path),
-                              builder: (context, snapshot) {
-                                if (snapshot.hasData &&
-                                    snapshot.data!.value.isInitialized) {
-                                  return VideoPlayer(snapshot.data!);
-                                }
-                                return Container(
-                                  color: Colors.grey[200],
-                                  child: const Center(
-                                    child: Icon(Icons.videocam,
-                                        size: 40, color: Colors.grey),
-                                  ),
-                                );
-                              },
-                            )
-                          : Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12),
-                                image: DecorationImage(
-                                  image: FileImage(File(file.path)),
-                                  fit: BoxFit.cover,
-                                  onError: (_, __) => Container(
-                                    color: Colors.grey[200],
-                                    child: const Icon(Icons.image, size: 40),
+                          ? _videoPlaceholder()
+                          : Image.file(
+                              File(file.path),
+                              fit: BoxFit.cover,
+                              cacheWidth: 500,
+                              errorBuilder: (_, __, ___) => Container(
+                                color: Colors.grey[200],
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.image,
+                                    size: 40,
+                                    color: Colors.grey,
                                   ),
                                 ),
                               ),
@@ -192,8 +173,10 @@ class HistoryScreenState extends State<HistoryScreen> {
                             color: Colors.black.withValues(alpha: 0.6),
                             shape: BoxShape.circle,
                           ),
-                          child:
-                              const Icon(Icons.play_arrow, color: Colors.white),
+                          child: const Icon(
+                            Icons.play_arrow,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
@@ -208,8 +191,11 @@ class HistoryScreenState extends State<HistoryScreen> {
                       ),
                       child: IconButton(
                         onPressed: () => _deleteMedia(file),
-                        icon: const Icon(Icons.delete_outline,
-                            size: 18, color: Colors.white),
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          size: 18,
+                          color: Colors.white,
+                        ),
                         padding: EdgeInsets.zero,
                       ),
                     ),
@@ -229,24 +215,29 @@ class HistoryScreenState extends State<HistoryScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, size: 100, color: Colors.grey[200]),
-          Text(txt,
-              style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey)),
-          const Text("Your downloaded items will appear here",
-              style: TextStyle(color: Colors.grey)),
+          Text(
+            txt,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+            ),
+          ),
+          const Text(
+            "Your downloaded items will appear here",
+            style: TextStyle(color: Colors.grey),
+          ),
         ],
       ),
     );
   }
 
-  @override
-  void dispose() {
-    for (final controller in _videoControllers.values) {
-      controller.dispose();
-    }
-    _videoControllers.clear();
-    super.dispose();
+  Widget _videoPlaceholder() {
+    return Container(
+      color: Colors.grey[200],
+      child: const Center(
+        child: Icon(Icons.videocam, size: 44, color: Colors.grey),
+      ),
+    );
   }
 }

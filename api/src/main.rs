@@ -64,21 +64,21 @@ impl Validator {
 
 #[route("/api/", method = "GET", method = "POST")]
 async fn api_handler(
-    req: HttpRequest,
+    _req: HttpRequest,
     client: web::Data<reqwest::Client>,
     body: web::Bytes,
     query: web::Query<HashMap<String, String>>,
 ) -> impl Responder {
-    let user_agent = req
-        .headers()
-        .get("User-Agent")
-        .and_then(|value| value.to_str().ok())
-        .unwrap_or("")
-        .to_lowercase();
+    // let user_agent = req
+    //     .headers()
+    //     .get("User-Agent")
+    //     .and_then(|value| value.to_str().ok())
+    //     .unwrap_or("")
+    //     .to_lowercase();
 
-    let is_apple_request = ["iphone", "ipad", "ipod", "ios", "macintosh", "mac os"]
-        .iter()
-        .any(|token| user_agent.contains(token));
+    // let is_apple_request = ["iphone", "ipad", "ipod", "ios", "macintosh", "mac os"]
+    //     .iter()
+    //     .any(|token| user_agent.contains(token));
 
     let json: HashMap<String, serde_json::Value> =
         serde_json::from_slice(&body).unwrap_or_default();
@@ -98,13 +98,13 @@ async fn api_handler(
     let url = url.unwrap();
     let platform = Validator::validate(url);
 
-    if platform != "NASA" && is_apple_request {
-        return HttpResponse::BadRequest().json(serde_json::json!({
-            "error": true,
-            "message": "Unsupported URL",
-            "error_message": "Unsupported URL"
-        }));
-    }
+    // if platform != "NASA" && is_apple_request {
+    //     return HttpResponse::BadRequest().json(serde_json::json!({
+    //         "error": true,
+    //         "message": "Unsupported URL",
+    //         "error_message": "Unsupported URL"
+    //     }));
+    // }
 
     match platform {
         "Facebook" => {

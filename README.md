@@ -2,7 +2,7 @@
 
 # Media Saver. Save Videos, Photos, Reels from Facebook, Instagram, TikTok, Twitter and Snapchat no watermark
 
-[![Rust](https://img.shields.io/badge/Rust-1.89+-orange?logo=rust)](https://www.rust-lang.org/) [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) ![Views](https://komarev.com/ghpvc/?username=devfemibadmus&repo=mediasaver&color=blue) [![Get it on Google Play](https://img.shields.io/badge/Get%20it%20on-Google%20Play-3DDC84?logo=googleplay&logoColor=white)](https://play.google.com/store/apps/details?id=com.blackstackhub.mediasaver) [![Download on the App Store](https://img.shields.io/badge/Download%20on-the%20App%20Store-0D96F6?logo=appstore&logoColor=white)](https://www.apple.com/app-store/)
+[![Rust](https://img.shields.io/badge/Rust-1.89+-orange?logo=rust)](https://www.rust-lang.org/) [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) ![Views](https://komarev.com/ghpvc/?username=devfemibadmus&repo=mediasaver&color=blue) [![Get it on Google Play](https://img.shields.io/badge/Get%20it%20on-Google%20Play-3DDC84?logo=googleplay&logoColor=white)](https://play.google.com/store/apps/details?id=com.blackstackhub.mediasaver) [![Download on the App Store](https://img.shields.io/badge/Download%20on-the%20App%20Store-0D96F6?logo=appstore&logoColor=white)](https://apps.apple.com/app/media-saver/id6757933675)
 
 feature graphic from [hotpot.io](https://hotpot.io)
 [![Feature Graphic](media/JN5MqT0rsNOi_1024_500.png?raw=true)](https://play.google.com/store/apps/details?id=com.blackstackhub.mediasaver)
