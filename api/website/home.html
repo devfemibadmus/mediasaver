@@ -52,6 +52,7 @@
 		<meta name="theme-color" content="#000000" />
 		<meta name="mobile-web-app-capable" content="yes" />
 		<meta name="apple-mobile-web-app-title" content="Media Saver" />
+		<meta name="apple-itunes-app" content="app-id=6757933675" />
 		<meta name="application-name" content="Media Saver" />
 		<meta name="msapplication-TileColor" content="#000000" />
 		<meta name="referrer" content="origin-when-cross-origin" />
@@ -189,10 +190,10 @@
 				</div>
 				<div class="hidden md:flex items-center gap-10 text-xs font-black uppercase tracking-[0.2em] text-slate-400">
 					<a href="#mobileApp" class="hover:text-black transition-colors">Mobile App</a>
-					<button onclick="togglePrivacyModal()" class="hover:text-black transition-colors">Privacy</button>
+					<a href="#privacy" onclick="openPrivacyModal()" class="hover:text-black transition-colors">Privacy</a>
 				</div>
 				<div class="md:hidden">
-					<button onclick="togglePrivacyModal()" class="p-2 text-black"><i data-lucide="menu" class="w-6 h-6"></i></button>
+					<a href="#privacy" onclick="openPrivacyModal()" class="p-2 text-black"><i data-lucide="menu" class="w-6 h-6"></i></a>
 				</div>
 			</div>
 		</nav>
@@ -378,7 +379,7 @@
 								</div>
 							</div>
 						</a>
-						<a href="https://www.apple.com/app-store/" target="_blank" class="store-button">
+						<a href="https://apps.apple.com/app/media-saver/id6757933675" target="_blank" class="store-button">
 							<img
 								src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg"
 								class="h-16"
@@ -402,18 +403,18 @@
 				<div class="text-black text-sm font-black tracking-widest uppercase">MediaSaver Pro &copy; 2026</div>
 			</div>
 			<div class="flex gap-10 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
-				<button onclick="togglePrivacyModal()" class="hover:text-black transition-colors">Privacy Policy</button>
+				<a href="#privacy" onclick="openPrivacyModal()" class="hover:text-black transition-colors">Privacy Policy</a>
 				<a href="mailto:devfemibadmus@gmail.com" class="hover:text-black transition-colors">Support</a>
 			</div>
 		</footer>
 
 		<!-- Privacy Modal -->
 		<div id="privacyModal" class="fixed inset-0 z-[100] flex items-center justify-center opacity-0 pointer-events-none modal">
-			<div class="absolute inset-0 bg-white/95 backdrop-blur-md" onclick="togglePrivacyModal()"></div>
+			<div class="absolute inset-0 bg-white/95 backdrop-blur-md" onclick="closePrivacyModal()"></div>
 			<div
 				class="relative bg-white border border-slate-200 w-full max-w-2xl max-h-[85vh] overflow-y-auto m-6 p-10 rounded-[3rem] shadow-[0_0_100px_rgba(0,0,0,0.05)]"
 			>
-				<button onclick="togglePrivacyModal()" class="absolute top-8 right-8 p-3 bg-slate-50 hover:bg-slate-100 rounded-full transition-all">
+				<button onclick="closePrivacyModal()" class="absolute top-8 right-8 p-3 bg-slate-50 hover:bg-slate-100 rounded-full transition-all">
 					<i data-lucide="x" class="w-6 h-6 text-black"></i>
 				</button>
 				<h2 class="text-4xl font-black text-black mb-8 tracking-tighter uppercase">Privacy</h2>
@@ -440,7 +441,7 @@
 					</div>
 				</div>
 				<button
-					onclick="togglePrivacyModal()"
+					onclick="closePrivacyModal()"
 					class="mt-12 w-full py-5 bg-black hover:bg-slate-800 text-white font-black rounded-3xl transition-all shadow-xl shadow-slate-200 uppercase tracking-widest text-xs"
 				>
 					Accept & Close
@@ -499,14 +500,27 @@
 				return isVideoUrl(cleanedUrl) ? "mp4" : "jpg";
 			}
 
-			function togglePrivacyModal() {
-				const isHidden = privacyModal.classList.contains("pointer-events-none");
-				if (isHidden) {
-					privacyModal.classList.remove("pointer-events-none", "opacity-0");
-					document.body.classList.add("modal-active");
+			function openPrivacyModal() {
+				privacyModal.classList.remove("pointer-events-none", "opacity-0");
+				document.body.classList.add("modal-active");
+				if (window.location.hash !== "#privacy") {
+					history.pushState(null, "", "#privacy");
+				}
+			}
+
+			function closePrivacyModal() {
+				privacyModal.classList.add("pointer-events-none", "opacity-0");
+				document.body.classList.remove("modal-active");
+				if (window.location.hash === "#privacy") {
+					history.pushState(null, "", window.location.pathname + window.location.search);
+				}
+			}
+
+			function syncPrivacyHash() {
+				if (window.location.hash === "#privacy") {
+					openPrivacyModal();
 				} else {
-					privacyModal.classList.add("pointer-events-none", "opacity-0");
-					document.body.classList.remove("modal-active");
+					closePrivacyModal();
 				}
 			}
 
@@ -658,7 +672,9 @@
 					downloadFile(url, `${currentPlatform}_${index + 1}.${ext}`);
 				});
 			});
+			window.addEventListener("hashchange", syncPrivacyHash);
 
+			syncPrivacyHash();
 			lucide.createIcons();
 		</script>
 	</body>
