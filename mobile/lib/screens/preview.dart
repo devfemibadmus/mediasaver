@@ -173,18 +173,25 @@ class _ImagePreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: isLocalFile
-          ? Image.file(
-              File(imageUrl),
-              fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => const Icon(Icons.error, size: 80),
-            )
-          : Image.network(
-              MediaHelper.cleanUrl(imageUrl),
-              fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => const Icon(Icons.error, size: 80),
-            ),
+    final image = isLocalFile
+        ? Image.file(
+            File(imageUrl),
+            fit: BoxFit.contain,
+            errorBuilder: (_, __, ___) => const Icon(Icons.error, size: 80),
+          )
+        : Image.network(
+            MediaHelper.cleanUrl(imageUrl),
+            fit: BoxFit.contain,
+            errorBuilder: (_, __, ___) => const Icon(Icons.error, size: 80),
+          );
+
+    return InteractiveViewer(
+      minScale: 1,
+      maxScale: 5,
+      clipBehavior: Clip.none,
+      child: Center(
+        child: image,
+      ),
     );
   }
 }

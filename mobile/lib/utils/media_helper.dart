@@ -10,6 +10,8 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 
 class MediaHelper {
+  static Future<void>? _storeOpenFuture;
+
   static Map<String, String> buildRequestHeaders({
     Map<String, String>? extraHeaders,
   }) {
@@ -34,21 +36,7 @@ class MediaHelper {
 
   static Future<void> initStore() async {
     try {
-      Directory dir;
-
-      try {
-        dir = await getApplicationSupportDirectory();
-      } catch (e) {
-        await Future.delayed(const Duration(milliseconds: 300));
-        dir = await getApplicationSupportDirectory();
-      }
-
-      if (!Hive.isBoxOpen('mediaBox')) {
-        Hive.init(dir.path);
-        await Hive.openBox('mediaBox');
-        await Hive.openBox('urlBox');
-        await Hive.openBox('pathToUrlBox');
-      }
+      await _ensureStoreOpen();
 
       if (Platform.isAndroid) {
         if (!await Permission.storage.isGranted) {
@@ -64,6 +52,43 @@ class MediaHelper {
     }
   }
 
+  static Future<void> _ensureStoreOpen() {
+    if (Hive.isBoxOpen('mediaBox') &&
+        Hive.isBoxOpen('urlBox') &&
+        Hive.isBoxOpen('pathToUrlBox')) {
+      return Future.value();
+    }
+
+    return _storeOpenFuture ??= _openStoreBoxes();
+  }
+
+  static Future<void> _openStoreBoxes() async {
+    try {
+      Directory dir;
+
+      try {
+        dir = await getApplicationSupportDirectory();
+      } catch (e) {
+        await Future.delayed(const Duration(milliseconds: 300));
+        dir = await getApplicationSupportDirectory();
+      }
+
+      Hive.init(dir.path);
+
+      if (!Hive.isBoxOpen('mediaBox')) {
+        await Hive.openBox('mediaBox');
+      }
+      if (!Hive.isBoxOpen('urlBox')) {
+        await Hive.openBox('urlBox');
+      }
+      if (!Hive.isBoxOpen('pathToUrlBox')) {
+        await Hive.openBox('pathToUrlBox');
+      }
+    } finally {
+      _storeOpenFuture = null;
+    }
+  }
+
   static Future<Directory> _historyDirectory() async {
     final dir = await getApplicationDocumentsDirectory();
     final historyDir = Directory('${dir.path}/MediaSaverHistory');
@@ -73,8 +98,21 @@ class MediaHelper {
     return historyDir;
   }
 
+  static Future<Directory> _thumbnailDirectory() async {
+    final dir = await getApplicationSupportDirectory();
+    final thumbnailDir = Directory('${dir.path}/MediaSaverThumbnails');
+    if (!await thumbnailDir.exists()) {
+      await thumbnailDir.create(recursive: true);
+    }
+    return thumbnailDir;
+  }
+
   static String cleanUrl(String url) {
     return url.replaceAll('&amp;', '&');
+  }
+
+  static String _shellQuote(String value) {
+    return '"${value.replaceAll('"', r'\"')}"';
   }
 
   static bool isVideoUrl(String url) {
@@ -160,10 +198,40 @@ class MediaHelper {
     }
   }
 
+  static Future<String?> getVideoThumbnailPath(String videoPath) async {
+    try {
+      final videoFile = File(videoPath);
+      if (!await videoFile.exists()) return null;
+
+      final thumbnailDir = await _thumbnailDirectory();
+      final pathHash = md5.convert(utf8.encode(videoPath)).toString();
+      final thumbnailPath = '${thumbnailDir.path}/$pathHash.jpg';
+      final thumbnailFile = File(thumbnailPath);
+
+      if (await thumbnailFile.exists()) {
+        return thumbnailPath;
+      }
+
+      await FFmpegKit.execute(
+        '-y -ss 00:00:01 -i ${_shellQuote(videoPath)} -frames:v 1 -q:v 4 ${_shellQuote(thumbnailPath)}',
+      );
+
+      if (await thumbnailFile.exists()) {
+        return thumbnailPath;
+      }
+    } catch (e) {
+      debugPrint('Video thumbnail failed: $e');
+    }
+
+    return null;
+  }
+
   static Future<File> saveToGalleryAndStore({
     required String url,
     required String fileName,
   }) async {
+    await _ensureStoreOpen();
+
     final cleanedUrl = cleanUrl(url);
     final response = await http.get(
       Uri.parse(cleanedUrl),
@@ -213,6 +281,8 @@ class MediaHelper {
   }
 
   static Future<List<FileSystemEntity>> getSavedPaths(String extension) async {
+    await _ensureStoreOpen();
+
     final box = Hive.box('mediaBox');
     final staleIndexes = <int>[];
     final seen = <String>{};
@@ -244,6 +314,8 @@ class MediaHelper {
   }
 
   static Future<void> cleanDeleted() async {
+    await _ensureStoreOpen();
+
     final box = Hive.box('mediaBox');
     final urlBox = Hive.box('urlBox');
     final pathToUrlBox = Hive.box('pathToUrlBox');
@@ -282,6 +354,8 @@ class MediaHelper {
   }
 
   static Future<String?> getMediaByUrl(String url) async {
+    await _ensureStoreOpen();
+
     final urlBox = Hive.box('urlBox');
     final urlHash = md5.convert(utf8.encode(url)).toString();
     return urlBox.get(urlHash);
@@ -289,6 +363,8 @@ class MediaHelper {
 
   static Future<bool> deleteMedia(String filePath, String url) async {
     try {
+      await _ensureStoreOpen();
+
       final file = File(filePath);
       if (file.existsSync()) {
         await file.delete();

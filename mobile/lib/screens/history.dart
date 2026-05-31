@@ -138,6 +138,8 @@ class HistoryScreenState extends State<HistoryScreen> {
               child: Stack(
                 children: [
                   Container(
+                    width: double.infinity,
+                    height: double.infinity,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       color: Colors.grey[100],
@@ -145,18 +147,41 @@ class HistoryScreenState extends State<HistoryScreen> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: isVideo
-                          ? _videoPlaceholder()
-                          : Image.file(
-                              File(file.path),
-                              fit: BoxFit.cover,
-                              cacheWidth: 500,
-                              errorBuilder: (_, __, ___) => Container(
-                                color: Colors.grey[200],
-                                child: const Center(
-                                  child: Icon(
-                                    Icons.image,
-                                    size: 40,
-                                    color: Colors.grey,
+                          ? FutureBuilder<String?>(
+                              future:
+                                  MediaHelper.getVideoThumbnailPath(file.path),
+                              builder: (context, snapshot) {
+                                final thumbnailPath = snapshot.data;
+                                if (thumbnailPath == null) {
+                                  return _videoPlaceholder();
+                                }
+
+                                return SizedBox.expand(
+                                  child: Image.file(
+                                    File(thumbnailPath),
+                                    fit: BoxFit.cover,
+                                    alignment: Alignment.center,
+                                    cacheWidth: 700,
+                                    errorBuilder: (_, __, ___) =>
+                                        _videoPlaceholder(),
+                                  ),
+                                );
+                              },
+                            )
+                          : SizedBox.expand(
+                              child: Image.file(
+                                File(file.path),
+                                fit: BoxFit.cover,
+                                alignment: Alignment.center,
+                                cacheWidth: 700,
+                                errorBuilder: (_, __, ___) => Container(
+                                  color: Colors.grey[200],
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.image,
+                                      size: 40,
+                                      color: Colors.grey,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -234,9 +259,9 @@ class HistoryScreenState extends State<HistoryScreen> {
 
   Widget _videoPlaceholder() {
     return Container(
-      color: Colors.grey[200],
+      color: Colors.grey[900],
       child: const Center(
-        child: Icon(Icons.videocam, size: 44, color: Colors.grey),
+        child: Icon(Icons.movie_outlined, size: 44, color: Colors.white70),
       ),
     );
   }
