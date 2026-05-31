@@ -5,30 +5,30 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Media Saver - NASA Public Media Saver</title>
+		<title>Media Saver - Free Video & Photo Downloader for Social Media</title>
 
 		<!-- Primary Meta Tags -->
-		<meta name="title" content="Media Saver - NASA Public Media Saver" />
+		<meta name="title" content="Media Saver - Free Video & Photo Downloader for Social Media" />
 		<meta
 			name="description"
-			content="Save NASA public media from NASA SVS and NASA Image Library links. Media Saver is built for public-domain NASA videos, images, and allowed direct media links."
+			content="Download videos, photos, reels, and NASA SVS media from Instagram, TikTok, Facebook, Twitter, Snapchat, and NASA. No registration. Fast & secure online downloader."
 		/>
 		<meta
 			name="keywords"
-			content="NASA media saver, NASA SVS, NASA Image Library, public domain media, NASA videos, NASA images, direct media links"
+			content="video downloader, Instagram downloader, TikTok downloader, Facebook downloader, NASA downloader, social media downloader, save videos, download reels, free media downloader, snapchat saver"
 		/>
 		<meta name="author" content="devfemibadmus" />
 		<meta name="robots" content="index, follow, max-image-preview:large" />
 		<meta name="googlebot" content="index, follow" />
 		<meta name="rating" content="safe for kids" />
 
-		<!-- Open Graph -->
+		<!-- Open Graph / Facebook -->
 		<meta property="og:type" content="website" />
 		<meta property="og:url" content="https://mediasaver.link/" />
-		<meta property="og:title" content="Media Saver - NASA Public Media Saver" />
+		<meta property="og:title" content="Media Saver - Free Video & Photo Downloader for Social Media" />
 		<meta
 			property="og:description"
-			content="Save NASA public-domain videos and images from NASA SVS and NASA Image Library links."
+			content="Download videos, photos, reels, and NASA SVS media from Instagram, TikTok, Facebook, Twitter, Snapchat, and NASA. No registration required."
 		/>
 		<meta property="og:image" content="https://mediasaver.link/static/og-image.jpg" />
 		<meta property="og:image:width" content="1200" />
@@ -36,13 +36,13 @@
 		<meta property="og:locale" content="en_US" />
 		<meta property="og:site_name" content="Media Saver" />
 
-		<!-- Social Preview -->
+		<!-- Twitter -->
 		<meta name="twitter:card" content="summary_large_image" />
 		<meta name="twitter:url" content="https://mediasaver.link/" />
-		<meta name="twitter:title" content="Media Saver - NASA Public Media Saver" />
+		<meta name="twitter:title" content="Media Saver - Free Video & Photo Downloader for Social Media" />
 		<meta
 			name="twitter:description"
-			content="Save NASA public-domain videos and images from NASA SVS and NASA Image Library links."
+			content="Download videos, photos, reels, and NASA SVS media from Instagram, TikTok, Facebook, Twitter, Snapchat, and NASA."
 		/>
 		<meta name="twitter:image" content="https://mediasaver.link/static/twitter-card.jpg" />
 		<meta name="twitter:creator" content="@devfemibadmus" />
@@ -62,7 +62,7 @@
 				"@context": "https://schema.org",
 				"@type": "WebApplication",
 				"name": "Media Saver",
-				"description": "Tool for saving NASA public-domain videos and images from NASA media links",
+				"description": "Free online tool to download videos and photos from social media platforms",
 				"url": "https://mediasaver.link/",
 				"applicationCategory": "UtilitiesApplication",
 				"operatingSystem": "Any",
@@ -189,10 +189,10 @@
 				</div>
 				<div class="hidden md:flex items-center gap-10 text-xs font-black uppercase tracking-[0.2em] text-slate-400">
 					<a href="#mobileApp" class="hover:text-black transition-colors">Mobile App</a>
-					<a href="#privacy" onclick="openPrivacyModal()" class="hover:text-black transition-colors">Privacy</a>
+					<button onclick="togglePrivacyModal()" class="hover:text-black transition-colors">Privacy</button>
 				</div>
 				<div class="md:hidden">
-					<a href="#privacy" onclick="openPrivacyModal()" class="p-2 text-black"><i data-lucide="menu" class="w-6 h-6"></i></a>
+					<button onclick="togglePrivacyModal()" class="p-2 text-black"><i data-lucide="menu" class="w-6 h-6"></i></button>
 				</div>
 			</div>
 		</nav>
@@ -204,7 +204,7 @@
 					ONE LINK.<br /><span class="text-slate-300 uppercase">EVERYTHING.</span>
 				</h1>
 				<p class="text-slate-500 text-xl max-w-xl font-medium leading-relaxed">
-					Save NASA public media from NASA SVS, NASA Image Library, and other allowed direct media links.
+					Save high-quality content instantly. Paste your link and we'll handle the rest.
 				</p>
 			</header>
 
@@ -219,7 +219,7 @@
 							<input
 								id="urlInput"
 								type="text"
-								placeholder="Paste a NASA media link here..."
+								placeholder="Paste your social link here..."
 								class="w-full bg-transparent border-none text-black py-4 text-xl placeholder:text-slate-300 font-semibold"
 							/>
 						</div>
@@ -240,33 +240,62 @@
 				</div>
 			</section>
 
-			<!-- Supported Sources -->
+			<!-- Supported Platforms -->
 			<section class="mb-32">
-				<p class="text-center text-slate-300 text-[10px] font-black uppercase tracking-[0.5em] mb-12">Supported Public Sources</p>
-				<div class="grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-3xl mx-auto">
-					<div class="flex flex-col items-center justify-start gap-5 group cursor-default min-h-[132px]">
+				<p class="text-center text-slate-300 text-[10px] font-black uppercase tracking-[0.5em] mb-12">Universal Support</p>
+				<div class="flex flex-wrap justify-center items-center gap-10 md:gap-20">
+					<div class="flex flex-col items-center gap-4 group cursor-default">
+						<img
+							src="static/ig.png"
+							onerror="this.src='https://cdn-icons-png.flaticon.com/512/174/174855.png'"
+							class="w-16 h-16 object-contain grayscale group-hover:grayscale-0 transition-all group-hover:scale-110"
+							alt="IG"
+						/>
+						<span class="text-[10px] font-black text-slate-400 group-hover:text-black uppercase tracking-widest">Instagram</span>
+					</div>
+					<div class="flex flex-col items-center gap-4 group cursor-default">
+						<img
+							src="static/fb.png"
+							onerror="this.src='https://cdn-icons-png.flaticon.com/512/733/733547.png'"
+							class="w-16 h-16 object-contain grayscale group-hover:grayscale-0 transition-all group-hover:scale-110"
+							alt="FB"
+						/>
+						<span class="text-[10px] font-black text-slate-400 group-hover:text-black uppercase tracking-widest">Facebook</span>
+					</div>
+					<div class="flex flex-col items-center gap-4 group cursor-default">
+						<img
+							src="static/tk.png"
+							onerror="this.src='https://cdn-icons-png.flaticon.com/512/3046/3046121.png'"
+							class="w-16 h-16 object-contain grayscale group-hover:grayscale-0 transition-all group-hover:scale-110"
+							alt="TK"
+						/>
+						<span class="text-[10px] font-black text-slate-400 group-hover:text-black uppercase tracking-widest">TikTok</span>
+					</div>
+					<div class="flex flex-col items-center gap-4 group cursor-default">
+						<img
+							src="static/sc.png"
+							onerror="this.src='https://cdn-icons-png.flaticon.com/512/3670/3670325.png'"
+							class="w-16 h-16 object-contain grayscale group-hover:grayscale-0 transition-all group-hover:scale-110"
+							alt="SC"
+						/>
+						<span class="text-[10px] font-black text-slate-400 group-hover:text-black uppercase tracking-widest">Snapchat</span>
+					</div>
+					<div class="flex flex-col items-center gap-4 group cursor-default">
+						<img
+							src="static/x.png"
+							onerror="this.src='https://cdn-icons-png.flaticon.com/512/5968/5968830.png'"
+							class="w-16 h-16 object-contain grayscale group-hover:grayscale-0 transition-all group-hover:scale-110"
+							alt="X"
+						/>
+						<span class="text-[10px] font-black text-slate-400 group-hover:text-black uppercase tracking-widest">Twitter (X)</span>
+					</div>
+					<div class="flex flex-col items-center gap-4 group cursor-default">
 						<div
-							class="w-20 h-20 shrink-0 rounded-full border border-slate-200 bg-white text-black flex items-center justify-center text-[11px] font-black tracking-[0.16em] group-hover:scale-105 transition-all"
+							class="w-16 h-16 rounded-full border border-slate-200 bg-white text-black flex items-center justify-center text-[11px] font-black tracking-[0.2em] group-hover:scale-110 transition-all"
 						>
 							NASA
 						</div>
-						<span class="h-8 flex items-center justify-center text-center text-[10px] font-black text-slate-400 group-hover:text-black uppercase tracking-widest leading-4">NASA SVS</span>
-					</div>
-					<div class="flex flex-col items-center justify-start gap-5 group cursor-default min-h-[132px]">
-						<div
-							class="w-20 h-20 shrink-0 rounded-full border border-slate-200 bg-white text-black flex items-center justify-center text-[11px] font-black tracking-[0.16em] group-hover:scale-105 transition-all"
-						>
-							IMG
-						</div>
-						<span class="h-8 flex items-center justify-center text-center text-[10px] font-black text-slate-400 group-hover:text-black uppercase tracking-widest leading-4">NASA Image Library</span>
-					</div>
-					<div class="flex flex-col items-center justify-start gap-5 group cursor-default min-h-[132px]">
-						<div
-							class="w-20 h-20 shrink-0 rounded-full border border-slate-200 bg-white text-black flex items-center justify-center text-[11px] font-black tracking-[0.16em] group-hover:scale-105 transition-all"
-						>
-							URL
-						</div>
-						<span class="h-8 flex items-center justify-center text-center text-[10px] font-black text-slate-400 group-hover:text-black uppercase tracking-widest leading-4">Allowed Direct Links</span>
+						<span class="text-[10px] font-black text-slate-400 group-hover:text-black uppercase tracking-widest">NASA SVS</span>
 					</div>
 				</div>
 			</section>
@@ -321,7 +350,7 @@
 					</div>
 					<h2 class="text-4xl md:text-6xl font-black text-black mb-6 tracking-tighter uppercase">Professional Saver</h2>
 					<p class="text-slate-500 text-xl max-w-lg mb-12 font-medium leading-relaxed">
-						Save and organize NASA public media on mobile. Available for Android and iOS.
+						The only app you need to download and merge split media seamlessly. Available for Android and iOS.
 					</p>
 
 					<div class="flex flex-wrap justify-center gap-6">
@@ -349,7 +378,7 @@
 								</div>
 							</div>
 						</a>
-						<a href="https://apps.apple.com/app/media-saver/id6757933675" target="_blank" class="store-button">
+						<a href="https://www.apple.com/app-store/" target="_blank" class="store-button">
 							<img
 								src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg"
 								class="h-16"
@@ -373,18 +402,18 @@
 				<div class="text-black text-sm font-black tracking-widest uppercase">MediaSaver Pro &copy; 2026</div>
 			</div>
 			<div class="flex gap-10 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
-				<a href="#privacy" onclick="openPrivacyModal()" class="hover:text-black transition-colors">Privacy Policy</a>
+				<button onclick="togglePrivacyModal()" class="hover:text-black transition-colors">Privacy Policy</button>
 				<a href="mailto:devfemibadmus@gmail.com" class="hover:text-black transition-colors">Support</a>
 			</div>
 		</footer>
 
 		<!-- Privacy Modal -->
 		<div id="privacyModal" class="fixed inset-0 z-[100] flex items-center justify-center opacity-0 pointer-events-none modal">
-			<div class="absolute inset-0 bg-white/95 backdrop-blur-md" onclick="closePrivacyModal()"></div>
+			<div class="absolute inset-0 bg-white/95 backdrop-blur-md" onclick="togglePrivacyModal()"></div>
 			<div
 				class="relative bg-white border border-slate-200 w-full max-w-2xl max-h-[85vh] overflow-y-auto m-6 p-10 rounded-[3rem] shadow-[0_0_100px_rgba(0,0,0,0.05)]"
 			>
-				<button onclick="closePrivacyModal()" class="absolute top-8 right-8 p-3 bg-slate-50 hover:bg-slate-100 rounded-full transition-all">
+				<button onclick="togglePrivacyModal()" class="absolute top-8 right-8 p-3 bg-slate-50 hover:bg-slate-100 rounded-full transition-all">
 					<i data-lucide="x" class="w-6 h-6 text-black"></i>
 				</button>
 				<h2 class="text-4xl font-black text-black mb-8 tracking-tighter uppercase">Privacy</h2>
@@ -411,7 +440,7 @@
 					</div>
 				</div>
 				<button
-					onclick="closePrivacyModal()"
+					onclick="togglePrivacyModal()"
 					class="mt-12 w-full py-5 bg-black hover:bg-slate-800 text-white font-black rounded-3xl transition-all shadow-xl shadow-slate-200 uppercase tracking-widest text-xs"
 				>
 					Accept & Close
@@ -470,27 +499,14 @@
 				return isVideoUrl(cleanedUrl) ? "mp4" : "jpg";
 			}
 
-			function openPrivacyModal() {
-				privacyModal.classList.remove("pointer-events-none", "opacity-0");
-				document.body.classList.add("modal-active");
-				if (window.location.hash !== "#privacy") {
-					history.pushState(null, "", "#privacy");
-				}
-			}
-
-			function closePrivacyModal() {
-				privacyModal.classList.add("pointer-events-none", "opacity-0");
-				document.body.classList.remove("modal-active");
-				if (window.location.hash === "#privacy") {
-					history.pushState(null, "", window.location.pathname + window.location.search);
-				}
-			}
-
-			function syncPrivacyHash() {
-				if (window.location.hash === "#privacy") {
-					openPrivacyModal();
+			function togglePrivacyModal() {
+				const isHidden = privacyModal.classList.contains("pointer-events-none");
+				if (isHidden) {
+					privacyModal.classList.remove("pointer-events-none", "opacity-0");
+					document.body.classList.add("modal-active");
 				} else {
-					closePrivacyModal();
+					privacyModal.classList.add("pointer-events-none", "opacity-0");
+					document.body.classList.remove("modal-active");
 				}
 			}
 
@@ -642,9 +658,7 @@
 					downloadFile(url, `${currentPlatform}_${index + 1}.${ext}`);
 				});
 			});
-			window.addEventListener("hashchange", syncPrivacyHash);
 
-			syncPrivacyHash();
 			lucide.createIcons();
 		</script>
 	</body>
