@@ -32,13 +32,13 @@ jobs:
               uses: actions/setup-java@v4
               with:
                   distribution: "temurin"
-                  java-version: "17"
+                  java-version: "21"
                   cache: "gradle"
 
             - name: Set up Flutter
               uses: subosito/flutter-action@v2
               with:
-                  flutter-version: "3.41.3"
+                  flutter-version: "3.38.5"
                   channel: "stable"
                   cache: true
 
