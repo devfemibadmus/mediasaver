@@ -106,7 +106,7 @@ impl Facebook {
             .replace("&amp;", "&")
     }
 
-    fn collect_fallback_media(html: &str) -> Vec<Value> {
+    fn collect_embedded_media_urls(html: &str) -> Vec<Value> {
         let normalized = html.replace("&quot;", "\"");
         let fields = [
             "browser_native_hd_url",
@@ -140,6 +140,31 @@ impl Facebook {
                         || lower.contains("fbsbx"));
 
                 if looks_like_media && seen.insert(url.clone()) {
+                    out.push(json!(url));
+                }
+            }
+        }
+
+        out
+    }
+
+    fn collect_combined_media(data: &Value) -> Vec<Value> {
+        let fields = [
+            "browser_native_hd_url",
+            "browser_native_sd_url",
+            "playable_url_quality_hd",
+            "playable_url",
+            "hd_src",
+            "sd_src",
+        ];
+        let mut out = Vec::new();
+        let mut seen = HashSet::new();
+
+        for field in fields {
+            if let Some(url) = Self::get_nested_value(data, field).and_then(|value| value.as_str())
+            {
+                let url = Self::decode_embedded_url(url);
+                if !url.is_empty() && seen.insert(url.clone()) {
                     out.push(json!(url));
                 }
             }
@@ -246,7 +271,7 @@ impl Facebook {
             }
         }
 
-        let fallback_media = Self::collect_fallback_media(&text);
+        let fallback_media = Self::collect_embedded_media_urls(&text);
         if !fallback_media.is_empty() {
             return Ok(json!({
                 "fallback_media": fallback_media,
@@ -271,8 +296,7 @@ impl Facebook {
 
         let mut out = Vec::new();
 
-        let preferred_thumbnail = Self::get_nested_value(&data, "preferred_thumbnail").cloned();
-        let browser_native_hd_url = Self::get_nested_value(&data, "browser_native_hd_url").cloned();
+        let combined_media = Self::collect_combined_media(&data);
         let representations = Self::get_nested_value(&data, "representations").cloned();
 
         if let Some(media) = data
@@ -286,7 +310,13 @@ impl Facebook {
             }
         }
 
-        if browser_native_hd_url.is_none() {
+        for url in combined_media {
+            if !out.contains(&url) {
+                out.push(url);
+            }
+        }
+
+        if out.is_empty() {
             if let Some(reps) = representations.and_then(|r| r.as_array().cloned()) {
                 let best_video = reps
                     .iter()
@@ -323,19 +353,6 @@ impl Facebook {
             }
         }
 
-        if let Some(url) = browser_native_hd_url {
-            out.push(url);
-        }
-
-        if let Some(thumb) = preferred_thumbnail
-            .as_ref()
-            .and_then(|p| p.get("image"))
-            .and_then(|i| i.get("uri"))
-            .cloned()
-        {
-            out.push(thumb);
-        }
-
         let result = json!({
             "data": out,
             "total": out.len(),
@@ -349,10 +366,7 @@ impl Facebook {
 #[tokio::test]
 async fn facebook() {
     let client = reqwest::Client::new();
-    let mut scraper = Facebook::new(
-        client,
-        "https://www.facebook.com/share/r/1AjofSWZsn/?mibextid=wwXIfr",
-    );
+    let mut scraper = Facebook::new(client, "https://www.facebook.com/share/r/1HG3ksoqj8/?");
     let response = scraper.get_data().await;
     let status = response.status();
     println!("Status: {}", status);
