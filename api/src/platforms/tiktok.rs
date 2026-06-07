@@ -3,6 +3,7 @@ use reqwest::Client;
 use reqwest::header::{ACCEPT, ACCEPT_LANGUAGE, HeaderMap, HeaderValue, USER_AGENT};
 use scraper::{Html, Selector};
 use serde_json::{Value, json};
+use std::collections::HashSet;
 
 pub struct TikTok {
     client: Client,
@@ -32,8 +33,32 @@ impl TikTok {
         headers
     }
 
-    fn find_url_lists(obj: &serde_json::Value) -> Vec<Vec<String>> {
-        let mut last_url_list: Option<Vec<String>> = None;
+    fn find_nested_value<'a>(data: &'a Value, key: &str) -> Option<&'a Value> {
+        match data {
+            Value::Object(map) => {
+                if let Some(v) = map.get(key) {
+                    return Some(v);
+                }
+                for v in map.values() {
+                    if let Some(res) = Self::find_nested_value(v, key) {
+                        return Some(res);
+                    }
+                }
+                None
+            }
+            Value::Array(arr) => {
+                for v in arr {
+                    if let Some(res) = Self::find_nested_value(v, key) {
+                        return Some(res);
+                    }
+                }
+                None
+            }
+            _ => None,
+        }
+    }
+
+    fn collect_url_lists(obj: &Value, out: &mut Vec<Vec<String>>) {
         let mut stack = vec![obj];
 
         while let Some(current) = stack.pop() {
@@ -46,7 +71,7 @@ impl TikTok {
                                 .filter_map(|v| v.as_str().map(String::from))
                                 .collect();
                             if !list.is_empty() {
-                                last_url_list = Some(list);
+                                out.push(list);
                             }
                         }
                     }
@@ -58,11 +83,79 @@ impl TikTok {
                 }
             }
         }
+    }
 
-        match last_url_list {
-            Some(list) => vec![list],
-            None => Vec::new(),
+    fn push_unique(out: &mut Vec<String>, seen: &mut HashSet<String>, url: String) {
+        let url = url.replace("&amp;", "&");
+        if !url.is_empty() && seen.insert(url.clone()) {
+            out.push(url);
         }
+    }
+
+    fn media_url_from_list(url_list: &[String]) -> Option<String> {
+        url_list
+            .iter()
+            .rev()
+            .find(|url| !url.trim().is_empty())
+            .cloned()
+    }
+
+    fn normalize_video_url(url: &str) -> String {
+        if url.contains("?dr=") {
+            url.to_string()
+        } else {
+            let parts: Vec<&str> = url.split('?').collect();
+            if parts.len() > 1 {
+                format!(
+                    "https://api16-normal-useast5.tiktokv.us/aweme/v1/play/?faid=1988&{}",
+                    parts[1].replace("&amp;", "&")
+                )
+            } else {
+                url.to_string()
+            }
+        }
+    }
+
+    fn collect_image_post_urls(item: &Value) -> Vec<String> {
+        let mut out = Vec::new();
+        let mut seen = HashSet::new();
+
+        let images = Self::find_nested_value(item, "imagePost")
+            .and_then(|image_post| image_post.get("images"))
+            .and_then(|images| images.as_array());
+
+        if let Some(images) = images {
+            for image in images {
+                let mut lists = Vec::new();
+                Self::collect_url_lists(image, &mut lists);
+                if let Some(url) = lists
+                    .iter()
+                    .filter_map(|list| Self::media_url_from_list(list))
+                    .find(|url| url.starts_with("http"))
+                {
+                    Self::push_unique(&mut out, &mut seen, url);
+                }
+            }
+        }
+
+        out
+    }
+
+    fn collect_video_urls(item: &Value) -> Vec<String> {
+        let mut out = Vec::new();
+        let mut seen = HashSet::new();
+
+        let video = Self::find_nested_value(item, "video").unwrap_or(item);
+        let mut lists = Vec::new();
+        Self::collect_url_lists(video, &mut lists);
+
+        for list in lists {
+            if let Some(url) = Self::media_url_from_list(&list) {
+                Self::push_unique(&mut out, &mut seen, Self::normalize_video_url(&url));
+            }
+        }
+
+        out
     }
 
     pub async fn get_data(&self) -> HttpResponse {
@@ -123,26 +216,11 @@ impl TikTok {
             }
         };
 
-        let all_url_lists = Self::find_url_lists(&data);
+        let item = Self::find_nested_value(&data, "itemStruct").unwrap_or(&data);
+        let mut out = Self::collect_image_post_urls(item);
 
-        let mut out = Vec::new();
-        for url_list in all_url_lists {
-            if let Some(url) = url_list.last() {
-                let new_url = if url.contains("?dr=") {
-                    url.clone()
-                } else {
-                    let parts: Vec<&str> = url.split('?').collect();
-                    if parts.len() > 1 {
-                        format!(
-                            "https://api16-normal-useast5.tiktokv.us/aweme/v1/play/?faid=1988&{}",
-                            parts[1].replace("&amp;", "&")
-                        )
-                    } else {
-                        url.clone()
-                    }
-                };
-                out.push(new_url);
-            }
+        if out.is_empty() {
+            out = Self::collect_video_urls(item);
         }
 
         let result = json!({

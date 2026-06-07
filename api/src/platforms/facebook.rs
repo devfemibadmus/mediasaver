@@ -1,8 +1,10 @@
 use actix_web::{HttpResponse, http::StatusCode};
+use regex::Regex;
 use reqwest::Client;
 use reqwest::header::{ACCEPT, ACCEPT_LANGUAGE, HeaderMap, HeaderValue, USER_AGENT};
 use scraper::{Html, Selector};
 use serde_json::{Value, json};
+use std::collections::HashSet;
 
 pub struct Facebook {
     url: String,
@@ -88,6 +90,62 @@ impl Facebook {
             }
             _ => None,
         }
+    }
+
+    fn decode_embedded_url(value: &str) -> String {
+        value
+            .replace("\\/", "/")
+            .replace("\\u0025", "%")
+            .replace("\\u0026", "&")
+            .replace("\\u003d", "=")
+            .replace("\\u003D", "=")
+            .replace("\\u003f", "?")
+            .replace("\\u003F", "?")
+            .replace("\\u002f", "/")
+            .replace("\\u002F", "/")
+            .replace("&amp;", "&")
+    }
+
+    fn collect_fallback_media(html: &str) -> Vec<Value> {
+        let normalized = html.replace("&quot;", "\"");
+        let fields = [
+            "browser_native_hd_url",
+            "browser_native_sd_url",
+            "playable_url_quality_hd",
+            "playable_url",
+            "hd_src",
+            "sd_src",
+            "base_url",
+        ];
+        let mut out = Vec::new();
+        let mut seen = HashSet::new();
+
+        for field in fields {
+            let pattern = format!(r#""{}"\s*:\s*"([^"]+)""#, regex::escape(field));
+            let re = match Regex::new(&pattern) {
+                Ok(re) => re,
+                Err(_) => continue,
+            };
+
+            for capture in re.captures_iter(&normalized) {
+                let Some(raw) = capture.get(1).map(|m| m.as_str()) else {
+                    continue;
+                };
+                let url = Self::decode_embedded_url(raw);
+                let lower = url.to_lowercase();
+                let looks_like_media = url.starts_with("http")
+                    && (lower.contains(".mp4")
+                        || lower.contains("video")
+                        || lower.contains("fbcdn")
+                        || lower.contains("fbsbx"));
+
+                if looks_like_media && seen.insert(url.clone()) {
+                    out.push(json!(url));
+                }
+            }
+        }
+
+        out
     }
 
     async fn fetch_json(&mut self) -> Result<Value, String> {
@@ -188,6 +246,14 @@ impl Facebook {
             }
         }
 
+        let fallback_media = Self::collect_fallback_media(&text);
+        if !fallback_media.is_empty() {
+            return Ok(json!({
+                "fallback_media": fallback_media,
+                "platform": "facebook"
+            }));
+        }
+
         Err("Video not visible. Open it in Reels and share the link again.".into())
     }
 
@@ -208,6 +274,17 @@ impl Facebook {
         let preferred_thumbnail = Self::get_nested_value(&data, "preferred_thumbnail").cloned();
         let browser_native_hd_url = Self::get_nested_value(&data, "browser_native_hd_url").cloned();
         let representations = Self::get_nested_value(&data, "representations").cloned();
+
+        if let Some(media) = data
+            .get("fallback_media")
+            .and_then(|media| media.as_array())
+        {
+            for url in media {
+                if !out.contains(url) {
+                    out.push(url.clone());
+                }
+            }
+        }
 
         if browser_native_hd_url.is_none() {
             if let Some(reps) = representations.and_then(|r| r.as_array().cloned()) {
