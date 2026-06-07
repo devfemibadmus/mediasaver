@@ -298,6 +298,7 @@ impl Facebook {
 
         let combined_media = Self::collect_combined_media(&data);
         let representations = Self::get_nested_value(&data, "representations").cloned();
+        let preferred_thumbnail = Self::get_nested_value(&data, "preferred_thumbnail").cloned();
 
         if let Some(media) = data
             .get("fallback_media")
@@ -351,6 +352,15 @@ impl Facebook {
                     }
                 }
             }
+        }
+
+        if let Some(thumb) = preferred_thumbnail
+            .as_ref()
+            .and_then(|p| p.get("image"))
+            .and_then(|i| i.get("uri"))
+            .cloned()
+        {
+            out.push(thumb);
         }
 
         let result = json!({
