@@ -1,7 +1,8 @@
-use actix_web::{HttpResponse, http::StatusCode};
+﻿use actix_web::{HttpResponse, http::StatusCode};
 use reqwest::Client;
-use reqwest::header::{ACCEPT, ACCEPT_LANGUAGE, CONTENT_TYPE, HeaderMap, HeaderValue, USER_AGENT};
+use reqwest::header::{ACCEPT, ACCEPT_LANGUAGE, HeaderMap, HeaderValue, USER_AGENT};
 use serde_json::{Value, json};
+use scraper::{Html, Selector};
 
 pub struct Instagram {
     client: Client,
@@ -13,162 +14,186 @@ impl Instagram {
         Self { client, url }
     }
 
-    fn graphql() -> &'static str {
-        "https://www.instagram.com/graphql/query/"
-    }
-
     fn headers() -> HeaderMap {
         let mut headers = HeaderMap::new();
-        headers.insert(ACCEPT, HeaderValue::from_static("*/*"));
-        headers.insert(ACCEPT_LANGUAGE, HeaderValue::from_static("en-US,en;q=0.9"));
         headers.insert(
-            CONTENT_TYPE,
-            HeaderValue::from_static("application/x-www-form-urlencoded"),
+            ACCEPT,
+            HeaderValue::from_static("text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"),
         );
-        headers.insert(USER_AGENT, HeaderValue::from_static(
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36 Edg/136.0.0.0"
-        ));
+        headers.insert(ACCEPT_LANGUAGE, HeaderValue::from_static("en-US,en;q=0.5"));
         headers.insert(
-            "Origin",
-            HeaderValue::from_static("https://www.instagram.com"),
+            USER_AGENT,
+            HeaderValue::from_static(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36",
+            ),
         );
-        headers.insert(
-            "Referer",
-            HeaderValue::from_static("https://www.instagram.com"),
-        );
-        headers.insert("X-CSRFToken", HeaderValue::from_static("11111111111"));
         headers
     }
 
-    fn extract_item_id(url: &str) -> Option<&str> {
+    fn extract_shortcode(url: &str) -> Option<&str> {
         url.split("/reel/")
             .nth(1)
             .or_else(|| url.split("/p/").nth(1))
+            .or_else(|| url.split("/tv/").nth(1))
             .and_then(|s| s.split('/').next())
+            .and_then(|s| s.split('?').next())
+    }
+
+    fn is_cdn_media_url(url: &str) -> bool {
+        (url.contains("cdninstagram.com") || url.contains("fbcdn.net"))
+            && !url.contains("static.cdninstagram.com")
+    }
+
+    async fn fetch_media_direct(&self, shortcode: &str) -> Result<Vec<String>, String> {
+        let url = format!("https://www.instagram.com/p/{}/media/?size=l", shortcode);
+
+        let resp = self
+            .client
+            .get(&url)
+            .headers(Self::headers())
+            .send()
+            .await
+            .map_err(|e| format!("Direct media request failed: {}", e))?;
+
+        let final_url = resp.url().to_string();
+
+        if Self::is_cdn_media_url(&final_url) {
+            let clean = final_url.split('?').next().unwrap_or(&final_url).to_string();
+            Ok(vec![clean])
+        } else {
+            Err("Direct media endpoint did not redirect to a CDN URL".to_string())
+        }
+    }
+
+    async fn fetch_page_media(&self, shortcode: &str) -> Result<Vec<String>, String> {
+        let page_url = format!("https://www.instagram.com/p/{}/", shortcode);
+
+        let resp = self
+            .client
+            .get(&page_url)
+            .headers(Self::headers())
+            .send()
+            .await
+            .map_err(|e| format!("Page request failed: {}", e))?;
+
+        if !resp.status().is_success() {
+            return Err(format!("Page returned status {}", resp.status().as_u16()));
+        }
+
+        let html = resp
+            .text()
+            .await
+            .map_err(|e| format!("Failed to read page: {}", e))?;
+
+        let mut results = Vec::new();
+        let document = Html::parse_document(&html);
+
+        let og_video_secure = Selector::parse("meta[property=\"og:video:secure_url\"]").unwrap();
+        for el in document.select(&og_video_secure) {
+            if let Some(c) = el.value().attr("content") {
+                if !c.is_empty() {
+                    results.push(c.to_string());
+                }
+            }
+        }
+
+        let og_video = Selector::parse("meta[property=\"og:video\"]").unwrap();
+        for el in document.select(&og_video) {
+            if let Some(c) = el.value().attr("content") {
+                if !c.is_empty() && !results.contains(&c.to_string()) {
+                    results.push(c.to_string());
+                }
+            }
+        }
+
+        let og_image = Selector::parse("meta[property=\"og:image\"]").unwrap();
+        for el in document.select(&og_image) {
+            if let Some(c) = el.value().attr("content") {
+                if !c.is_empty() && !results.contains(&c.to_string()) {
+                    results.push(c.to_string());
+                }
+            }
+        }
+
+        let ld_json = Selector::parse("script[type=\"application/ld+json\"]").unwrap();
+        for el in document.select(&ld_json) {
+            let text: String = el.text().collect();
+            if let Ok(parsed) = serde_json::from_str::<Value>(&text) {
+                if let Some(img) = parsed.get("image") {
+                    match img {
+                        Value::String(s) => {
+                            if !results.contains(s) {
+                                results.push(s.clone());
+                            }
+                        }
+                        Value::Array(arr) => {
+                            for v in arr {
+                                if let Some(s) = v.as_str() {
+                                    if !results.contains(&s.to_string()) {
+                                        results.push(s.to_string());
+                                    }
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+                if let Some(vid_url) = parsed
+                    .get("video")
+                    .and_then(|v| v.get("contentUrl"))
+                    .and_then(|s| s.as_str())
+                {
+                    if !results.contains(&vid_url.to_string()) {
+                        results.push(vid_url.to_string());
+                    }
+                }
+            }
+        }
+
+        if results.is_empty() {
+            Err("No media found on page".to_string())
+        } else {
+            Ok(results)
+        }
     }
 
     pub async fn get_data(&self) -> HttpResponse {
-        let item_id = if let Some(id) = Self::extract_item_id(&self.url) {
-            id.to_string()
-        } else {
-            return HttpResponse::NotFound().json(json!({ "error_message": "Post not found" }));
-        };
-
-        let graphql_data = json!({
-            "av": "0",
-            "__d": "www",
-            "__user": "0",
-            "__a": "1",
-            "__req": "a",
-            "__hs": "20229.HYP:instagram_web_pkg.2.1...0",
-            "dpr": "1",
-            "__ccg": "GOOD",
-            "__rev": "1023049274",
-            "__comet_req": "7",
-            "lsd": "AVqQ3As1H7g",
-            "jazoest": "2855",
-            "__spin_r": "1023049274",
-            "__spin_b": "trunk",
-            "__spin_t": "1747835843",
-            "fb_api_caller_class": "RelayModern",
-            "fb_api_req_friendly_name": "PolarisPostActionLoadPostQueryQuery",
-            "variables": format!("{{\"shortcode\":\"{}\",\"fetch_tagged_user_count\":null,\"hoisted_comment_id\":null,\"hoisted_reply_id\":null}}", item_id),
-            "server_timestamps": "true",
-            "doc_id": "9510064595728286"
-        });
-
-        let resp = match self
-            .client
-            .post(Self::graphql())
-            .headers(Self::headers())
-            .form(&graphql_data)
-            .send()
-            .await
-        {
-            Ok(r) => r,
-            Err(e) => {
-                return HttpResponse::build(StatusCode::BAD_GATEWAY)
-                    .json(json!({ "error_message": format!("Request failed: {}", e) }));
-            }
-        };
-
-        let data: Value = match resp.json().await {
-            Ok(d) => d,
-            Err(e) => {
-                return HttpResponse::build(StatusCode::BAD_GATEWAY)
-                    .json(json!({ "error_message": format!("JSON parse failed: {}", e) }));
-            }
-        };
-
-        let item = match data.get("data").and_then(|d| d.get("xdt_shortcode_media")) {
-            Some(i) => i,
+        let shortcode = match Self::extract_shortcode(&self.url) {
+            Some(id) => id.to_string(),
             None => {
-                return HttpResponse::build(StatusCode::BAD_GATEWAY)
-                    .json(json!({ "error_message": "Item not found" }));
+                return HttpResponse::NotFound()
+                    .json(json!({ "error_message": "Could not extract post ID from URL" }));
             }
         };
 
-        let mut out = Vec::new();
-
-        if let Some(thumbnail_src) = item.get("thumbnail_src") {
-            out.push(thumbnail_src.clone());
-        }
-
-        if let Some(resources) = item.get("display_resources").and_then(|r| r.as_array()) {
-            if let Some(last) = resources.last() {
-                if let Some(video_url) = last.get("src") {
-                    out.push(video_url.clone());
+        let results = match self.fetch_media_direct(&shortcode).await {
+            Ok(urls) => urls,
+            Err(_) => match self.fetch_page_media(&shortcode).await {
+                Ok(urls) => urls,
+                Err(e) => {
+                    return HttpResponse::build(StatusCode::BAD_GATEWAY)
+                        .json(json!({ "error_message": e }));
                 }
-            }
-        }
+            },
+        };
 
-        if let Some(edges) = item
-            .get("edge_sidecar_to_children")
-            .and_then(|c| c.get("edges"))
-            .and_then(|a| a.as_array())
-        {
-            for edge in edges {
-                if let Some(node) = edge.get("node") {
-                    if let Some(video_url) = node.get("video_url") {
-                        out.push(video_url.clone());
-                    }
-                    if let Some(display_url) = node.get("display_url") {
-                        out.push(display_url.clone());
-                    }
-                    if let Some(resources) =
-                        node.get("display_resources").and_then(|r| r.as_array())
-                    {
-                        if let Some(last) = resources.last() {
-                            if let Some(video_url) = last.get("src") {
-                                out.push(video_url.clone());
-                            }
-                        }
-                    }
-                    if let Some(video) = node.get("video_url") {
-                        out.push(video.clone());
-                    }
-                }
-            }
-        } else if let Some(video_url) = item.get("video_url") {
-            out.push(video_url.clone());
-        }
-
-        let result = json!({
-            "data": out,
-            "total": out.len(),
+        HttpResponse::Ok().json(json!({
+            "data": results,
+            "total": results.len(),
             "platform": "instagram"
-        });
-
-        HttpResponse::Ok().json(result)
+        }))
     }
 }
 
 #[tokio::test]
 async fn instagram() {
-    let client = reqwest::Client::new();
+    let client = reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::limited(5))
+        .build()
+        .unwrap();
     let scraper = Instagram::new(
         client,
-        "https://www.instagram.com/reel/DHm7knuzl1D".to_string(),
+        "https://www.instagram.com/p/DajR8O7PHb3/".to_string(),
     );
     let response = scraper.get_data().await;
     let status = response.status();
@@ -179,4 +204,11 @@ async fn instagram() {
     let body_str = String::from_utf8(body_bytes.to_vec()).unwrap();
     println!("Body: {}", body_str);
     assert_eq!(status, StatusCode::OK);
+    let v: Value = serde_json::from_str(&body_str).unwrap();
+    let url = v["data"][0].as_str().unwrap();
+    assert!(
+        url.contains("fbcdn.net") || url.contains("cdninstagram.com"),
+        "Expected CDN URL, got: {}",
+        url
+    );
 }
