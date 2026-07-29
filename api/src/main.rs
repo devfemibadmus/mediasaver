@@ -1,4 +1,4 @@
-﻿use actix_cors::Cors;
+use actix_cors::Cors;
 use actix_web::http::header::ContentType;
 use actix_web::{App, HttpRequest, HttpResponse, HttpServer, Responder, get, route, web};
 use regex::Regex;
@@ -167,7 +167,7 @@ async fn home() -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let client = reqwest::Client::builder().redirect(reqwest::redirect::Policy::limited(5)).build().unwrap();
+    let client = reqwest::Client::new();
     let host = env::var("APP_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
     let port = env::var("APP_PORT")
         .ok()

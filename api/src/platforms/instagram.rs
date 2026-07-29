@@ -1,8 +1,18 @@
-﻿use actix_web::{HttpResponse, http::StatusCode};
+use actix_web::{HttpResponse, http::StatusCode};
 use reqwest::Client;
-use reqwest::header::{ACCEPT, ACCEPT_LANGUAGE, HeaderMap, HeaderValue, USER_AGENT};
-use serde_json::{Value, json};
+use reqwest::header::{
+    ACCEPT, ACCEPT_LANGUAGE, CONTENT_TYPE, HeaderMap, HeaderValue, ORIGIN, REFERER, USER_AGENT,
+};
 use scraper::{Html, Selector};
+use serde_json::{Value, json};
+use std::collections::HashSet;
+
+const GRAPHQL_URL: &str = "https://www.instagram.com/graphql/query/";
+const GRAPHQL_DOC_ID: &str = "10015901848480474";
+const GRAPHQL_LSD: &str = "AVqbxe3J_YA";
+const INSTAGRAM_APP_ID: &str = "1217981644879628";
+const INSTAGRAM_ASBD_ID: &str = "129477";
+const INSTAGRAM_CSRF_TOKEN: &str = "RVDUooU5MYsBbS1CNN3CzVAuEP8oHB52";
 
 pub struct Instagram {
     client: Client,
@@ -14,201 +24,275 @@ impl Instagram {
         Self { client, url }
     }
 
-    fn headers() -> HeaderMap {
+    fn user_agent() -> &'static str {
+        "Mozilla/5.0 (Linux; Android 11) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Mobile Safari/537.36"
+    }
+
+    fn page_headers() -> HeaderMap {
         let mut headers = HeaderMap::new();
         headers.insert(
             ACCEPT,
-            HeaderValue::from_static("text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"),
-        );
-        headers.insert(ACCEPT_LANGUAGE, HeaderValue::from_static("en-US,en;q=0.5"));
-        headers.insert(
-            USER_AGENT,
             HeaderValue::from_static(
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36",
+                "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
             ),
         );
+        headers.insert(ACCEPT_LANGUAGE, HeaderValue::from_static("en-US,en;q=0.9"));
+        headers.insert(USER_AGENT, HeaderValue::from_static(Self::user_agent()));
         headers
+    }
+
+    fn graphql_headers(referer: &str) -> Result<HeaderMap, String> {
+        let mut headers = HeaderMap::new();
+        headers.insert(ACCEPT, HeaderValue::from_static("*/*"));
+        headers.insert(ACCEPT_LANGUAGE, HeaderValue::from_static("en-US,en;q=0.5"));
+        headers.insert(
+            CONTENT_TYPE,
+            HeaderValue::from_static("application/x-www-form-urlencoded"),
+        );
+        headers.insert(USER_AGENT, HeaderValue::from_static(Self::user_agent()));
+        headers.insert(
+            ORIGIN,
+            HeaderValue::from_static("https://www.instagram.com"),
+        );
+        headers.insert(
+            REFERER,
+            HeaderValue::from_str(referer).map_err(|e| format!("Invalid Instagram URL: {e}"))?,
+        );
+        headers.insert(
+            "X-FB-Friendly-Name",
+            HeaderValue::from_static("PolarisPostActionLoadPostQueryQuery"),
+        );
+        headers.insert("X-IG-App-ID", HeaderValue::from_static(INSTAGRAM_APP_ID));
+        headers.insert("X-FB-LSD", HeaderValue::from_static(GRAPHQL_LSD));
+        headers.insert("X-ASBD-ID", HeaderValue::from_static(INSTAGRAM_ASBD_ID));
+        headers.insert(
+            "X-CSRFToken",
+            HeaderValue::from_static(INSTAGRAM_CSRF_TOKEN),
+        );
+        headers.insert("Sec-Fetch-Dest", HeaderValue::from_static("empty"));
+        headers.insert("Sec-Fetch-Mode", HeaderValue::from_static("cors"));
+        headers.insert("Sec-Fetch-Site", HeaderValue::from_static("same-origin"));
+        Ok(headers)
     }
 
     fn extract_shortcode(url: &str) -> Option<&str> {
         url.split("/reel/")
             .nth(1)
+            .or_else(|| url.split("/reels/").nth(1))
             .or_else(|| url.split("/p/").nth(1))
             .or_else(|| url.split("/tv/").nth(1))
             .and_then(|s| s.split('/').next())
             .and_then(|s| s.split('?').next())
+            .filter(|s| !s.is_empty())
     }
 
-    fn is_cdn_media_url(url: &str) -> bool {
-        (url.contains("cdninstagram.com") || url.contains("fbcdn.net"))
-            && !url.contains("static.cdninstagram.com")
-    }
+    async fn fetch_graphql_media(&self, shortcode: &str) -> Result<Value, String> {
+        let variables = json!({
+            "shortcode": shortcode,
+            "fetch_tagged_user_count": null,
+            "hoisted_comment_id": null,
+            "hoisted_reply_id": null
+        });
+        let variables =
+            serde_json::to_string(&variables).map_err(|e| format!("Variables failed: {e}"))?;
+        let form = [
+            ("variables", variables.as_str()),
+            ("server_timestamps", "true"),
+            ("doc_id", GRAPHQL_DOC_ID),
+        ];
 
-    async fn fetch_media_direct(&self, shortcode: &str) -> Result<Vec<String>, String> {
-        let url = format!("https://www.instagram.com/p/{}/media/?size=l", shortcode);
-
-        let resp = self
+        let response = self
             .client
-            .get(&url)
-            .headers(Self::headers())
+            .post(GRAPHQL_URL)
+            .headers(Self::graphql_headers(&self.url)?)
+            .form(&form)
             .send()
             .await
-            .map_err(|e| format!("Direct media request failed: {}", e))?;
+            .map_err(|e| format!("Instagram GraphQL request failed: {e}"))?;
 
-        let final_url = resp.url().to_string();
-
-        if Self::is_cdn_media_url(&final_url) {
-            let clean = final_url.split('?').next().unwrap_or(&final_url).to_string();
-            Ok(vec![clean])
-        } else {
-            Err("Direct media endpoint did not redirect to a CDN URL".to_string())
+        if !response.status().is_success() {
+            return Err(format!(
+                "Instagram GraphQL returned status {}",
+                response.status()
+            ));
         }
+
+        let body = response
+            .text()
+            .await
+            .map_err(|e| format!("Instagram GraphQL body failed: {e}"))?;
+        let body = body.strip_prefix("for (;;);").unwrap_or(&body);
+        let data: Value = serde_json::from_str(body)
+            .map_err(|e| format!("Instagram GraphQL JSON failed: {e}"))?;
+
+        data.get("data")
+            .and_then(|data| data.get("xdt_shortcode_media"))
+            .filter(|media| !media.is_null())
+            .cloned()
+            .ok_or_else(|| "Instagram item not found in GraphQL response".to_string())
+    }
+
+    fn push_url(out: &mut Vec<String>, seen: &mut HashSet<String>, value: Option<&Value>) {
+        if let Some(url) = value.and_then(Value::as_str) {
+            let url = url.replace("&amp;", "&");
+            if !url.is_empty() && seen.insert(url.clone()) {
+                out.push(url);
+            }
+        }
+    }
+
+    fn push_best_image(node: &Value, out: &mut Vec<String>, seen: &mut HashSet<String>) {
+        if let Some(resource) = node
+            .get("display_resources")
+            .and_then(Value::as_array)
+            .and_then(|resources| resources.last())
+        {
+            Self::push_url(out, seen, resource.get("src"));
+            return;
+        }
+
+        Self::push_url(out, seen, node.get("display_url"));
+    }
+
+    fn extract_graphql_urls(item: &Value) -> Vec<String> {
+        let mut out = Vec::new();
+        let mut seen = HashSet::new();
+
+        Self::push_url(&mut out, &mut seen, item.get("thumbnail_src"));
+        Self::push_best_image(item, &mut out, &mut seen);
+
+        if let Some(edges) = item
+            .get("edge_sidecar_to_children")
+            .and_then(|sidecar| sidecar.get("edges"))
+            .and_then(Value::as_array)
+        {
+            for edge in edges {
+                let Some(node) = edge.get("node") else {
+                    continue;
+                };
+                Self::push_url(&mut out, &mut seen, node.get("video_url"));
+                Self::push_best_image(node, &mut out, &mut seen);
+            }
+        } else {
+            Self::push_url(&mut out, &mut seen, item.get("video_url"));
+        }
+
+        out
     }
 
     async fn fetch_page_media(&self, shortcode: &str) -> Result<Vec<String>, String> {
-        let page_url = format!("https://www.instagram.com/p/{}/", shortcode);
-
-        let resp = self
+        let page_url = format!("https://www.instagram.com/p/{shortcode}/");
+        let response = self
             .client
             .get(&page_url)
-            .headers(Self::headers())
+            .headers(Self::page_headers())
             .send()
             .await
-            .map_err(|e| format!("Page request failed: {}", e))?;
+            .map_err(|e| format!("Instagram page request failed: {e}"))?;
 
-        if !resp.status().is_success() {
-            return Err(format!("Page returned status {}", resp.status().as_u16()));
+        if !response.status().is_success() {
+            return Err(format!(
+                "Instagram page returned status {}",
+                response.status()
+            ));
         }
 
-        let html = resp
+        let html = response
             .text()
             .await
-            .map_err(|e| format!("Failed to read page: {}", e))?;
-
-        let mut results = Vec::new();
+            .map_err(|e| format!("Instagram page body failed: {e}"))?;
         let document = Html::parse_document(&html);
+        let mut out = Vec::new();
+        let mut seen = HashSet::new();
 
-        let og_video_secure = Selector::parse("meta[property=\"og:video:secure_url\"]").unwrap();
-        for el in document.select(&og_video_secure) {
-            if let Some(c) = el.value().attr("content") {
-                if !c.is_empty() {
-                    results.push(c.to_string());
-                }
-            }
-        }
-
-        let og_video = Selector::parse("meta[property=\"og:video\"]").unwrap();
-        for el in document.select(&og_video) {
-            if let Some(c) = el.value().attr("content") {
-                if !c.is_empty() && !results.contains(&c.to_string()) {
-                    results.push(c.to_string());
-                }
-            }
-        }
-
-        let og_image = Selector::parse("meta[property=\"og:image\"]").unwrap();
-        for el in document.select(&og_image) {
-            if let Some(c) = el.value().attr("content") {
-                if !c.is_empty() && !results.contains(&c.to_string()) {
-                    results.push(c.to_string());
-                }
-            }
-        }
-
-        let ld_json = Selector::parse("script[type=\"application/ld+json\"]").unwrap();
-        for el in document.select(&ld_json) {
-            let text: String = el.text().collect();
-            if let Ok(parsed) = serde_json::from_str::<Value>(&text) {
-                if let Some(img) = parsed.get("image") {
-                    match img {
-                        Value::String(s) => {
-                            if !results.contains(s) {
-                                results.push(s.clone());
-                            }
-                        }
-                        Value::Array(arr) => {
-                            for v in arr {
-                                if let Some(s) = v.as_str() {
-                                    if !results.contains(&s.to_string()) {
-                                        results.push(s.to_string());
-                                    }
-                                }
-                            }
-                        }
-                        _ => {}
-                    }
-                }
-                if let Some(vid_url) = parsed
-                    .get("video")
-                    .and_then(|v| v.get("contentUrl"))
-                    .and_then(|s| s.as_str())
-                {
-                    if !results.contains(&vid_url.to_string()) {
-                        results.push(vid_url.to_string());
+        for property in ["og:video:secure_url", "og:video", "og:image"] {
+            let selector = Selector::parse(&format!("meta[property=\"{property}\"]"))
+                .map_err(|e| format!("Instagram selector failed: {e}"))?;
+            for element in document.select(&selector) {
+                if let Some(url) = element.value().attr("content") {
+                    let url = url.replace("&amp;", "&");
+                    if !url.is_empty() && seen.insert(url.clone()) {
+                        out.push(url);
                     }
                 }
             }
         }
 
-        if results.is_empty() {
-            Err("No media found on page".to_string())
+        if out.is_empty() {
+            Err("No media found on Instagram page".to_string())
         } else {
-            Ok(results)
+            Ok(out)
         }
     }
 
     pub async fn get_data(&self) -> HttpResponse {
         let shortcode = match Self::extract_shortcode(&self.url) {
-            Some(id) => id.to_string(),
+            Some(shortcode) => shortcode.to_string(),
             None => {
                 return HttpResponse::NotFound()
-                    .json(json!({ "error_message": "Could not extract post ID from URL" }));
+                    .json(json!({ "error_message": "Could not extract Instagram post ID" }));
             }
         };
 
-        let results = match self.fetch_media_direct(&shortcode).await {
-            Ok(urls) => urls,
-            Err(_) => match self.fetch_page_media(&shortcode).await {
-                Ok(urls) => urls,
-                Err(e) => {
-                    return HttpResponse::build(StatusCode::BAD_GATEWAY)
-                        .json(json!({ "error_message": e }));
+        let results = match self.fetch_graphql_media(&shortcode).await {
+            Ok(item) => {
+                let urls = Self::extract_graphql_urls(&item);
+                if urls.is_empty() {
+                    self.fetch_page_media(&shortcode).await
+                } else {
+                    Ok(urls)
                 }
-            },
+            }
+            Err(graphql_error) => self
+                .fetch_page_media(&shortcode)
+                .await
+                .map_err(|page_error| format!("{graphql_error}; {page_error}")),
         };
 
-        HttpResponse::Ok().json(json!({
-            "data": results,
-            "total": results.len(),
-            "platform": "instagram"
-        }))
+        match results {
+            Ok(data) => HttpResponse::Ok().json(json!({
+                "data": data,
+                "total": data.len(),
+                "platform": "instagram"
+            })),
+            Err(error) => {
+                HttpResponse::build(StatusCode::BAD_GATEWAY).json(json!({ "error_message": error }))
+            }
+        }
     }
 }
 
 #[tokio::test]
 async fn instagram() {
-    let client = reqwest::Client::builder()
-        .redirect(reqwest::redirect::Policy::limited(5))
-        .build()
-        .unwrap();
+    let client = reqwest::Client::new();
     let scraper = Instagram::new(
         client,
         "https://www.instagram.com/p/DajR8O7PHb3/".to_string(),
     );
     let response = scraper.get_data().await;
     let status = response.status();
-    println!("Status: {}", status);
+    println!("Status: {status}");
     let body_bytes = actix_web::body::to_bytes(response.into_body())
         .await
         .unwrap();
     let body_str = String::from_utf8(body_bytes.to_vec()).unwrap();
-    println!("Body: {}", body_str);
+    println!("Body: {body_str}");
     assert_eq!(status, StatusCode::OK);
-    let v: Value = serde_json::from_str(&body_str).unwrap();
-    let url = v["data"][0].as_str().unwrap();
+
+    let result: Value = serde_json::from_str(&body_str).unwrap();
+    let media = result["data"].as_array().unwrap();
+    assert!(!media.is_empty(), "Expected at least one Instagram URL");
     assert!(
-        url.contains("fbcdn.net") || url.contains("cdninstagram.com"),
-        "Expected CDN URL, got: {}",
-        url
+        media.iter().any(|url| {
+            url.as_str()
+                .is_some_and(|url| url.contains("cdninstagram.com") || url.contains("fbcdn.net"))
+        }),
+        "Expected an Instagram CDN URL"
+    );
+    assert!(
+        media
+            .iter()
+            .any(|url| url.as_str().is_some_and(|url| url.contains(".mp4"))),
+        "Expected an Instagram video URL"
     );
 }
