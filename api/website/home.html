@@ -55,7 +55,7 @@
 		<meta name="apple-itunes-app" content="app-id=6757933675" />
 		<meta name="application-name" content="Media Saver" />
 		<meta name="msapplication-TileColor" content="#000000" />
-		<meta name="referrer" content="origin-when-cross-origin" />
+		<meta name="referrer" content="no-referrer" />
 
 		<!-- Structured Data -->
 		<script type="application/ld+json">
@@ -465,29 +465,59 @@
 
 			let currentMediaList = [];
 			let currentPlatform = "";
+			let activeFetchController = null;
 
-			function cleanUrl(url) {
-				return url.trim();
+			const apiTimeoutMs = 45000;
+			const mediaLoadTimeoutMs = 30000;
+			const mediaRetryDelayMs = 750;
+
+			function cleanUrl(value) {
+				return typeof value === "string" ? value.trim() : "";
+			}
+
+			function normalizeMedia(value) {
+				const rawValue = cleanUrl(value);
+				const isSplit = rawValue.startsWith("audio===");
+				let url = rawValue.replace(/^audio===/, "").trim();
+
+				if (!url) return null;
+
+				try {
+					const parsed = new URL(url);
+					if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+						return null;
+					}
+
+					if (window.location.protocol === "https:" && parsed.protocol === "http:") {
+						url = `https://${url.slice("http://".length)}`;
+					}
+				} catch (error) {
+					return null;
+				}
+
+				return { url, isSplit };
 			}
 
 			function isVideoUrl(url) {
-				const cleanedUrl = cleanUrl(url);
+				const cleanedUrl = cleanUrl(url).replace(/^audio===/, "");
 				const low = cleanedUrl.toLowerCase();
 				return (
-					low.includes(".mp4") ||
-					low.includes(".mov") ||
-					url.includes("/play/") ||
-					url.includes("/video/") ||
-					url.includes("video_id=") ||
-					url.includes(".27.IRZXSOY") ||
-					url.includes(".1034.IRZXSOY") ||
-					url.includes("aweme/v1/play") ||
-					url.includes("audio===")
+					/\.(mp4|mov|m4v|webm)(?:$|[?#])/i.test(cleanedUrl) ||
+					low.includes("/play/") ||
+					low.includes("/video/") ||
+					low.includes("video_id=") ||
+					low.includes(".27.irzxsoy") ||
+					low.includes(".1034.irzxsoy") ||
+					low.includes("aweme/v1/play")
 				);
 			}
 
+			function isAudioUrl(url) {
+				return /\.(mp3|m4a|aac|wav|ogg|opus)(?:$|[?#])/i.test(cleanUrl(url).replace(/^audio===/, ""));
+			}
+
 			function inferExtension(url) {
-				const cleanedUrl = cleanUrl(url).replace("audio===", "");
+				const cleanedUrl = cleanUrl(url).replace(/^audio===/, "");
 
 				try {
 					const parsed = new URL(cleanedUrl, window.location.origin);
@@ -497,7 +527,14 @@
 					}
 				} catch (error) {}
 
-				return isVideoUrl(cleanedUrl) ? "mp4" : "jpg";
+				return isVideoUrl(cleanedUrl) ? "mp4" : isAudioUrl(cleanedUrl) ? "mp3" : "jpg";
+			}
+
+			function safeFilenamePart(value) {
+				return String(value || "media")
+					.toLowerCase()
+					.replace(/[^a-z0-9_-]+/g, "_")
+					.replace(/^_+|_+$/g, "") || "media";
 			}
 
 			function openPrivacyModal() {
@@ -525,8 +562,15 @@
 			}
 
 			async function downloadFile(url, filename) {
+				const media = normalizeMedia(url);
+				if (!media) return;
+
 				try {
-					const response = await fetch(url);
+					const response = await fetch(media.url, { referrerPolicy: "no-referrer" });
+					if (!response.ok) {
+						throw new Error(`Media request failed with status ${response.status}`);
+					}
+
 					const blob = await response.blob();
 					const blobUrl = window.URL.createObjectURL(blob);
 					const link = document.createElement("a");
@@ -535,15 +579,118 @@
 					document.body.appendChild(link);
 					link.click();
 					document.body.removeChild(link);
-					window.URL.revokeObjectURL(blobUrl);
+					window.setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
 				} catch (error) {
-					window.open(url, "_blank");
+					const link = document.createElement("a");
+					link.href = media.url;
+					link.target = "_blank";
+					link.rel = "noopener noreferrer";
+					link.referrerPolicy = "no-referrer";
+					document.body.appendChild(link);
+					link.click();
+					document.body.removeChild(link);
 				}
 			}
 
+			function removeMediaLoading(container) {
+				container.querySelector(".media-loading-overlay")?.remove();
+			}
+
+			function showMediaFailure(container) {
+				if (container.dataset.mediaFailed === "true") return;
+
+				container.dataset.mediaFailed = "true";
+				removeMediaLoading(container);
+				container.querySelector(".media-preview")?.remove();
+				container.querySelector(".media-play-overlay")?.remove();
+
+				const failure = document.createElement("div");
+				failure.className = "w-full h-full flex flex-col items-center justify-center bg-slate-50";
+				failure.innerHTML = `
+					<div class="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+						<i data-lucide="image-off" class="w-10 h-10 text-slate-400"></i>
+					</div>
+					<span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Preview unavailable</span>
+				`;
+				container.appendChild(failure);
+				lucide.createIcons();
+			}
+
+			function loadMediaElement(element, container, url, loadedEvent) {
+				let retryCount = 0;
+				let timeoutId = null;
+				let retryScheduled = false;
+				let settled = false;
+
+				const clearWatchdog = () => {
+					if (timeoutId !== null) {
+						window.clearTimeout(timeoutId);
+						timeoutId = null;
+					}
+				};
+
+				const finish = () => {
+					if (settled) return;
+					settled = true;
+					clearWatchdog();
+					removeMediaLoading(container);
+				};
+
+				const fail = () => {
+					if (settled || retryScheduled) return;
+					clearWatchdog();
+
+					if (retryCount === 0 && element.isConnected) {
+						retryCount += 1;
+						retryScheduled = true;
+						window.setTimeout(() => {
+							retryScheduled = false;
+							startAttempt();
+						}, mediaRetryDelayMs);
+						return;
+					}
+
+					settled = true;
+					showMediaFailure(container);
+				};
+
+				const startAttempt = () => {
+					if (settled || !element.isConnected) return;
+
+					element.src = url;
+					if (element instanceof HTMLMediaElement) {
+						element.load();
+					}
+					timeoutId = window.setTimeout(fail, mediaLoadTimeoutMs);
+				};
+
+				element.addEventListener(loadedEvent, finish);
+				element.addEventListener("error", fail);
+				startAttempt();
+			}
+
 			function renderResults(data, platform) {
+				if (!Array.isArray(data)) {
+					throw new Error("THE SERVICE RETURNED AN INVALID MEDIA LIST.");
+				}
+
+				const seen = new Set();
+				const mediaList = data
+					.map(normalizeMedia)
+					.filter((media) => {
+						if (!media) return false;
+						const key = `${media.isSplit ? "audio" : "media"}:${media.url}`;
+						if (seen.has(key)) return false;
+						seen.add(key);
+						return true;
+					});
+
+				if (mediaList.length === 0) {
+					throw new Error("NO MEDIA WAS FOUND FOR THIS LINK.");
+				}
+
 				resultsGrid.innerHTML = "";
-				currentMediaList = data;
+				currentMediaList = mediaList;
 				currentPlatform = platform || "media";
 
 				resultsHeader.classList.remove("hidden");
@@ -551,10 +698,10 @@
 
 				let hasSplitMedia = false;
 
-				data.forEach((url, index) => {
-					const isVideo = isVideoUrl(url);
-					const isSplit = url.includes("audio===");
-					url = url.replace("audio===", "");
+				mediaList.forEach((media, index) => {
+					const { url, isSplit } = media;
+					const isVideo = !isSplit && isVideoUrl(url);
+					const isAudio = isSplit || isAudioUrl(url);
 					if (isSplit) hasSplitMedia = true;
 
 					const card = document.createElement("div");
@@ -563,25 +710,23 @@
 					card.style.animationDelay = `${index * 0.1}s`;
 
 					let mediaHtml = "";
-					if (isSplit) {
+					if (isAudio) {
 						mediaHtml = `
                         <div class="w-full h-full flex flex-col items-center justify-center bg-slate-50">
                             <div class="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-4">
                                 <i data-lucide="music" class="w-10 h-10 text-slate-400"></i>
                             </div>
                             <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Audio Stream</span>
-                            <!-- Hidden tag to trigger loader removal for audio -->
-                            <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" class="hidden" onload="this.parentElement.parentElement.querySelector('.media-loading-overlay').remove()">
                         </div>`;
 					} else if (isVideo) {
-						mediaHtml = `<video src="${url}" class="w-full h-full object-cover" muted playsInline onloadeddata="this.parentElement.querySelector('.media-loading-overlay').remove()" onmouseenter="this.play()" onmouseleave="this.pause(); this.currentTime=0;"></video>
-                       <div class="absolute inset-0 flex items-center justify-center pointer-events-none group-hover:opacity-0 transition-opacity">
+						mediaHtml = `<video class="media-preview w-full h-full object-cover" muted playsinline preload="metadata"></video>
+                       <div class="media-play-overlay absolute inset-0 flex items-center justify-center pointer-events-none group-hover:opacity-0 transition-opacity">
                            <div class="w-16 h-16 rounded-full bg-white/70 backdrop-blur-md flex items-center justify-center border border-white">
                                <i data-lucide="play" class="w-8 h-8 text-black fill-black"></i>
                            </div>
                        </div>`;
 					} else {
-						mediaHtml = `<img src="${url}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" onload="this.parentElement.querySelector('.media-loading-overlay').remove()" alt="Preview">`;
+						mediaHtml = `<img class="media-preview w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt="Preview" decoding="async">`;
 					}
 
 					card.innerHTML = `
@@ -592,14 +737,14 @@
                         ${mediaHtml}
                         <div class="absolute top-6 left-6 flex flex-col gap-2">
                             <span class="px-4 py-1.5 bg-white/90 backdrop-blur-sm border border-slate-100 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-black">
-                                ${isSplit ? "SPLIT MEDIA" : isVideo ? "VIDEO" : "IMAGE"}
+								${isSplit ? "SPLIT MEDIA" : isAudio ? "AUDIO" : isVideo ? "VIDEO" : "IMAGE"}
                             </span>
                         </div>
                     </div>
                     <div class="p-8">
                         <div class="flex items-center justify-between mb-8">
                            <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Asset #${index + 1}</span>
-                           <a href="${url}" target="_blank" class="p-2 text-slate-300 hover:text-black transition-colors">
+							<a target="_blank" rel="noopener noreferrer" class="media-open-link p-2 text-slate-300 hover:text-black transition-colors">
                               <i data-lucide="maximize-2" class="w-5 h-5"></i>
                            </a>
                         </div>
@@ -613,14 +758,51 @@
                         `
 								: ""
 						}
-                        <button onclick="downloadFile('${url}', '${currentPlatform}_${index + 1}.${inferExtension(url)}')" 
-                                class="w-full py-5 bg-slate-50 hover:bg-black hover:text-white text-black font-black rounded-3xl transition-all flex items-center justify-center gap-3 active:scale-95 text-xs uppercase tracking-widest">
+						<button type="button" class="media-download-button w-full py-5 bg-slate-50 hover:bg-black hover:text-white text-black font-black rounded-3xl transition-all flex items-center justify-center gap-3 active:scale-95 text-xs uppercase tracking-widest">
                             <i data-lucide="download" class="w-5 h-5"></i>
                             SAVE ASSET
                         </button>
                     </div>
                 `;
 					resultsGrid.appendChild(card);
+
+					const mediaContainer = card.querySelector(".asset-card-media");
+					const openLink = card.querySelector(".media-open-link");
+					const downloadButton = card.querySelector(".media-download-button");
+
+					openLink.href = url;
+					openLink.referrerPolicy = "no-referrer";
+					downloadButton.addEventListener("click", () => {
+						const filename = `${safeFilenamePart(currentPlatform)}_${index + 1}.${inferExtension(url)}`;
+						downloadFile(url, filename);
+					});
+
+					if (isAudio) {
+						removeMediaLoading(mediaContainer);
+					} else {
+						const preview = card.querySelector(".media-preview");
+						if (preview instanceof HTMLImageElement) {
+							preview.referrerPolicy = "no-referrer";
+							loadMediaElement(preview, mediaContainer, url, "load");
+						} else if (preview instanceof HTMLVideoElement) {
+							preview.addEventListener("loadedmetadata", () => {
+								if (preview.readyState < HTMLMediaElement.HAVE_CURRENT_DATA && Number.isFinite(preview.duration) && preview.duration > 0) {
+									try {
+										preview.currentTime = Math.min(0.01, preview.duration);
+									} catch (error) {}
+								}
+							});
+							preview.addEventListener("mouseenter", () => {
+								const playAttempt = preview.play();
+								if (playAttempt) playAttempt.catch(() => {});
+							});
+							preview.addEventListener("mouseleave", () => {
+								preview.pause();
+								preview.currentTime = 0;
+							});
+							loadMediaElement(preview, mediaContainer, url, "loadeddata");
+						}
+					}
 				});
 
 				if (hasSplitMedia) {
@@ -634,8 +816,20 @@
 			}
 
 			async function handleFetch() {
-				const url = urlInput.value.trim();
+				const url = cleanUrl(urlInput.value);
 				if (!url) return;
+
+				if (activeFetchController) {
+					activeFetchController.abort();
+				}
+
+				const controller = new AbortController();
+				let didTimeout = false;
+				const timeoutId = window.setTimeout(() => {
+					didTimeout = true;
+					controller.abort();
+				}, apiTimeoutMs);
+				activeFetchController = controller;
 
 				errorBox.classList.add("hidden");
 				fetchBtn.disabled = true;
@@ -644,21 +838,44 @@
 				splitMediaNotice.classList.add("hidden");
 
 				try {
-					const response = await fetch(`/api/?url=${encodeURIComponent(url)}`);
-					const result = await response.json();
+					const response = await fetch(`/api/?url=${encodeURIComponent(url)}`, {
+						signal: controller.signal,
+						cache: "no-store",
+						headers: { Accept: "application/json" },
+					});
+					const responseText = await response.text();
+					let result;
 
-					if (response.ok && !result.error) {
-						renderResults(result.data, result.platform);
-					} else {
+					try {
+						result = JSON.parse(responseText);
+					} catch (error) {
+						throw new Error("THE SERVICE RETURNED AN INVALID RESPONSE.");
+					}
+
+					if (!result || typeof result !== "object") {
+						throw new Error("THE SERVICE RETURNED AN INVALID RESPONSE.");
+					}
+
+					if (!response.ok || result.error) {
 						throw new Error(result.message || result.error_message || "COULD NOT FETCH CONTENT FROM THIS LINK.");
 					}
+
+					renderResults(result.data, result.platform);
 				} catch (err) {
-					errorText.textContent = err.message || "CHECK YOUR LOCAL API SERVICE (PORT 8080).";
+					if (activeFetchController !== controller) return;
+
+					errorText.textContent = didTimeout
+						? "THE REQUEST TIMED OUT. PLEASE TRY AGAIN."
+						: err.message || "CHECK YOUR LOCAL API SERVICE (PORT 8080).";
 					errorBox.classList.remove("hidden");
 				} finally {
-					fetchBtn.disabled = false;
-					btnText.textContent = "DOWNLOAD";
-					btnLoader.classList.add("hidden");
+					window.clearTimeout(timeoutId);
+					if (activeFetchController === controller) {
+						activeFetchController = null;
+						fetchBtn.disabled = false;
+						btnText.textContent = "DOWNLOAD";
+						btnLoader.classList.add("hidden");
+					}
 				}
 			}
 
@@ -667,9 +884,10 @@
 				if (e.key === "Enter") handleFetch();
 			});
 			downloadAllBtn.addEventListener("click", () => {
-				currentMediaList.forEach((url, index) => {
-					const ext = inferExtension(url);
-					downloadFile(url, `${currentPlatform}_${index + 1}.${ext}`);
+				currentMediaList.forEach((media, index) => {
+					const ext = inferExtension(media.url);
+					const filename = `${safeFilenamePart(currentPlatform)}_${index + 1}.${ext}`;
+					downloadFile(media.url, filename);
 				});
 			});
 			window.addEventListener("hashchange", syncPrivacyHash);
